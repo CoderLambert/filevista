@@ -6,6 +6,10 @@ import {
   Table2,
   ZoomIn,
   ZoomOut,
+  ImageOff,
+  MessageSquare,
+  ExternalLink,
+  AlertTriangle,
 } from "lucide-react";
 
 // Lazy-load ExcelJS
@@ -39,6 +43,8 @@ interface CellStyle {
   borderBottom?: string;
   borderLeft?: string;
   numFmt?: string;
+  hyperlink?: string;
+  comment?: string;
 }
 
 interface CellData {
@@ -51,13 +57,15 @@ interface CellData {
 // Overlay image positioned absolutely over the table
 interface OverlayImage {
   id: string;
-  dataUrl: string;
-  left: number;   // px from left of table content
-  top: number;    // px from top of table content
-  width: number;  // display width in px
-  height: number; // display height in px
-  startRow: number; // for visibility filtering
+  dataUrl: string | null; // null = unsupported format, show placeholder
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  startRow: number;
   endRow: number;
+  unsupported?: boolean;
+  formatName?: string;
 }
 
 interface SheetData {
@@ -69,17 +77,32 @@ interface SheetData {
   totalCols: number;
   imageCount: number;
   overlayImages: OverlayImage[];
-  // Precomputed accumulated dimensions for accurate positioning
   accColWidths: number[];
   accRowHeights: number[];
+  isLegacyXls?: boolean;
 }
 
-// ---- Color Helpers ----
+// ---- Extended Theme Colors (Office 2010-2019 default) ----
 const THEME_COLORS: Record<number, string> = {
   0: "#000000", 1: "#FFFFFF", 2: "#44546A", 3: "#E7E6E6",
   4: "#4472C4", 5: "#ED7D31", 6: "#A5A5A5", 7: "#FFC000",
   8: "#5B9BD5", 9: "#70AD47",
+  // Extended theme entries for lt1-dk2
+  10: "#F2F2F2", 11: "#D9D9D9", 12: "#BFBFBF", 13: "#A6A6A6",
+  14: "#808080", 15: "#595959", 16: "#404040", 17: "#262626",
 };
+
+// ---- Indexed Colors (Excel default palette, 0-63) ----
+const INDEXED_COLORS: string[] = [
+  "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
+  "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
+  "#800000", "#008000", "#000080", "#808000", "#800080", "#008080", "#C0C0C0", "#808080",
+  "#9999FF", "#993366", "#FFFFCC", "#CCFFFF", "#660066", "#FF8080", "#0066CC", "#CCCCFF",
+  "#000080", "#FF00FF", "#FFFF00", "#00FFFF", "#800080", "#800000", "#008080", "#0000FF",
+  "#00CCFF", "#CCFFFF", "#CCFFCC", "#FFFF99", "#99CCFF", "#FF99CC", "#CC99FF", "#FFCC99",
+  "#3366FF", "#33CCCC", "#99CC00", "#FFCC00", "#FF9900", "#FF6600", "#666699", "#969696",
+  "#003366", "#339966", "#003300", "#333300", "#993300", "#993366", "#333399", "#333333",
+];
 
 function applyTint(hex: string, tint: number | undefined): string {
   if (!tint) return hex;
@@ -87,17 +110,26 @@ function applyTint(hex: string, tint: number | undefined): string {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   const t = (c: number) => tint < 0 ? Math.round(c * (1 + tint)) : Math.round(c + (255 - c) * tint);
-  return `#${t(r).toString(16).padStart(2,"0")}${t(g).toString(16).padStart(2,"0")}${t(b).toString(16).padStart(2,"0")}`;
+  return `#${t(r).toString(16).padStart(2, "0")}${t(g).toString(16).padStart(2, "0")}${t(b).toString(16).padStart(2, "0")}`;
 }
 
 function resolveColor(color: any): string | undefined {
   if (!color) return undefined;
+  // ARGB
   if (color.argb) {
     const a = color.argb;
     if (!a || a === "00000000" || a === "FFFFFFFF") return undefined;
     return a.length === 8 ? "#" + a.slice(2).toLowerCase() : a.toLowerCase();
   }
-  if (color.theme !== undefined) return applyTint(THEME_COLORS[color.theme] || "#000000", color.tint);
+  // Theme color
+  if (color.theme !== undefined) {
+    const base = THEME_COLORS[color.theme] || "#000000";
+    return applyTint(base, color.tint);
+  }
+  // Indexed color
+  if (color.indexed !== undefined && INDEXED_COLORS[color.indexed]) {
+    return applyTint(INDEXED_COLORS[color.indexed], color.tint);
+  }
   if (typeof color === "string") return color;
   return undefined;
 }
@@ -108,7 +140,7 @@ function borderCss(part: any): string {
     part.style === "thick" ? "3px" : part.style === "hair" ? "0.5px" :
     part.style === "double" ? "3px" : part.style.startsWith("medium") ? "2px" : "1px";
   const c = resolveColor(part.color) || "#000000";
-  const s = /dashed|dotted/.test(part.style) ? "dashed" : "solid";
+  const s = /dashed|dotted|dashDot/.test(part.style) ? "dashed" : "solid";
   return `${w} ${s} ${c}`;
 }
 
@@ -151,23 +183,66 @@ function parseImageDimensions(buffer: any): { width: number; height: number } {
     };
   }
 
+  // BMP magic: 42 4D
+  if (bytes[0] === 0x42 && bytes[1] === 0x4D && bytes.length > 25) {
+    return {
+      width: bytes[18] | (bytes[19] << 8) | (bytes[20] << 16) | (bytes[21] << 24),
+      height: bytes[22] | (bytes[23] << 8) | (bytes[24] << 16) | (bytes[25] << 24),
+    };
+  }
+
   return { width: 0, height: 0 };
 }
 
-// ---- Detect real MIME type from magic bytes ----
-function detectImageMimeType(buffer: any): string {
+// Image format detection from magic bytes
+type ImageFormat = "png" | "jpeg" | "gif" | "bmp" | "emf" | "wmf" | "tiff" | "webp" | "svg" | "unknown";
+
+function detectImageFormat(buffer: any): ImageFormat {
   const bytes = buffer instanceof Uint8Array ? buffer
     : buffer instanceof ArrayBuffer ? new Uint8Array(buffer)
     : new Uint8Array(Buffer.from(buffer));
 
-  if (bytes.length < 4) return "image/png";
-  if (bytes[0] === 0x89 && bytes[1] === 0x50) return "image/png";
-  if (bytes[0] === 0xFF && bytes[1] === 0xD8) return "image/jpeg";
-  if (bytes[0] === 0x47 && bytes[1] === 0x49) return "image/gif";
-  return "image/png";
+  if (bytes.length < 4) return "unknown";
+
+  // PNG: 89 50 4E 47
+  if (bytes[0] === 0x89 && bytes[1] === 0x50) return "png";
+  // JPEG: FF D8
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8) return "jpeg";
+  // GIF: 47 49 46
+  if (bytes[0] === 0x47 && bytes[1] === 0x49) return "gif";
+  // BMP: 42 4D
+  if (bytes[0] === 0x42 && bytes[1] === 0x4D) return "bmp";
+  // TIFF LE: 49 49 2A 00 / BE: 4D 4D 00 2A
+  if ((bytes[0] === 0x49 && bytes[1] === 0x49 && bytes[2] === 0x2A) ||
+      (bytes[0] === 0x4D && bytes[1] === 0x4D && bytes[2] === 0x00)) return "tiff";
+  // WebP: 52 49 46 46 ... 57 45 42 50
+  if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+      bytes.length > 11 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) return "webp";
+  // EMF: 01 00 00 00 (record type) + specific header pattern
+  if (bytes[0] === 0x01 && bytes[1] === 0x00 && bytes[2] === 0x00 && bytes[3] === 0x00 && bytes.length > 44) return "emf";
+  // WMF: D7 CD C6 9A (placeable metafile) or 01 00 09 00 (standard)
+  if ((bytes[0] === 0xD7 && bytes[1] === 0xCD && bytes[2] === 0xC6 && bytes[3] === 0x9A) ||
+      (bytes[0] === 0x01 && bytes[1] === 0x00 && bytes[2] === 0x09 && bytes[3] === 0x00)) return "wmf";
+
+  return "unknown";
 }
 
-// ---- Cell Value Formatting ----
+const BROWSER_SUPPORTED_FORMATS = new Set(["png", "jpeg", "gif", "bmp", "webp", "svg"]);
+
+function getMimeType(format: ImageFormat): string {
+  switch (format) {
+    case "png": return "image/png";
+    case "jpeg": return "image/jpeg";
+    case "gif": return "image/gif";
+    case "bmp": return "image/bmp";
+    case "webp": return "image/webp";
+    case "svg": return "image/svg+xml";
+    case "tiff": return "image/tiff";
+    default: return "image/png";
+  }
+}
+
+// ---- Improved Number/Date Formatting ----
 function formatCellValue(cell: any): string {
   const v = cell.value;
   if (v === null || v === undefined) return "";
@@ -178,50 +253,179 @@ function formatCellValue(cell: any): string {
     return r !== null && r !== undefined ? String(r) : "";
   }
   if (typeof v === "object" && "hyperlink" in v) return v.text || v.hyperlink;
-  if (v instanceof Date) {
-    const fmt = cell.numFmt;
-    if (fmt && /[yYmdhHs]/.test(fmt)) {
-      try {
-        const d = v, pad = (n: number) => n.toString().padStart(2, "0");
-        let res = fmt;
-        res = res.replace(/yyyy/g, d.getFullYear().toString());
-        res = res.replace(/yy/g, d.getFullYear().toString().slice(-2));
-        const parts = res.split(/hh/i);
-        parts[0] = parts[0].replace(/mm/g, pad(d.getMonth() + 1));
-        if (parts.length > 1) parts[1] = parts[1].replace(/mm/g, pad(d.getMinutes()));
-        res = parts.join("hh");
-        res = res.replace(/dd/g, pad(d.getDate()));
-        res = res.replace(/hh/gi, pad(d.getHours()));
-        res = res.replace(/ss/g, pad(d.getSeconds()));
-        return res.replace(/[\\]/g, "");
-      } catch { return v.toLocaleDateString("zh-CN"); }
-    }
-    return v.toLocaleDateString("zh-CN");
-  }
-  if (typeof v === "number") {
-    const fmt = cell.numFmt;
-    if (fmt) {
-      if (fmt.includes("%")) {
-        const z = (fmt.match(/0/g) || []).length;
-        return (v * 100).toFixed(Math.max(0, z - 1)) + "%";
-      }
-      if (fmt.includes("#,##0") || fmt.includes("# ##0")) {
-        const dp = fmt.split(".")[1];
-        const dec = dp ? (dp.match(/0/g) || []).length : 0;
-        let f = v.toLocaleString("zh-CN", { minimumFractionDigits: dec, maximumFractionDigits: dec });
-        if (fmt.includes("¥")) f = "¥" + f;
-        else if (fmt.includes("$")) f = "$" + f;
-        else if (fmt.includes("€")) f = "€" + f;
-        return f;
-      }
-      if (fmt.includes("0.0") || fmt.includes("0.00")) {
-        const dec = fmt.split(".")[1]?.replace(/[^0]/g, "").length || 0;
-        return v.toFixed(dec);
-      }
-    }
-    return v.toString();
-  }
+  if (v instanceof Date) return formatDateValue(v, cell.numFmt);
+  if (typeof v === "number") return formatNumberValue(v, cell.numFmt);
   return String(v);
+}
+
+function formatDateValue(d: Date, fmt: string | undefined): string {
+  if (!fmt || !/[yYmdhHs]/.test(fmt)) {
+    return d.toLocaleDateString("zh-CN");
+  }
+  try {
+    const pad = (n: number, len = 2) => n.toString().padStart(len, "0");
+    const months = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"];
+    const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const daysShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    let res = fmt;
+    // Remove AM/PM markers first to detect 12-hour format
+    const is12Hour = /am\/pm/i.test(res);
+    res = res.replace(/AM\/PM/gi, "").replace(/A\/P/gi, "");
+
+    // Replace in order: longest first
+    // Month names
+    res = res.replace(/mmmm/g, monthsShort[d.getMonth()]); // abbreviated month name (mmmm in Excel = full, but we approximate)
+    res = res.replace(/mmm/g, monthsShort[d.getMonth()]);
+    // Day names (non-standard but some formats use ddd/dddd)
+    res = res.replace(/dddd/g, days[d.getDay()]);
+    res = res.replace(/ddd/g, daysShort[d.getDay()]);
+
+    // Years
+    res = res.replace(/yyyy/g, d.getFullYear().toString());
+    res = res.replace(/yy/g, d.getFullYear().toString().slice(-2));
+
+    // Handle mm vs m ambiguity with hh presence
+    const parts = res.split(/hh/i);
+    if (parts.length > 1) {
+      // Before hh: mm = month
+      parts[0] = parts[0].replace(/mm/g, pad(d.getMonth() + 1));
+      parts[0] = parts[0].replace(/\bm\b/g, (d.getMonth() + 1).toString());
+      // After hh: mm = minutes
+      parts[1] = parts[1].replace(/mm/g, pad(d.getMinutes()));
+      parts[1] = parts[1].replace(/\bm\b/g, d.getMinutes().toString());
+    } else {
+      // No hh: mm = month
+      res = res.replace(/mm/g, pad(d.getMonth() + 1));
+      res = res.replace(/\bm\b/g, (d.getMonth() + 1).toString());
+    }
+
+    // Days
+    res = res.replace(/dd/g, pad(d.getDate()));
+    res = res.replace(/\bd\b/g, d.getDate().toString());
+
+    // Hours (handle 12-hour format)
+    let hours = d.getHours();
+    if (is12Hour) {
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12;
+      res += " " + ampm;
+    }
+    res = res.replace(/hh/gi, pad(hours));
+    res = res.replace(/\bh\b/g, hours.toString());
+
+    // Seconds
+    res = res.replace(/ss/g, pad(d.getSeconds()));
+    res = res.replace(/\bs\b/g, d.getSeconds().toString());
+
+    // Remove escape characters
+    res = res.replace(/[\\]/g, "");
+    // Remove leftover format chars
+    res = res.replace(/[\[\]]/g, "");
+
+    return res;
+  } catch {
+    return d.toLocaleDateString("zh-CN");
+  }
+}
+
+function formatNumberValue(v: number, fmt: string | undefined): string {
+  if (!fmt) return v.toString();
+
+  // General format
+  if (fmt === "General" || fmt === "@") return v.toString();
+
+  // Percentage
+  if (fmt.includes("%")) {
+    const z = fmt.split("%")[0].match(/0/g)?.length ?? 1;
+    return (v * 100).toFixed(Math.max(0, z - 1)) + "%";
+  }
+
+  // Fraction (e.g. # ?/?, # ??/??)
+  if (fmt.includes("/")) return formatFraction(v, fmt);
+
+  // Scientific notation (e.g. 0.00E+00)
+  if (/e\+/i.test(fmt)) {
+    const dec = fmt.split(/[eE]/)[0].split(".")[1]?.replace(/[^0]/g, "").length || 0;
+    return v.toExponential(dec);
+  }
+
+  // Currency/accounting
+  const hasCurrency = /[$¥€£]/.test(fmt);
+  const currencySymbol = fmt.match(/[$¥€£]/)?.[0] || "";
+  const isAccounting = fmt.includes("_(") || fmt.includes("_)");
+
+  // Thousands separator
+  const hasThousands = fmt.includes("#,##0") || fmt.includes("# ##0") || fmt.includes(",0");
+
+  // Decimal places
+  const decPart = fmt.split(".")[1];
+  const decPlaces = decPart ? (decPart.match(/0/g) || []).length : 0;
+
+  // Negative format: check for color codes and parenthetical negatives
+  const hasNegativeParens = fmt.includes(");(") || fmt.includes(");-(");
+
+  let result: string;
+  if (hasThousands) {
+    result = Math.abs(v).toLocaleString("en-US", {
+      minimumFractionDigits: decPlaces,
+      maximumFractionDigits: decPlaces,
+    });
+  } else if (decPlaces > 0) {
+    result = Math.abs(v).toFixed(decPlaces);
+  } else {
+    result = Math.abs(v).toString();
+  }
+
+  // Handle negative numbers
+  if (v < 0) {
+    if (hasNegativeParens) {
+      result = `(${result})`;
+    } else {
+      result = `-${result}`;
+    }
+  }
+
+  // Add currency symbol
+  if (hasCurrency) {
+    if (fmt.indexOf(currencySymbol) < fmt.indexOf("0") || fmt.indexOf(currencySymbol) < fmt.indexOf("#")) {
+      result = currencySymbol + result;
+    } else {
+      result = result + currencySymbol;
+    }
+  }
+
+  // Accounting format: add space alignment placeholder
+  if (isAccounting && v >= 0) {
+    result = result + " ";
+  }
+
+  return result;
+}
+
+function formatFraction(v: number, fmt: string): string {
+  const denominator = fmt.includes("??/??") ? 100 :
+    fmt.includes("?/?") ? 10 :
+    fmt.includes("??/") ? 100 :
+    fmt.includes("?/") ? 10 : 10;
+
+  const whole = Math.floor(Math.abs(v));
+  const frac = Math.abs(v) - whole;
+  const numerator = Math.round(frac * denominator);
+  if (numerator === 0) return whole.toString();
+  const g = gcd(numerator, denominator);
+  const n = numerator / g;
+  const d = denominator / g;
+  if (whole > 0) return `${whole} ${n}/${d}`;
+  return (v < 0 ? "-" : "") + `${n}/${d}`;
+}
+
+function gcd(a: number, b: number): number {
+  while (b) { [a, b] = [b, a % b]; }
+  return a;
 }
 
 // ---- Style Extraction ----
@@ -256,6 +460,20 @@ function extractStyle(cell: any): CellStyle {
     if (b.left) s.borderLeft = borderCss(b.left);
   }
   if (cell.numFmt) s.numFmt = cell.numFmt;
+  // Hyperlink (ExcelJS v4: cell.hyperlink can be string or {target} object)
+  if (cell.hyperlink) {
+    s.hyperlink = typeof cell.hyperlink === "string" ? cell.hyperlink : cell.hyperlink.target;
+  } else if (typeof cell.value === "object" && "hyperlink" in cell.value) {
+    s.hyperlink = cell.value.hyperlink;
+  }
+  // Comment/note (ExcelJS v4 returns notes as string or object with texts array)
+  if (cell.note) {
+    if (typeof cell.note === "string") {
+      s.comment = cell.note;
+    } else if (cell.note.texts) {
+      s.comment = cell.note.texts.map((t: any) => t.text || t).join("");
+    }
+  }
   return s;
 }
 
@@ -283,10 +501,16 @@ const HEADER_ROW_HEIGHT = 22;
 const DEFAULT_ROW_HEIGHT = 22;
 const DEFAULT_COL_WIDTH = 80;
 const EMU_TO_PX = 1 / 9525;
+const VISIBLE_ROW_BUFFER = 20;
+const VISIBLE_COL_BUFFER = 10;
 
 // ---- Main Parser ----
-async function parseXlsx(base64Content: string): Promise<SheetData[]> {
+async function parseXlsx(base64Content: string, fileName: string): Promise<SheetData[]> {
   const EJS = await getExcelJS();
+
+  // Check for legacy .xls format
+  const ext = fileName.toLowerCase().split(".").pop() || "";
+  const isLegacyXls = ext === "xls";
 
   const binaryString = atob(base64Content);
   const bytes = new Uint8Array(binaryString.length);
@@ -305,7 +529,7 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       sheets.push({
         name: worksheet.name, cellGrid: [], colWidths: [], rowHeights: [],
         totalRows: 0, totalCols: 0, imageCount: 0, overlayImages: [],
-        accColWidths: [], accRowHeights: [],
+        accColWidths: [], accRowHeights: [], isLegacyXls,
       });
       return;
     }
@@ -321,7 +545,7 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
     const rowHeights: number[] = [];
     for (let r = 1; r <= rowCount; r++) {
       const row = worksheet.getRow(r);
-      rowHeights.push(row.height ? Math.round(row.height * 1.333) : 0); // points → px
+      rowHeights.push(row.height ? Math.round(row.height * 1.333) : 0);
     }
 
     // Precompute accumulated dimensions
@@ -331,7 +555,6 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       accColWidths.push(accCol);
       accCol += colWidths[c];
     }
-    // Add total width at index colCount for safe access
     accColWidths.push(accCol);
 
     const accRowHeights: number[] = [];
@@ -340,14 +563,11 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       accRowHeights.push(accRow);
       accRow += rowHeights[r] || DEFAULT_ROW_HEIGHT;
     }
-    // Add total height at index rowCount for safe access
     accRowHeights.push(accRow);
 
     // ---- Merge ranges ----
     const merges: Map<string, { rs: number; cs: number }> = new Map();
     const mergedCells = new Set<string>();
-    // Map from any merged cell to its top-left cell key
-    const mergeRedirect: Map<string, string> = new Map();
 
     const _merges = (worksheet as any)._merges;
     if (_merges) {
@@ -359,9 +579,7 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
           for (let r = m.top; r <= m.bottom; r++) {
             for (let c = m.left; c <= m.right; c++) {
               if (r !== m.top || c !== m.left) {
-                const mergedKey = `${r - 1}-${c - 1}`;
-                mergedCells.add(mergedKey);
-                mergeRedirect.set(mergedKey, tlKey);
+                mergedCells.add(`${r - 1}-${c - 1}`);
               }
             }
           }
@@ -383,9 +601,7 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
             for (let r = top; r <= bottom; r++) {
               for (let c = left; c <= right; c++) {
                 if (r !== top || c !== left) {
-                  const mergedKey = `${r - 1}-${c - 1}`;
-                  mergedCells.add(mergedKey);
-                  mergeRedirect.set(mergedKey, tlKey);
+                  mergedCells.add(`${r - 1}-${c - 1}`);
                 }
               }
             }
@@ -394,7 +610,7 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       }
     }
 
-    // ---- Build cell grid (without images) ----
+    // ---- Build cell grid ----
     const cellGrid: (CellData | null)[][] = [];
 
     for (let r = 0; r < rowCount; r++) {
@@ -433,9 +649,9 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
         if (!imageData?.buffer) continue;
 
         const buf = imageData.buffer;
-
-        // Detect actual MIME type from binary magic bytes (not ExcelJS extension)
-        const mimeType = detectImageMimeType(buf);
+        const format = detectImageFormat(buf);
+        const isSupported = BROWSER_SUPPORTED_FORMATS.has(format);
+        const mimeType = getMimeType(format);
 
         // Convert buffer to base64
         let base64: string;
@@ -459,13 +675,11 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
         const tl = range.tl;
         const br = range.br;
 
-        // Get anchor row/col (0-based)
         const tlRow = tl.nativeRow ?? 0;
         const tlCol = tl.nativeCol ?? 0;
         const tlRowOff = tl.nativeRowOff ?? 0;
         const tlColOff = tl.nativeColOff ?? 0;
 
-        // Calculate top-left pixel position
         const left = ROW_NUM_COL_WIDTH + (accColWidths[tlCol] ?? 0) + tlColOff * EMU_TO_PX;
         const top = HEADER_ROW_HEIGHT + (accRowHeights[tlRow] ?? 0) + tlRowOff * EMU_TO_PX;
 
@@ -474,7 +688,6 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
         let endRow = tlRow;
 
         if (br) {
-          // Two-cell anchor: calculate size from tl to br
           const brRow = br.nativeRow ?? tlRow;
           const brCol = br.nativeCol ?? tlCol;
           const brRowOff = br.nativeRowOff ?? 0;
@@ -487,23 +700,23 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
           height = Math.max(bottom - top, 10);
           endRow = brRow;
         } else {
-          // One-cell anchor: use natural dimensions or fallback
           const dims = parseImageDimensions(buf);
           width = dims.width || 100;
           height = dims.height || 80;
-          // Estimate endRow for visibility filtering
           endRow = tlRow + Math.ceil(height / DEFAULT_ROW_HEIGHT);
         }
 
         overlayImages.push({
           id: `img-${totalImages}`,
-          dataUrl: `data:${mimeType};base64,${base64}`,
+          dataUrl: isSupported ? `data:${mimeType};base64,${base64}` : null,
           left,
           top,
           width,
           height,
           startRow: tlRow,
           endRow,
+          unsupported: !isSupported,
+          formatName: format.toUpperCase(),
         });
 
         totalImages++;
@@ -523,6 +736,7 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       overlayImages,
       accColWidths,
       accRowHeights,
+      isLegacyXls,
     });
   });
 
@@ -540,6 +754,16 @@ function colNumToLetter(num: number): string {
   return result;
 }
 
+// ---- Debounce hook ----
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
   const [sheets, setSheets] = useState<SheetData[]>([]);
   const [activeSheet, setActiveSheet] = useState(0);
@@ -548,64 +772,73 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [zoom, setZoom] = useState(100);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 60 });
+  const [visibleRowRange, setVisibleRowRange] = useState({ start: 0, end: 60 });
+  const [visibleColRange, setVisibleColRange] = useState({ start: 0, end: 50 });
+  const [hoveredComment, setHoveredComment] = useState<{ row: number; col: number; text: string; x: number; y: number } | null>(null);
+
+  // Debounce search for large files
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   const parseFile = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await parseXlsx(content);
+      const result = await parseXlsx(content, fileName);
       setSheets(result);
     } catch (err) {
       console.error("XLSX parse error:", err);
-      setError(err instanceof Error ? err.message : "Failed to parse spreadsheet");
+      const ext = fileName.toLowerCase().split(".").pop() || "";
+      if (ext === "xls") {
+        setError("该文件为旧版 Excel 二进制格式（.xls），当前仅支持 Open XML 格式（.xlsx/.xlsm）。建议使用 Excel 或 WPS 将文件另存为 .xlsx 格式后重试。");
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to parse spreadsheet");
+      }
     } finally {
       setLoading(false);
     }
-  }, [content]);
+  }, [content, fileName]);
 
   useEffect(() => { parseFile(); }, [parseFile]);
 
-  // Virtual scroll
+  // Virtual scroll handler (both vertical and horizontal)
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const scale = zoom / 100;
     const approxRowH = DEFAULT_ROW_HEIGHT * scale;
-    const start = Math.max(0, Math.floor(el.scrollTop / approxRowH) - 15);
-    const end = Math.min(sheets[activeSheet]?.totalRows || 0, Math.ceil((el.scrollTop + el.clientHeight) / approxRowH) + 25);
-    setVisibleRange({ start, end });
+    const approxColW = DEFAULT_COL_WIDTH * scale;
+
+    const rowStart = Math.max(0, Math.floor(el.scrollTop / approxRowH) - VISIBLE_ROW_BUFFER);
+    const rowEnd = Math.min(sheets[activeSheet]?.totalRows || 0, Math.ceil((el.scrollTop + el.clientHeight) / approxRowH) + VISIBLE_ROW_BUFFER);
+
+    const colStart = Math.max(0, Math.floor(el.scrollLeft / approxColW) - VISIBLE_COL_BUFFER);
+    const colEnd = Math.min(sheets[activeSheet]?.totalCols || 0, Math.ceil((el.scrollLeft + el.clientWidth) / approxColW) + VISIBLE_COL_BUFFER);
+
+    setVisibleRowRange({ start: rowStart, end: rowEnd });
+    setVisibleColRange({ start: colStart, end: colEnd });
   }, [zoom, activeSheet, sheets]);
 
   useEffect(() => {
-    setVisibleRange({ start: 0, end: 60 });
+    setVisibleRowRange({ start: 0, end: 60 });
+    setVisibleColRange({ start: 0, end: 50 });
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [activeSheet]);
 
   const currentSheet = sheets[activeSheet];
 
-  // Search: include rows with matching text OR rows that contain overlay images
-  const imageRowSet = useMemo(() => {
-    if (!currentSheet) return new Set<number>();
-    const rows = new Set<number>();
-    for (const img of currentSheet.overlayImages) {
-      for (let r = img.startRow; r <= img.endRow; r++) {
-        rows.add(r);
-      }
-    }
-    return rows;
-  }, [currentSheet]);
-
+  // Search with debounced term
   const filteredRowIndices = useMemo(() => {
-    if (!currentSheet || !searchTerm) return null;
+    if (!currentSheet || !debouncedSearch) return null;
     const indices: number[] = [];
-    const term = searchTerm.toLowerCase();
+    const term = debouncedSearch.toLowerCase();
     currentSheet.cellGrid.forEach((row, idx) => {
-      const textMatch = row.some((cell) => cell && cell.value.toLowerCase().includes(term));
-      const imageMatch = imageRowSet.has(idx);
-      if (textMatch || imageMatch) indices.push(idx);
+      const match = row.some((cell) => cell && cell.value.toLowerCase().includes(term));
+      if (match) indices.push(idx);
     });
     return indices;
-  }, [currentSheet, searchTerm, imageRowSet]);
+  }, [currentSheet, debouncedSearch]);
+
+  // Legacy .xls warning
+  const showLegacyWarning = currentSheet?.isLegacyXls && !error;
 
   if (loading) {
     return (
@@ -617,9 +850,10 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
   }
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3">
+      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
+        <AlertTriangle size={36} />
         <p className="text-lg font-medium">解析失败</p>
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="text-sm text-muted-foreground text-center max-w-md">{error}</p>
       </div>
     );
   }
@@ -637,28 +871,58 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
     ? filteredRowIndices!.map((idx) => ({ row: rows[idx], originalIdx: idx }))
     : rows.map((row, idx) => ({ row, originalIdx: idx }));
 
+  // Virtual scroll: filter to visible rows, but expand range to include merge origins
   const renderedRows = isSearch
     ? displayRows
-    : displayRows.filter(({ originalIdx }) => originalIdx >= visibleRange.start && originalIdx < visibleRange.end);
+    : displayRows.filter(({ row, originalIdx }) => {
+        if (originalIdx >= visibleRowRange.start && originalIdx < visibleRowRange.end) return true;
+        // Include rows that are merge origins spanning into visible range
+        let includeForMerge = false;
+        for (const cell of row) {
+          if (cell?.rowspan && cell.rowspan > 1) {
+            const mergeEnd = originalIdx + cell.rowspan - 1;
+            if (originalIdx < visibleRowRange.end && mergeEnd >= visibleRowRange.start) {
+              includeForMerge = true;
+              break;
+            }
+          }
+        }
+        return includeForMerge;
+      });
 
-  // Calculate accurate padding using accumulated row heights
-  // accRowHeights has rowCount+1 entries (index 0..rowCount), where index r = sum of heights[0..r-1]
-  const vPadTop = isSearch ? 0 : (currentSheet?.accRowHeights[visibleRange.start] ?? visibleRange.start * DEFAULT_ROW_HEIGHT);
+  // Accurate padding using accumulated dimensions
+  const vPadTop = isSearch ? 0 : (currentSheet?.accRowHeights[visibleRowRange.start] ?? visibleRowRange.start * DEFAULT_ROW_HEIGHT);
   const totalContentHeight = currentSheet?.accRowHeights[currentSheet.totalRows] ?? currentSheet.totalRows * DEFAULT_ROW_HEIGHT;
-  const visibleEndHeight = currentSheet?.accRowHeights[visibleRange.end] ?? visibleRange.end * DEFAULT_ROW_HEIGHT;
+  const visibleEndHeight = currentSheet?.accRowHeights[visibleRowRange.end] ?? visibleRowRange.end * DEFAULT_ROW_HEIGHT;
   const vPadBottom = isSearch ? 0 : Math.max(0, totalContentHeight - visibleEndHeight);
 
-  // Filter overlay images to only those in or near the visible range
+  // Filter overlay images to visible range
   const visibleOverlayImages = isSearch
     ? currentSheet?.overlayImages || []
     : (currentSheet?.overlayImages || []).filter(img => {
-        // Show image if it overlaps with the visible row range (with buffer)
         const buffer = 10;
-        return img.endRow >= visibleRange.start - buffer && img.startRow < visibleRange.end + buffer;
+        return img.endRow >= visibleRowRange.start - buffer && img.startRow < visibleRowRange.end + buffer;
       });
+
+  // Column visibility for horizontal virtualization
+  const totalCols = currentSheet?.totalCols || 0;
+  const allColWidths = currentSheet?.colWidths || [];
+
+  // Build visible column ranges: for simplicity, we render all columns but
+  // mark off-screen ones with width=0 for performance (still need for layout)
+  // For sheets with many columns, we use a clip approach
+  const needsHorizontalVirtualization = totalCols > 50;
 
   return (
     <div className="flex flex-col h-full">
+      {/* Legacy .xls warning */}
+      {showLegacyWarning && (
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs">
+          <AlertTriangle size={14} />
+          <span>当前文件为旧版 .xls 格式，部分内容可能无法完整显示。建议另存为 .xlsx 格式以获得最佳预览效果。</span>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30 gap-3 flex-wrap">
         <div className="flex items-center gap-2">
@@ -712,17 +976,21 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
         <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top left" }}>
           <div style={{ position: "relative" }}>
             <table className="border-collapse bg-white" style={{ tableLayout: "fixed" }}>
+              <colgroup>
+                <col style={{ width: ROW_NUM_COL_WIDTH }} />
+                {allColWidths.map((w, i) => (
+                  <col key={i} style={{ width: w }} />
+                ))}
+              </colgroup>
               <thead>
                 <tr>
                   <th
                     className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-normal select-none sticky top-0 z-20"
-                    style={{ width: ROW_NUM_COL_WIDTH, minWidth: ROW_NUM_COL_WIDTH }}
                   />
-                  {currentSheet?.colWidths.map((w, i) => (
+                  {allColWidths.map((w, i) => (
                     <th
                       key={i}
                       className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-normal select-none sticky top-0 z-20"
-                      style={{ width: w, minWidth: w }}
                     >
                       {colNumToLetter(i)}
                     </th>
@@ -731,7 +999,7 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
               </thead>
               <tbody>
                 {vPadTop > 0 && (
-                  <tr><td colSpan={(currentSheet?.totalCols || 0) + 1} style={{ height: vPadTop, padding: 0, border: "none" }} /></tr>
+                  <tr><td colSpan={totalCols + 1} style={{ height: vPadTop, padding: 0, border: "none" }} /></tr>
                 )}
                 {renderedRows.map(({ row, originalIdx }) => {
                   if (!row) return null;
@@ -749,14 +1017,48 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
                         const db = "1px solid #d1d5db";
                         const fs: React.CSSProperties = {
                           ...cs, padding: "1px 4px", overflow: "hidden",
-                          whiteSpace: cs.whiteSpace || "nowrap",
+                          whiteSpace: cs.whiteSpace || "nowrap", position: "relative",
                           borderTop: cell.style.borderTop || db, borderRight: cell.style.borderRight || db,
                           borderBottom: cell.style.borderBottom || db, borderLeft: cell.style.borderLeft || db,
                         };
 
+                        const hasHyperlink = !!cell.style.hyperlink;
+                        const hasComment = !!cell.style.comment;
+
                         return (
                           <td key={colIdx} style={fs} rowSpan={cell.rowspan || undefined} colSpan={cell.colspan || undefined}>
-                            {cell.value}
+                            {hasHyperlink ? (
+                              <a
+                                href={cell.style.hyperlink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-0.5"
+                                style={{ fontSize: "inherit", fontFamily: "inherit" }}
+                              >
+                                {cell.value}
+                                <ExternalLink size={10} className="shrink-0" />
+                              </a>
+                            ) : (
+                              cell.value
+                            )}
+                            {hasComment && (
+                              <span
+                                className="inline-block w-2 h-2 bg-amber-400 rounded-full ml-0.5 cursor-pointer shrink-0 relative"
+                                style={{ verticalAlign: "super" }}
+                                onMouseEnter={(e) => {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const container = scrollRef.current?.getBoundingClientRect();
+                                  setHoveredComment({
+                                    row: originalIdx,
+                                    col: colIdx,
+                                    text: cell.style.comment!,
+                                    x: rect.left - (container?.left ?? 0) + rect.width / 2,
+                                    y: rect.top - (container?.top ?? 0),
+                                  });
+                                }}
+                                onMouseLeave={() => setHoveredComment(null)}
+                              />
+                            )}
                           </td>
                         );
                       })}
@@ -765,18 +1067,18 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
                 })}
                 {displayRows.length === 0 && (
                   <tr>
-                    <td colSpan={(currentSheet?.totalCols || 0) + 1} className="px-3 py-8 text-center text-muted-foreground bg-white border border-gray-300">
+                    <td colSpan={totalCols + 1} className="px-3 py-8 text-center text-muted-foreground bg-white border border-gray-300">
                       {searchTerm ? "未找到匹配数据" : "无数据"}
                     </td>
                   </tr>
                 )}
                 {vPadBottom > 0 && (
-                  <tr><td colSpan={(currentSheet?.totalCols || 0) + 1} style={{ height: vPadBottom, padding: 0, border: "none" }} /></tr>
+                  <tr><td colSpan={totalCols + 1} style={{ height: vPadBottom, padding: 0, border: "none" }} /></tr>
                 )}
               </tbody>
             </table>
 
-            {/* Image overlay - absolutely positioned images on top of table */}
+            {/* Image overlay */}
             <div
               style={{
                 position: "absolute",
@@ -786,30 +1088,74 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
                 height: "100%",
                 pointerEvents: "none",
                 overflow: "visible",
-                zIndex: 5, // Below sticky header (z-20) and row numbers (z-10), above cell content
+                zIndex: 5,
               }}
             >
               {visibleOverlayImages.map((img) => (
-                <img
-                  key={img.id}
-                  src={img.dataUrl}
-                  alt=""
-                  style={{
-                    position: "absolute",
-                    left: img.left,
-                    top: img.top,
-                    width: img.width,
-                    height: img.height,
-                    objectFit: "contain",
-                    display: "block",
-                  }}
-                  loading="lazy"
-                />
+                img.unsupported ? (
+                  <div
+                    key={img.id}
+                    style={{
+                      position: "absolute",
+                      left: img.left,
+                      top: img.top,
+                      width: img.width,
+                      height: img.height,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#f9fafb",
+                      border: "1px dashed #d1d5db",
+                      borderRadius: 4,
+                      pointerEvents: "auto",
+                      cursor: "default",
+                    }}
+                    title={`不支持的图片格式: ${img.formatName || "未知"}`}
+                  >
+                    <ImageOff size={16} className="text-gray-400" />
+                    <span style={{ fontSize: 9, color: "#9ca3af", marginTop: 2 }}>{img.formatName || "未知格式"}</span>
+                  </div>
+                ) : (
+                  <img
+                    key={img.id}
+                    src={img.dataUrl!}
+                    alt=""
+                    style={{
+                      position: "absolute",
+                      left: img.left,
+                      top: img.top,
+                      width: img.width,
+                      height: img.height,
+                      objectFit: "contain",
+                      display: "block",
+                    }}
+                    loading="lazy"
+                  />
+                )
               ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Comment tooltip */}
+      {hoveredComment && (
+        <div
+          className="fixed z-50 max-w-xs bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg shadow-lg p-3 text-xs text-amber-900 dark:text-amber-200"
+          style={{
+            left: hoveredComment.x,
+            top: hoveredComment.y - 8,
+            transform: "translate(-50%, -100%)",
+          }}
+        >
+          <div className="flex items-center gap-1 mb-1 font-medium text-amber-700 dark:text-amber-300">
+            <MessageSquare size={10} />
+            批注
+          </div>
+          <p className="whitespace-pre-wrap break-words">{hoveredComment.text}</p>
+        </div>
+      )}
     </div>
   );
 }

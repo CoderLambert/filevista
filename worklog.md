@@ -307,3 +307,33 @@ Stage Summary:
 - Overlay approach is more robust than cell-embedded approach for complex Excel layouts
 - Images are sized according to Excel's tl/br anchor specifications (~90x94 pixels for category icons)
 - Accurate virtual scroll padding using precomputed accumulated row heights
+
+---
+Task ID: 9
+Agent: main
+Task: Comprehensive optimization of Excel preview - fix all identified issues
+
+Work Log:
+- Fixed .xls legacy format handling: parse error now shows clear Chinese message explaining .xls is unsupported, suggesting to save as .xlsx; .xls files that happen to parse show an amber warning banner
+- Added EMF/WMF/TIFF/WebP/BMP image format detection via magic bytes; unsupported formats (EMF/WMF/TIFF) show a placeholder with format name and dashed border instead of broken <img>
+- Fixed virtual scroll + merged cells truncation: expanded visible row range to include merge origins whose rowspan extends into the viewport
+- Added horizontal virtualization support for wide sheets (>50 columns): colgroup-based layout, scroll handler tracks horizontal viewport
+- Added search debounce (300ms) via useDebounce hook to prevent lag on large files
+- Improved number format parsing: added fraction format (# ??/??), scientific notation (0.00E+00), accounting format with parenthetical negatives (#,##0.00;(#,##0.00)), currency position detection, better thousands separator
+- Improved date format parsing: added AM/PM 12-hour support, month/day name support (mmmm/mmm/dddd/ddd), better mm vs m disambiguation when hh is present
+- Added indexed color support (INDEXED_COLORS array with 64 Excel default palette entries)
+- Extended theme color table (added entries 10-17 for additional Office palette colors)
+- Added hyperlink support: extracted from cell.hyperlink (string or {target}) or value.hyperlink; rendered as clickable blue underlined links with external link icon
+- Added comment/note support: extracted from cell.note (string or {texts} array); displayed as amber dot indicator on hover with tooltip popup
+- Added AlertTriangle, ExternalLink, MessageSquare, ImageOff icons
+- Used colgroup for column layout (more robust than per-th width)
+- Created test_features.xlsx with all new features for verification
+- Lint passes with no errors
+- Dev server running, pages loading correctly (HTTP 200)
+
+Stage Summary:
+- Comprehensive Excel preview optimization covering 12 improvements
+- All high-priority issues fixed: .xls error, unsupported images, merge truncation, image positioning
+- All medium-priority issues fixed: search debounce, number/date formatting, horizontal virtualization
+- All low-priority issues fixed: indexed colors, hyperlinks, comments
+- Excel preview now handles: cell values, styles, merges, images (with format detection), hyperlinks, comments, advanced number/date formats, indexed/theme colors
