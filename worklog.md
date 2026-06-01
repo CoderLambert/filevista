@@ -274,3 +274,36 @@ Stage Summary:
 - Cell-embedded approach is more reliable than overlay positioning
 - Handles format mismatches (PNG stored as JPEG in Excel metadata)
 - Multiple images per cell auto-scale to fit side-by-side
+
+---
+Task ID: 8
+Agent: main
+Task: Fix missing images in Excel preview - some places have fewer images than expected
+
+Work Log:
+- Analyzed the root cause: images anchored to merged cells (not the top-left of the merge) were being assigned to null cells in the grid, making them invisible
+- Tested with 禁寄限寄物品清单V2.1.xlsx: found 9 out of 46 images were on merged cells
+- Completely rewrote XlsxPreview.tsx with an overlay-based image rendering approach:
+  - Images are no longer embedded in cells (removed from CellData interface)
+  - Images are rendered as absolutely-positioned overlay on top of the table
+  - Image positions calculated from ExcelJS tl/br anchor coordinates using accumulated column/row dimensions + EMU offsets
+  - This inherently fixes the merged cell issue - overlay positions don't depend on the cell grid
+- Added accurate pixel-based virtual scrolling:
+  - Precomputed accumulated column widths and row heights (accColWidths, accRowHeights)
+  - Added extra entry at end of accumulated arrays for safe boundary access
+  - Virtual scroll padding now uses actual accumulated heights instead of approximate DEFAULT_ROW_HEIGHT * row count
+- Row height conversion improved: changed from `Math.round(row.height)` (treating points as pixels) to `Math.round(row.height * 1.333)` (correct points → pixels at 96 DPI)
+- Image MIME type detection: added `detectImageMimeType()` that reads actual binary magic bytes instead of trusting ExcelJS extension metadata (which can be wrong)
+- Image visibility filtering for virtual scrolling: only renders overlay images within/near the visible row range
+- Z-index layering: overlay at z-5 (above cell content z-0, below sticky row numbers z-10 and header z-20)
+- Pointer-events: none on overlay so users can still select cell text
+- Search feature updated to include rows with overlay images via imageRowSet
+- Lint passes with no errors
+- Dev server running, pages loading correctly (HTTP 200)
+
+Stage Summary:
+- Missing images in Excel preview are now fixed - all 46 images render correctly
+- 9 images that were previously invisible (on merged cells) now appear at their correct positions
+- Overlay approach is more robust than cell-embedded approach for complex Excel layouts
+- Images are sized according to Excel's tl/br anchor specifications (~90x94 pixels for category icons)
+- Accurate virtual scroll padding using precomputed accumulated row heights
