@@ -18,3 +18,25 @@ Stage Summary:
 - Demo system now supports both inline text and URL-fetched binary files
 - loadDemoFiles is now async with loading indicator
 - Total demo files: 5 text + 3 binary = 8 files
+
+---
+Task ID: 2
+Agent: main
+Task: Replace mammoth.js with docx-preview for better DOCX rendering
+
+Work Log:
+- Compared mammoth.js vs docx-preview across 10+ dimensions
+- mammoth: semantic HTML, loses colors/fonts/layout/pagination — only good for text extraction
+- docx-preview: pixel-accurate rendering, preserves fonts/colors/pagination/images/headers/footers
+- Installed docx-preview@0.3.7
+- Rewrote DocxPreview.tsx to use renderAsync() from docx-preview
+- Added page count display and custom CSS overrides for centered page display
+- Kept mammoth for .doc (legacy format) in DocPreview.tsx — docx-preview only supports .docx
+- Updated docs/preview-modules/docx/README.md with comparison table and new implementation details
+- Updated docs/tech-stack/README.md with new dependency info
+
+Stage Summary:
+- DOCX rendering upgraded from mammoth → docx-preview for high-fidelity rendering
+- Heading colors, fonts, layout, pagination, images, headers/footers now fully preserved
+- mammoth retained only for legacy .doc format text extraction
+- Package: docx-preview@0.3.7 added (~74KB gzip)

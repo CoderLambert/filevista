@@ -25,7 +25,8 @@
 | 库 | 版本 | 支持格式 | 核心能力 |
 |---|------|---------|---------|
 | pdfjs-dist | 4.4.168 | PDF | Canvas 渲染、分页、Worker |
-| mammoth | 1.12.0 | DOCX/DOC | Word → HTML 转换 |
+| docx-preview | 0.3.7 | DOCX | Word 高保真渲染（字体/颜色/分页/图片） |
+| mammoth | 1.12.0 | DOC | 旧版 .doc 文本提取（仅限 .doc 格式） |
 | exceljs | 4.4.0 | XLSX | 完整 Excel 解析（样式/合并/图片/注释） |
 | jszip | 3.10.1 | ZIP/EPUB/PPTX | ZIP 解压缩、二进制文件提取 |
 | react-markdown | 10.1.0 | Markdown | Markdown → React 渲染 |
@@ -80,7 +81,7 @@ page.tsx
   │
   └── FilePreviewRenderer
         ├── PdfPreview ←── pdfjs-dist
-        ├── DocxPreview ←── mammoth
+        ├── DocxPreview ←── docx-preview
         ├── DocPreview ←── mammoth
         ├── PptxPreview ←── jszip
         ├── XlsxPreview ←── exceljs
@@ -105,6 +106,7 @@ page.tsx
 | pdfjs-dist | ~800KB | PDF 必需 |
 | exceljs | ~400KB | Excel 必需 |
 | react-syntax-highlighter | ~200KB | 代码高亮必需 |
-| mammoth | ~100KB | DOCX 必需 |
+| docx-preview | ~74KB | DOCX 高保真渲染 |
+| mammoth | ~100KB | DOC 旧格式文本提取 |
 | jszip | ~50KB | ZIP/EPUB/PPTX 必需 |
 | react-markdown | ~30KB | Markdown 必需 |
