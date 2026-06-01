@@ -9,6 +9,7 @@ import {
   List,
   Search,
   X,
+  ChevronDown,
 } from "lucide-react";
 
 interface EpubPreviewProps {
@@ -431,9 +432,11 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
   const [error, setError] = useState<string | null>(null);
   const [currentChapter, setCurrentChapter] = useState(0);
   const [showToc, setShowToc] = useState(false);
+  const [showChapterDropdown, setShowChapterDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<{ chapterIndex: number; snippet: string }[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const parseFile = useCallback(async () => {
     try {
@@ -452,6 +455,17 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
     parseFile();
   }, [parseFile]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowChapterDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
@@ -462,6 +476,13 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
       }
     };
   }, [bookData?.imageMap]);
+
+  // Scroll to top when chapter changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [currentChapter]);
 
   // Search functionality
   const handleSearch = useCallback(
@@ -513,7 +534,6 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
         );
         if (chapterIdx !== -1) {
           setCurrentChapter(chapterIdx);
-          // Scroll to anchor if present
           setTimeout(() => {
             if (contentRef.current) contentRef.current.scrollTop = 0;
           }, 100);
@@ -554,14 +574,35 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
   const chapter = bookData.chapters[currentChapter];
 
   // Build combined CSS for inline injection
-  const combinedCss = bookData.stylesheets.join("\n");
+  // Override any absolute positioning or overflow issues in book CSS
+  const combinedCss = bookData.stylesheets.join("\n") + `
+    /* Override book styles that may cause horizontal overflow */
+    .epub-content * {
+      max-width: 100% !important;
+      overflow-wrap: break-word !important;
+      word-wrap: break-word !important;
+    }
+    .epub-content pre, .epub-content code {
+      overflow-x: auto !important;
+      max-width: 100% !important;
+    }
+    .epub-content img {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+    .epub-content table {
+      display: block;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+  `;
 
   return (
     <div className="flex flex-col h-full">
       {/* Book info bar */}
       <div className="px-4 py-2 border-b bg-muted/30">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <BookOpen size={14} className="text-muted-foreground shrink-0" />
             <span className="text-sm font-medium truncate">
               {bookData.title || fileName}
@@ -581,7 +622,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Search..."
-                className="h-7 w-32 sm:w-48 rounded-md border bg-background pl-7 pr-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-7 w-28 sm:w-48 rounded-md border bg-background pl-7 pr-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
               {searchQuery && (
                 <button
@@ -607,9 +648,6 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
             >
               <List size={16} />
             </button>
-            <span className="text-xs text-muted-foreground">
-              {currentChapter + 1} / {bookData.chapters.length}
-            </span>
           </div>
         </div>
       </div>
@@ -650,7 +688,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
       <div className="flex flex-1 min-h-0">
         {/* TOC sidebar */}
         {showToc && (
-          <div className="w-64 shrink-0 border-r overflow-y-auto bg-background">
+          <div className="w-56 sm:w-64 shrink-0 border-r overflow-y-auto bg-background">
             <div className="p-3">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Table of Contents
@@ -661,7 +699,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                 currentChapter={currentChapter}
                 onSelect={(idx) => {
                   setCurrentChapter(idx);
-                  if (window.innerWidth < 768) setShowToc(false);
+                  setShowChapterDropdown(false);
                 }}
               />
               {/* Fallback: if no TOC items, show chapter list */}
@@ -686,27 +724,76 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
           </div>
         )}
 
-        {/* Chapter navigation tabs */}
+        {/* Main content area */}
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex items-center gap-1 px-4 py-1.5 border-b overflow-x-auto shrink-0">
-            {bookData.chapters.map((ch, i) => (
+          {/* Compact chapter selector bar */}
+          <div className="flex items-center gap-2 px-4 py-1.5 border-b shrink-0">
+            <button
+              onClick={() => setCurrentChapter(Math.max(0, currentChapter - 1))}
+              disabled={currentChapter === 0}
+              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {/* Chapter dropdown */}
+            <div className="relative flex-1 min-w-0" ref={dropdownRef}>
               <button
-                key={i}
-                onClick={() => setCurrentChapter(i)}
-                className={`px-2.5 py-1 text-xs rounded-md whitespace-nowrap transition-colors shrink-0 ${
-                  i === currentChapter
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted"
-                }`}
+                onClick={() => setShowChapterDropdown(!showChapterDropdown)}
+                className="flex items-center gap-1.5 w-full px-2 py-1 text-xs rounded-md hover:bg-muted transition-colors text-left"
               >
-                {ch.title.length > 20 ? ch.title.slice(0, 17) + "..." : ch.title}
+                <span className="text-muted-foreground shrink-0">
+                  {currentChapter + 1}/{bookData.chapters.length}
+                </span>
+                <span className="truncate font-medium text-foreground">
+                  {chapter.title}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={`shrink-0 text-muted-foreground transition-transform ${
+                    showChapterDropdown ? "rotate-180" : ""
+                  }`}
+                />
               </button>
-            ))}
+
+              {/* Dropdown list */}
+              {showChapterDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
+                  {bookData.chapters.map((ch, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setCurrentChapter(i);
+                        setShowChapterDropdown(false);
+                      }}
+                      className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                        i === currentChapter
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <span className="text-muted-foreground/60 mr-1.5">{i + 1}.</span>
+                      {ch.title}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() =>
+                setCurrentChapter(Math.min(bookData.chapters.length - 1, currentChapter + 1))
+              }
+              disabled={currentChapter === bookData.chapters.length - 1}
+              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
 
           {/* Chapter content */}
-          <div className="flex-1 overflow-auto" ref={contentRef} onClick={handleContentClick}>
-            <div className="max-w-3xl mx-auto p-6 sm:p-8">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden" ref={contentRef} onClick={handleContentClick}>
+            <div className="max-w-3xl mx-auto p-4 sm:p-8">
               <h2 className="text-xl font-bold mb-6 text-foreground">{chapter.title}</h2>
               {/* Inject book CSS */}
               {combinedCss && (
@@ -714,7 +801,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               )}
               <div
                 className="epub-content prose prose-sm dark:prose-invert max-w-none
-                  [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded
+                  [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_img]:my-2
                   [&_table]:w-full [&_table]:border-collapse
                   [&_td]:border [&_td]:border-border [&_td]:p-1.5 [&_td]:text-xs
                   [&_th]:border [&_th]:border-border [&_th]:p-1.5 [&_th]:bg-muted [&_th]:text-xs [&_th]:font-medium
@@ -723,7 +810,8 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                   [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
                   [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:overflow-x-auto
                   [&_.mbp_pagebreak]:hidden
-                  [&_img]:my-2"
+                  [&_p]:break-words [&_span]:break-words
+                  [&_div]:break-words"
                 dangerouslySetInnerHTML={{ __html: chapter.htmlContent }}
               />
             </div>
