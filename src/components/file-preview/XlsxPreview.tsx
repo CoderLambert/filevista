@@ -8,7 +8,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 
-// Lazy-load ExcelJS to avoid blocking initial page load
+// Lazy-load ExcelJS
 let ExcelJS: typeof import("exceljs") | null = null;
 async function getExcelJS() {
   if (!ExcelJS) {
@@ -18,7 +18,7 @@ async function getExcelJS() {
 }
 
 interface XlsxPreviewProps {
-  content: string; // base64 encoded
+  content: string;
   fileName: string;
 }
 
@@ -41,30 +41,18 @@ interface CellStyle {
   numFmt?: string;
 }
 
+interface EmbeddedImage {
+  dataUrl: string;
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
 interface CellData {
   value: string;
   style: CellStyle;
   colspan?: number;
   rowspan?: number;
-  image?: ImageInCell;
-}
-
-interface ImageInCell {
-  dataUrl: string;
-  widthPx?: number;
-  heightPx?: number;
-}
-
-interface ImageInfo {
-  dataUrl: string;
-  nativeRow: number;
-  nativeCol: number;
-  colOffset: number;
-  rowOffset: number;
-  brNativeRow: number;
-  brNativeCol: number;
-  widthEmu?: number;
-  heightEmu?: number;
+  images?: EmbeddedImage[];
 }
 
 interface SheetData {
@@ -113,6 +101,48 @@ function borderCss(part: any): string {
   const c = resolveColor(part.color) || "#000000";
   const s = /dashed|dotted/.test(part.style) ? "dashed" : "solid";
   return `${w} ${s} ${c}`;
+}
+
+// ---- Parse image dimensions from binary magic bytes (not extension!) ----
+function parseImageDimensions(buffer: any): { width: number; height: number } {
+  const bytes = buffer instanceof Uint8Array ? buffer
+    : buffer instanceof ArrayBuffer ? new Uint8Array(buffer)
+    : new Uint8Array(Buffer.from(buffer));
+
+  if (bytes.length < 10) return { width: 0, height: 0 };
+
+  // PNG magic: 89 50 4E 47 — IHDR chunk at offset 16
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47 && bytes.length > 24) {
+    return {
+      width: (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19],
+      height: (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23],
+    };
+  }
+
+  // JPEG magic: FF D8 — find SOF marker (0xFFC0-0xFFCF except C4/C8/CC)
+  if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
+    for (let i = 0; i < Math.min(bytes.length - 9, 65536); i++) {
+      if (bytes[i] === 0xFF) {
+        const m = bytes[i + 1];
+        if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) {
+          return {
+            height: (bytes[i + 5] << 8) | bytes[i + 6],
+            width: (bytes[i + 7] << 8) | bytes[i + 8],
+          };
+        }
+      }
+    }
+  }
+
+  // GIF magic: 47 49 46
+  if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
+    return {
+      width: bytes[6] | (bytes[7] << 8),
+      height: bytes[8] | (bytes[9] << 8),
+    };
+  }
+
+  return { width: 0, height: 0 };
 }
 
 // ---- Cell Value Formatting ----
@@ -226,11 +256,6 @@ function styleToCss(style: CellStyle): React.CSSProperties {
   return css;
 }
 
-// EMU (English Metric Units) to pixels: 1 EMU = 1/914400 inch, 96 DPI => 1px = 914400/96 EMU = 9525 EMU
-function emuToPx(emu: number): number {
-  return Math.round(emu / 9525);
-}
-
 // ---- Main Parser ----
 async function parseXlsx(base64Content: string): Promise<SheetData[]> {
   const EJS = await getExcelJS();
@@ -253,7 +278,7 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       return;
     }
 
-    // Column widths (chars -> pixels)
+    // Column widths
     const colWidths: number[] = [];
     for (let c = 1; c <= colCount; c++) {
       const col = worksheet.getColumn(c);
@@ -267,7 +292,7 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       rowHeights.push(row.height ? Math.round(row.height) : 0);
     }
 
-    // ---- Merge ranges (using _merges for reliable parsing) ----
+    // ---- Merge ranges ----
     const merges: Map<string, { rs: number; cs: number }> = new Map();
     const mergedCells = new Set<string>();
 
@@ -286,14 +311,10 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
         }
       }
     }
-    // Fallback: model.merges (string format like "A1:F1")
+    // Fallback: model.merges string format
     const modelMerges = (worksheet as any).model?.merges;
-    if (modelMerges && modelMerges.length > 0 && typeof modelMerges[0] === "string") {
-      const colLetterToNum = (s: string) => {
-        let n = 0;
-        for (let i = 0; i < s.length; i++) n = n * 26 + (s.charCodeAt(i) - 64);
-        return n;
-      };
+    if (modelMerges?.length > 0 && typeof modelMerges[0] === "string") {
+      const colLetterToNum = (s: string) => { let n = 0; for (let i = 0; i < s.length; i++) n = n * 26 + (s.charCodeAt(i) - 64); return n; };
       for (const rangeStr of modelMerges) {
         const match = (rangeStr as string).match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
         if (match) {
@@ -312,8 +333,12 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       }
     }
 
-    // ---- Extract images ----
-    const images: ImageInfo[] = [];
+    // ---- Extract images & group by anchor cell ----
+    // Each image is anchored to a cell position (nativeRow, nativeCol)
+    // We embed images into the cell they're anchored to
+    const cellImages = new Map<string, EmbeddedImage[]>();
+    let totalImages = 0;
+
     try {
       const wsImages = worksheet.getImages();
       for (const img of wsImages) {
@@ -339,81 +364,34 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
         } else if (typeof buf === "string") {
           base64 = buf;
         } else {
-          // Node.js Buffer polyfill - has .toString('base64')
           base64 = (buf as any).toString("base64");
         }
 
         const range = img.range;
         if (!range?.tl) continue;
 
-        const tl = range.tl;
-        const br = range.br;
+        // Use nativeRow/nativeCol as the anchor cell (0-based)
+        const anchorRow = range.tl.nativeRow ?? 0;
+        const anchorCol = range.tl.nativeCol ?? 0;
+        const key = `${anchorRow}-${anchorCol}`;
 
-        images.push({
+        // Parse natural dimensions from image binary header
+        const dims = parseImageDimensions(buf);
+
+        const embedded: EmbeddedImage = {
           dataUrl: `data:${mimeType};base64,${base64}`,
-          nativeRow: tl.nativeRow ?? 0,
-          nativeCol: tl.nativeCol ?? 0,
-          colOffset: tl.nativeColOff ?? 0,
-          rowOffset: tl.nativeRowOff ?? 0,
-          brNativeRow: br?.nativeRow ?? (tl.nativeRow ?? 0) + 3,
-          brNativeCol: br?.nativeCol ?? (tl.nativeCol ?? 0) + 1,
-          widthEmu: range.ext?.width,
-          heightEmu: range.ext?.height,
-        });
+          naturalWidth: dims.width,
+          naturalHeight: dims.height,
+        };
+
+        if (!cellImages.has(key)) {
+          cellImages.set(key, []);
+        }
+        cellImages.get(key)!.push(embedded);
+        totalImages++;
       }
     } catch (err) {
       console.warn("Image extraction error:", err);
-    }
-
-    // ---- Group images by their anchor row for overlay rendering ----
-    // Images in Excel float over cells, so we render them as overlays on the table
-    // We need to calculate pixel positions from nativeRow + offsets
-
-    // Calculate cumulative column widths and row heights for pixel positioning
-    const colPx = [0]; // cumulative left position for each column (0-based)
-    for (let c = 0; c < colCount; c++) colPx.push(colPx[c] + colWidths[c]);
-
-    const rowPx = [0]; // cumulative top position for each row (0-based)
-    for (let r = 0; r < rowCount; r++) {
-      rowPx.push(rowPx[r] + (rowHeights[r] || DEFAULT_ROW_HEIGHT));
-    }
-
-    // Build image overlay data with pixel positions
-    const imageOverlays: Array<{
-      dataUrl: string;
-      left: number;
-      top: number;
-      width: number;
-      height: number;
-    }> = [];
-
-    for (const img of images) {
-      const r = img.nativeRow;
-      const c = img.nativeCol;
-      if (r >= rowCount || c >= colCount) continue;
-
-      // Position: row/col start + EMU offset
-      const left = colPx[c] + emuToPx(img.colOffset) + ROW_NUM_COL_WIDTH;
-      const top = rowPx[r] + emuToPx(img.rowOffset) + HEADER_ROW_HEIGHT;
-
-      // Size: from tl to br, or from ext
-      let width: number, height: number;
-      if (img.widthEmu && img.heightEmu) {
-        width = emuToPx(img.widthEmu);
-        height = emuToPx(img.heightEmu);
-      } else {
-        // Calculate from tl/br positions
-        const brLeft = img.brNativeCol < colCount
-          ? colPx[img.brNativeCol] + emuToPx(img.brNativeColOff ?? 0)
-          : colPx[colCount];
-        const brTop = img.brNativeRow < rowCount
-          ? rowPx[img.brNativeRow] + emuToPx(img.brNativeRowOff ?? 0)
-          : rowPx[rowCount];
-        width = Math.max(20, brLeft - (colPx[c] + emuToPx(img.colOffset)));
-        height = Math.max(20, brTop - (rowPx[r] + emuToPx(img.rowOffset)));
-      }
-
-      imageOverlays.push({ dataUrl: img.dataUrl, left, top, width: Math.max(20, width), height: Math.max(20, height) });
     }
 
     // ---- Build cell grid ----
@@ -431,8 +409,15 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
         const value = formatCellValue(cell);
         const style = extractStyle(cell);
         const merge = merges.get(key);
+        const images = cellImages.get(key);
 
-        row.push({ value, style, colspan: merge?.cs, rowspan: merge?.rs });
+        row.push({
+          value,
+          style,
+          colspan: merge?.cs,
+          rowspan: merge?.rs,
+          images: images && images.length > 0 ? images : undefined,
+        });
       }
       cellGrid.push(row);
     }
@@ -444,9 +429,8 @@ async function parseXlsx(base64Content: string): Promise<SheetData[]> {
       rowHeights,
       totalRows: rowCount,
       totalCols: colCount,
-      imageCount: images.length,
-      imageOverlays,
-    } as SheetData & { imageOverlays: typeof imageOverlays });
+      imageCount: totalImages,
+    });
   });
 
   return sheets;
@@ -468,7 +452,7 @@ const HEADER_ROW_HEIGHT = 22;
 const DEFAULT_ROW_HEIGHT = 22;
 
 export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
-  const [sheets, setSheets] = useState<(SheetData & { imageOverlays?: any[] })[]>([]);
+  const [sheets, setSheets] = useState<SheetData[]>([]);
   const [activeSheet, setActiveSheet] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -481,7 +465,7 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
     try {
       setLoading(true);
       const result = await parseXlsx(content);
-      setSheets(result as any);
+      setSheets(result);
     } catch (err) {
       console.error("XLSX parse error:", err);
       setError(err instanceof Error ? err.message : "Failed to parse spreadsheet");
@@ -515,7 +499,7 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
     const indices: number[] = [];
     const term = searchTerm.toLowerCase();
     currentSheet.cellGrid.forEach((row, idx) => {
-      if (row.some((cell) => cell && cell.value.toLowerCase().includes(term))) indices.push(idx);
+      if (row.some((cell) => cell && (cell.value.toLowerCase().includes(term) || cell.images?.some(img => true)))) indices.push(idx);
     });
     return indices;
   }, [currentSheet, searchTerm]);
@@ -556,12 +540,6 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
 
   const vPadTop = isSearch ? 0 : visibleRange.start * DEFAULT_ROW_HEIGHT;
   const vPadBottom = isSearch ? 0 : Math.max(0, (currentSheet?.totalRows || 0) - visibleRange.end) * DEFAULT_ROW_HEIGHT;
-
-  // Calculate total table width for image overlay container
-  const totalTableWidth = (currentSheet?.colWidths || []).reduce((a, b) => a + b, 0) + ROW_NUM_COL_WIDTH;
-  const totalTableHeight = (currentSheet?.rowHeights || []).reduce((a, b) => a + (b || DEFAULT_ROW_HEIGHT), 0) + HEADER_ROW_HEIGHT;
-
-  const imageOverlays = (currentSheet as any)?.imageOverlays || [];
 
   return (
     <div className="flex flex-col h-full">
@@ -613,98 +591,127 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
         </div>
       </div>
 
-      {/* Table with image overlay */}
+      {/* Table */}
       <div ref={scrollRef} className="flex-1 overflow-auto bg-gray-100" onScroll={handleScroll}>
         <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top left" }}>
-          {/* Container for table + image overlays */}
-          <div className="relative" style={{ width: totalTableWidth, minHeight: totalTableHeight }}>
-            {/* Image overlay layer - positioned absolutely over the table */}
-            {imageOverlays.length > 0 && (
-              <div className="absolute inset-0 pointer-events-none z-[5]" style={{ top: 0, left: 0 }}>
-                {imageOverlays.map((img: any, idx: number) => (
-                  <img
-                    key={idx}
-                    src={img.dataUrl}
-                    alt=""
-                    className="pointer-events-auto"
-                    style={{
-                      position: "absolute",
-                      left: img.left,
-                      top: img.top,
-                      width: img.width,
-                      height: img.height,
-                      objectFit: "contain",
-                    }}
-                    loading="lazy"
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Table */}
-            <table className="border-collapse bg-white" style={{ tableLayout: "fixed" }}>
-              <thead>
-                <tr>
+          <table className="border-collapse bg-white" style={{ tableLayout: "fixed" }}>
+            <thead>
+              <tr>
+                <th
+                  className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-normal select-none sticky top-0 z-20"
+                  style={{ width: ROW_NUM_COL_WIDTH, minWidth: ROW_NUM_COL_WIDTH }}
+                />
+                {currentSheet?.colWidths.map((w, i) => (
                   <th
+                    key={i}
                     className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-normal select-none sticky top-0 z-20"
-                    style={{ width: ROW_NUM_COL_WIDTH, minWidth: ROW_NUM_COL_WIDTH }}
-                  />
-                  {currentSheet?.colWidths.map((w, i) => (
-                    <th
-                      key={i}
-                      className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-normal select-none sticky top-0 z-20"
-                      style={{ width: w, minWidth: w }}
-                    >
-                      {colNumToLetter(i)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {vPadTop > 0 && (
-                  <tr><td colSpan={(currentSheet?.totalCols || 0) + 1} style={{ height: vPadTop, padding: 0, border: "none" }} /></tr>
-                )}
-                {renderedRows.map(({ row, originalIdx }) => {
-                  if (!row) return null;
-                  const rh = currentSheet?.rowHeights[originalIdx] || 0;
-                  return (
-                    <tr key={originalIdx} style={rh ? { height: rh } : undefined}>
-                      <td className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-mono select-none sticky left-0 z-10">
-                        {originalIdx + 1}
-                      </td>
-                      {row.map((cell, colIdx) => {
-                        if (!cell) return null;
-                        const cs = styleToCss(cell.style);
-                        const db = "1px solid #d1d5db";
-                        const fs: React.CSSProperties = {
-                          ...cs, padding: "1px 4px", overflow: "hidden", textOverflow: "ellipsis",
-                          whiteSpace: cs.whiteSpace || "nowrap", position: "relative",
-                          borderTop: cell.style.borderTop || db, borderRight: cell.style.borderRight || db,
-                          borderBottom: cell.style.borderBottom || db, borderLeft: cell.style.borderLeft || db,
-                          ...(rh ? { height: rh } : {}),
-                        };
-                        return (
-                          <td key={colIdx} style={fs} rowSpan={cell.rowspan || undefined} colSpan={cell.colspan || undefined}>
-                            {cell.value}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-                {displayRows.length === 0 && (
-                  <tr>
-                    <td colSpan={(currentSheet?.totalCols || 0) + 1} className="px-3 py-8 text-center text-muted-foreground bg-white border border-gray-300">
-                      {searchTerm ? "未找到匹配数据" : "无数据"}
+                    style={{ width: w, minWidth: w }}
+                  >
+                    {colNumToLetter(i)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {vPadTop > 0 && (
+                <tr><td colSpan={(currentSheet?.totalCols || 0) + 1} style={{ height: vPadTop, padding: 0, border: "none" }} /></tr>
+              )}
+              {renderedRows.map(({ row, originalIdx }) => {
+                if (!row) return null;
+                const rh = currentSheet?.rowHeights[originalIdx] || 0;
+
+                // Check if this row has any images (need to auto-expand row height)
+                const rowHasImages = row.some((cell) => cell?.images?.length);
+                // Calculate minimum row height needed for images
+                let imgMinHeight = 0;
+                if (rowHasImages) {
+                  for (const cell of row) {
+                    if (cell?.images) {
+                      for (const img of cell.images) {
+                        imgMinHeight = Math.max(imgMinHeight, img.naturalHeight || 60);
+                      }
+                    }
+                  }
+                }
+                const effectiveHeight = Math.max(rh, imgMinHeight + 8);
+
+                return (
+                  <tr key={originalIdx} style={effectiveHeight > 0 ? { height: effectiveHeight } : undefined}>
+                    <td className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-mono select-none sticky left-0 z-10">
+                      {originalIdx + 1}
                     </td>
+                    {row.map((cell, colIdx) => {
+                      if (!cell) return null;
+                      const cs = styleToCss(cell.style);
+                      const db = "1px solid #d1d5db";
+                      const fs: React.CSSProperties = {
+                        ...cs, padding: "1px 4px", overflow: "visible",
+                        whiteSpace: cs.whiteSpace || "nowrap", position: "relative",
+                        borderTop: cell.style.borderTop || db, borderRight: cell.style.borderRight || db,
+                        borderBottom: cell.style.borderBottom || db, borderLeft: cell.style.borderLeft || db,
+                      };
+
+                      const hasImages = cell.images && cell.images.length > 0;
+                      const cellContent = cell.value?.trim();
+
+                      return (
+                        <td key={colIdx} style={fs} rowSpan={cell.rowspan || undefined} colSpan={cell.colspan || undefined}>
+                          {hasImages ? (
+                            <div className="flex flex-wrap gap-1 items-center py-0.5" style={{ minHeight: 30 }}>
+                              {cell.images!.map((img, imgIdx) => {
+                                const imgCount = cell.images!.length;
+                                // If multiple images, scale each down so they fit side by side
+                                // Each image gets roughly 1/imgCount of the cell width
+                                const maxW = imgCount > 1
+                                  ? `calc(${Math.floor(100 / imgCount)}% - 4px)`
+                                  : "100%";
+                                return (
+                                  <img
+                                    key={imgIdx}
+                                    src={img.dataUrl}
+                                    alt=""
+                                    style={{
+                                      width: img.naturalWidth ? undefined : maxW,
+                                      height: "auto",
+                                      maxWidth: maxW,
+                                      objectFit: "contain",
+                                      display: "block",
+                                      // If single image and not too large, show at natural size
+                                      ...(imgCount === 1 && img.naturalWidth > 0 ? {
+                                        width: img.naturalWidth,
+                                        height: img.naturalHeight,
+                                        maxWidth: "100%",
+                                      } : {}),
+                                    }}
+                                    loading="lazy"
+                                  />
+                                );
+                              })}
+                              {cellContent && (
+                                <span className="text-xs text-muted-foreground ml-1">{cellContent}</span>
+                              )}
+                            </div>
+                          ) : (
+                            cell.value
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
-                )}
-                {vPadBottom > 0 && (
-                  <tr><td colSpan={(currentSheet?.totalCols || 0) + 1} style={{ height: vPadBottom, padding: 0, border: "none" }} /></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                );
+              })}
+              {displayRows.length === 0 && (
+                <tr>
+                  <td colSpan={(currentSheet?.totalCols || 0) + 1} className="px-3 py-8 text-center text-muted-foreground bg-white border border-gray-300">
+                    {searchTerm ? "未找到匹配数据" : "无数据"}
+                  </td>
+                </tr>
+              )}
+              {vPadBottom > 0 && (
+                <tr><td colSpan={(currentSheet?.totalCols || 0) + 1} style={{ height: vPadBottom, padding: 0, border: "none" }} /></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

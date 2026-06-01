@@ -240,3 +240,37 @@ Stage Summary:
 - Images are rendered as overlays at their exact Excel positions
 - Performance significantly improved with lazy loading and virtual scrolling
 - Supports 46+ images per sheet with correct positioning
+
+---
+Task ID: 7
+Agent: main
+Task: Fix Excel image display - show images at original/natural size instead of tiny EMU-calculated size
+
+Work Log:
+- Root cause: EMU anchor-based size calculation gave tiny sizes (~90x70px) or negative heights, while actual image natural dimensions are 257x253px
+- Discovered ExcelJS can report wrong extension (e.g., "jpeg" for PNG files) - need to check actual binary magic bytes
+- Complete rewrite of image rendering approach:
+  - Replaced overlay-based rendering with cell-embedded rendering
+  - Images are now embedded directly into their anchor cells
+  - No more complex EMU position calculations or absolute positioning issues
+- Added robust image dimension parser (parseImageDimensions):
+  - Detects actual format from magic bytes, not from ExcelJS extension metadata
+  - PNG: checks magic 89 50 4E 47, reads IHDR chunk (offset 16)
+  - JPEG: checks magic FF D8, finds SOF0-SOF15 markers (except C4/C8/CC)
+  - GIF: checks magic 47 49 46, reads dimensions at offset 6
+  - Successfully parses all 46 images (including mislabeled PNG→JPEG files)
+- Image display in cells:
+  - Single image: displayed at natural pixel dimensions (e.g., 257x253px)
+  - Multiple images in same cell: auto-scaled to fit side-by-side (each gets 1/N of cell width)
+  - Images use objectFit: "contain" to preserve aspect ratios
+  - Row height auto-expands to accommodate image dimensions
+- Removed old overlay rendering code (ImageInfo interface, EMU position calculations, absolute positioned image layer)
+- Simplified data structures: CellData now has `images: EmbeddedImage[]` instead of overlay data
+- Lint passes with no errors
+- Dev server running, pages loading correctly (HTTP 200)
+
+Stage Summary:
+- Excel images now display at their original/natural pixel dimensions (257x253 instead of 90x70)
+- Cell-embedded approach is more reliable than overlay positioning
+- Handles format mismatches (PNG stored as JPEG in Excel metadata)
+- Multiple images per cell auto-scale to fit side-by-side
