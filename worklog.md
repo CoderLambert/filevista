@@ -337,3 +337,29 @@ Stage Summary:
 - All medium-priority issues fixed: search debounce, number/date formatting, horizontal virtualization
 - All low-priority issues fixed: indexed colors, hyperlinks, comments
 - Excel preview now handles: cell values, styles, merges, images (with format detection), hyperlinks, comments, advanced number/date formats, indexed/theme colors
+
+---
+Task ID: 10
+Agent: main
+Task: Fix images displayed outside table - revert to cell-embedded approach with merge redirect
+
+Work Log:
+- User reported images floating outside the table cells instead of being inside them
+- Root cause: overlay-based approach calculated pixel positions that didn't match actual rendered table dimensions
+- Reverted to cell-embedded image approach where images are rendered inside their anchor cells
+- Key fix: added mergeRedirect map that redirects images on merged (non-top-left) cells to the top-left cell of the merge
+- This ensures all 46 images appear inside cells, including the 9 that were previously on merged cells
+- Images display at their natural dimensions (naturalWidth × naturalHeight) with maxWidth: 100%
+- Row heights auto-expand to accommodate image dimensions (imgMinHeight calculation)
+- Unsupported formats (EMF/WMF/TIFF) show inline placeholder with dashed border
+- Removed overlay-related code (OverlayImage interface, absolute positioning, image overlay div)
+- Simplified SheetData interface (removed accColWidths, overlayImages)
+- Kept all other optimizations: search debounce, number/date formatting, hyperlinks, comments, indexed colors, .xls warning
+- Lint passes with no errors
+- Dev server running correctly
+
+Stage Summary:
+- Images now render inside table cells as expected by user
+- Merge redirect ensures no images are lost (9 images on merged cells → redirected to merge top-left)
+- All 46 images correctly displayed within their respective cells
+- Natural dimensions preserved (257×253px JPEGs shown at actual size)
