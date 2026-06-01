@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { renderAsync } from "docx-preview";
 
 interface DocxPreviewProps {
   content: string; // base64 encoded
@@ -13,6 +12,7 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(0);
+  const mountedRef = useRef(true);
 
   const renderDocument = useCallback(async () => {
     if (!containerRef.current) return;
@@ -20,6 +20,11 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
     try {
       setLoading(true);
       setError(null);
+
+      // Dynamic import to avoid SSR issues — docx-preview uses browser-only APIs
+      const { renderAsync } = await import("docx-preview");
+
+      if (!mountedRef.current || !containerRef.current) return;
 
       // Decode base64 to ArrayBuffer
       const binaryString = atob(content);
@@ -48,6 +53,8 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
         renderEndnotes: true,
       });
 
+      if (!mountedRef.current || !containerRef.current) return;
+
       // Count pages
       const pages = containerRef.current.querySelectorAll(
         ".docx-wrapper > section"
@@ -55,43 +62,28 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
       setPageCount(pages.length);
     } catch (err) {
       console.error("Error rendering DOCX:", err);
-      setError(err instanceof Error ? err.message : "Failed to render document");
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : "Failed to render document");
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [content]);
 
   useEffect(() => {
+    mountedRef.current = true;
     renderDocument();
+    return () => {
+      mountedRef.current = false;
+    };
   }, [renderDocument]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        <p className="text-muted-foreground text-sm">Rendering document...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <p className="text-lg font-medium">Rendering Failed</p>
-        <p className="text-sm text-muted-foreground">{error}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full">
       {/* Document info bar */}
-      {pageCount > 0 && (
+      {pageCount > 0 && !loading && (
         <div className="px-4 py-1.5 border-b bg-muted/30 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
             {fileName}
@@ -102,10 +94,33 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
         </div>
       )}
 
-      {/* Document content */}
-      <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800/50">
+      {/* Document content — always rendered so containerRef is always available */}
+      <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800/50 relative">
         {/* docx-preview container styles */}
         <style dangerouslySetInnerHTML={{ __html: DOCX_PREVIEW_STYLES }} />
+
+        {/* Loading overlay */}
+        {loading && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800/50">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <p className="text-muted-foreground text-sm mt-3">Rendering document...</p>
+          </div>
+        )}
+
+        {/* Error overlay */}
+        {error && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800/50 text-destructive gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p className="text-lg font-medium">Rendering Failed</p>
+            <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+          </div>
+        )}
+
+        {/* Render target — always in DOM so ref is always available */}
         <div
           ref={containerRef}
           className="docx-preview-container"

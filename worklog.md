@@ -40,3 +40,26 @@ Stage Summary:
 - Heading colors, fonts, layout, pagination, images, headers/footers now fully preserved
 - mammoth retained only for legacy .doc format text extraction
 - Package: docx-preview@0.3.7 added (~74KB gzip)
+
+---
+Task ID: 3
+Agent: main
+Task: Fix DOCX preview infinite "Rendering document..." loading bug
+
+Work Log:
+- Investigated user report: clicking demo.docx shows "Rendering document..." forever
+- Found root cause: React ref timing bug — when `loading` state is `true`, the component renders a spinner instead of the container div with `containerRef`, so `containerRef.current` is `null` when `renderDocument()` runs in `useEffect`, causing it to silently return without ever rendering
+- Also found: `docx-preview` is a browser-only library that was imported statically at top level, causing potential SSR issues in Next.js
+- Fixed DocxPreview.tsx:
+  1. Changed from static `import { renderAsync } from "docx-preview"` to dynamic `await import("docx-preview")` inside the render function
+  2. Changed from conditional rendering (spinner OR container) to always-render-container with overlay approach — container is always in DOM so ref is always available
+  3. Added `mountedRef` to prevent state updates after unmount
+- Added `serverExternalPackages: ["docx-preview"]` to next.config.ts
+- Updated docs/preview-modules/docx/README.md with SSR compatibility notes and the key pitfall
+- Tested with agent-browser: demo.docx now renders correctly showing document content with table
+
+Stage Summary:
+- DOCX preview now works: renders document with text ("Above", "Below") and 2x2 table
+- Key fix: always-render-container pattern prevents ref null issue
+- Dynamic import prevents SSR module loading issues
+- Docs updated with SSR compatibility section

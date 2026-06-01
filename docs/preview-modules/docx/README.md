@@ -131,6 +131,16 @@ await renderAsync(arrayBuffer, container, undefined, {
 }
 ```
 
+### SSR 兼容性处理
+
+`docx-preview` 是纯浏览器端库（依赖 DOM API），在 Next.js 中需特殊处理：
+
+1. **动态导入**：使用 `await import("docx-preview")` 而非顶层静态导入，避免 SSR 阶段加载浏览器模块
+2. **容器常驻 DOM**：将 `containerRef` 所在的 `<div>` 始终渲染在 DOM 中（通过 overlay 方式显示 loading/error），而非条件渲染切换，确保 `useEffect` 触发时 `containerRef.current` 不为 null
+3. **serverExternalPackages**：在 `next.config.ts` 中将 `docx-preview` 加入 `serverExternalPackages`，防止服务端尝试打包该模块
+
+> ⚠️ **关键坑点**：若 loading 状态使用条件渲染（`if (loading) return <Spinner/>`），则 `containerRef` 在 loading 期间不在 DOM 中，`renderAsync` 无法找到容器，导致永远卡在 "Rendering document..."。
+
 ### 已知限制
 - 复杂 SmartArt 图形可能不完整
 - 嵌入式对象（OLE）不渲染
