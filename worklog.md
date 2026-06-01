@@ -63,3 +63,47 @@ Stage Summary:
 - Key fix: always-render-container pattern prevents ref null issue
 - Dynamic import prevents SSR module loading issues
 - Docs updated with SSR compatibility section
+
+---
+Task ID: 4
+Agent: main
+Task: Replace react-syntax-highlighter with Shiki for code preview optimization
+
+Work Log:
+- Evaluated Shiki vs highlight.js vs react-syntax-highlighter for code syntax highlighting
+- Shiki wins: VS Code-level fidelity, native lazy loading, CSS variable dual themes, no WASM needed
+- Installed shiki@4.1.0 + @shikijs/langs@4.1.0 + @shikijs/themes@4.1.0 + @shikijs/transformers@4.1.0
+- Created src/lib/shiki.ts: singleton highlighter with createBundledHighlighter + createSingletonShorthands
+  - 50+ languages as separate dynamic imports (each is its own async chunk)
+  - 2 themes (github-light, github-dark) for dual theme support
+  - createJavaScriptRegexEngine() eliminates WASM dependency (226KB gzip saved)
+  - transformerLineNumbers() adds data-line attributes for CSS line number display
+  - getShikiLanguage() maps 50+ file extensions to Shiki language IDs
+- Rewrote CodePreview.tsx:
+  - Uses codeToHtml() from shiki.ts with dual themes (CSS variables)
+  - defaultColor: false outputs --shiki-light/--shiki-dark CSS vars
+  - CSS-based theme switching (no re-render needed for light/dark toggle)
+  - Toolbar with language badge, line count, word wrap toggle, copy button
+  - Plain text fallback when highlighting fails
+  - Loading state while Shiki core + language chunk loads
+- Updated FilePreviewRenderer.tsx:
+  - React.lazy() for CodePreview — zero Shiki code loaded until user opens a code file
+  - Suspense fallback with loading spinner
+- Removed react-syntax-highlighter and @types/react-syntax-highlighter
+- Removed old code-languages.ts (replaced by shiki.ts)
+- Tested with agent-browser:
+  - example.ts: renders with VS Code-quality syntax highlighting, line numbers, toolbar
+  - package.json: JSON formatted + highlighted correctly
+  - README.md: Markdown preview still works (doesn't depend on react-syntax-highlighter)
+- Updated docs:
+  - docs/preview-modules/json-code/README.md: complete rewrite with Shiki architecture
+  - docs/tech-stack/README.md: updated dependency list and bundle sizes
+
+Stage Summary:
+- Code preview upgraded from react-syntax-highlighter → Shiki
+- First code file load: ~49KB gzip (core + 1 lang + 2 themes, all lazy)
+- Subsequent languages: +4-20KB gzip each (on demand)
+- Non-code files: 0KB Shiki loaded (React.lazy)
+- Dual theme support: CSS variable switching, no re-render needed
+- No WASM dependency (JS RegExp engine used instead)
+- VS Code-level rendering quality with TextMate grammars

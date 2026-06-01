@@ -31,7 +31,11 @@
 | jszip | 3.10.1 | ZIP/EPUB/PPTX | ZIP 解压缩、二进制文件提取 |
 | react-markdown | 10.1.0 | Markdown | Markdown → React 渲染 |
 | remark-gfm | 4.0.1 | Markdown | GFM 扩展（表格/任务列表/删除线） |
-| react-syntax-highlighter | 15.6.1 | 代码 | Prism 语法高亮引擎 |
+| react-syntax-highlighter | 15.6.1 | 代码 | Prism 语法高亮引擎（已移除） |
+| shiki | 4.1.0 | 代码 | VS Code 级语法高亮（懒加载） |
+| @shikijs/langs | 4.1.0 | 代码 | 50+ 语言按需加载 |
+| @shikijs/themes | 4.1.0 | 代码 | GitHub Dark/Light 双主题 |
+| @shikijs/transformers | 4.1.0 | 代码 | 行号等 Transformer |
 
 ## 数据与状态
 
@@ -88,7 +92,7 @@ page.tsx
         ├── EpubPreview ←── jszip
         ├── ZipPreview ←── jszip
         ├── MarkdownPreview ←── react-markdown + remark-gfm
-        ├── CodePreview ←── react-syntax-highlighter
+        ├── CodePreview ←── shiki (React.lazy 懒加载)
         ├── ImagePreview ←── HTML5 (Object URL)
         ├── VideoPreview ←── HTML5 (Object URL)
         ├── AudioPreview ←── HTML5 (Object URL)
@@ -105,7 +109,8 @@ page.tsx
 |---|------------|-----------|
 | pdfjs-dist | ~800KB | PDF 必需 |
 | exceljs | ~400KB | Excel 必需 |
-| react-syntax-highlighter | ~200KB | 代码高亮必需 |
+| shiki/core + JS engine | ~25KB (首屏 0KB，懒加载) | 代码高亮（按需） |
+| @shikijs/langs/* | 4-20KB/语言 (懒加载) | 语法定义（按需） |
 | docx-preview | ~74KB | DOCX 高保真渲染 |
 | mammoth | ~100KB | DOC 旧格式文本提取 |
 | jszip | ~50KB | ZIP/EPUB/PPTX 必需 |

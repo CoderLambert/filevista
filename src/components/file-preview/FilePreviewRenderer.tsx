@@ -1,9 +1,9 @@
 "use client";
 
+import { lazy, Suspense } from "react";
 import { FileInfo, FileType } from "./utils";
 import { PdfPreview } from "./PdfPreview";
 import { MarkdownPreview } from "./MarkdownPreview";
-import { CodePreview } from "./CodePreview";
 import { DocxPreview } from "./DocxPreview";
 import { DocPreview } from "./DocPreview";
 import { PptxPreview } from "./PptxPreview";
@@ -18,6 +18,11 @@ import { TextPreview } from "./TextPreview";
 import { CsvPreview } from "./CsvPreview";
 import { VideoPreview } from "./VideoPreview";
 import { AudioPreview } from "./AudioPreview";
+
+// Lazy load CodePreview — Shiki + all language grammars only load when needed
+const CodePreview = lazy(() =>
+  import("./CodePreview").then((m) => ({ default: m.CodePreview }))
+);
 
 interface FilePreviewRendererProps {
   file: FileInfo;
@@ -40,6 +45,17 @@ function UnsupportedPreview({ fileType }: { fileType: FileType }) {
   );
 }
 
+function PreviewLoading() {
+  return (
+    <div className="flex items-center justify-center h-full min-h-[300px]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+        <p className="text-xs text-muted-foreground">Loading preview...</p>
+      </div>
+    </div>
+  );
+}
+
 export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
   switch (file.fileType) {
     case "pdf":
@@ -58,14 +74,18 @@ export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
 
     case "json":
       return file.content ? (
-        <CodePreview content={file.content} fileName={file.name} isJson />
+        <Suspense fallback={<PreviewLoading />}>
+          <CodePreview content={file.content} fileName={file.name} isJson />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="json" />
       );
 
     case "code":
       return file.content ? (
-        <CodePreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <CodePreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="code" />
       );
