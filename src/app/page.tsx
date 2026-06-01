@@ -35,6 +35,7 @@ const FILE_TYPE_ICONS: Record<FileType, string> = {
   json: "🔧",
   code: "💻",
   docx: "📃",
+  pptx: "📊",
   image: "🖼️",
   text: "📄",
   csv: "📊",
@@ -53,7 +54,7 @@ export default function Home() {
 
   const processFile = useCallback(async (file: File): Promise<FileInfo> => {
     const fileType = detectFileType(file.name, file.type);
-    const isBinary = ["pdf", "docx", "image", "video", "audio"].includes(
+    const isBinary = ["pdf", "docx", "pptx", "image", "video", "audio"].includes(
       fileType
     );
 
@@ -62,8 +63,8 @@ export default function Home() {
 
     if (isBinary) {
       url = URL.createObjectURL(file);
-      if (fileType === "docx") {
-        // Also read as base64 for docx
+      if (fileType === "docx" || fileType === "pptx") {
+        // Also read as base64 for docx/pptx
         content = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = () => {
@@ -446,6 +447,7 @@ export default function Home() {
                       "JSON",
                       "Code",
                       "DOCX",
+                      "PPT",
                       "Images",
                       "CSV",
                       "Text",

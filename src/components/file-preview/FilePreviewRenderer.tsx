@@ -10,6 +10,7 @@ import { TextPreview } from "./TextPreview";
 import { CsvPreview } from "./CsvPreview";
 import { VideoPreview } from "./VideoPreview";
 import { AudioPreview } from "./AudioPreview";
+import { PptxPreview } from "./PptxPreview";
 
 interface FilePreviewRendererProps {
   file: FileInfo;
@@ -67,6 +68,13 @@ export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
         <DocxPreview content={file.content} fileName={file.name} />
       ) : (
         <UnsupportedPreview fileType="docx" />
+      );
+
+    case "pptx":
+      return file.content ? (
+        <PptxPreview content={file.content} fileName={file.name} />
+      ) : (
+        <UnsupportedPreview fileType="pptx" />
       );
 
     case "image":

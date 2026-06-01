@@ -15,6 +15,7 @@ A modern, feature-rich file preview application built with **Next.js** and **sha
 | JSON | \`.json\` | Auto-formatting & syntax highlighting |
 | Code | \`.js\`, \`.ts\`, \`.py\`, etc. | 30+ languages with line numbers |
 | Word | \`.docx\` | HTML conversion with styling |
+| PPT | \`.pptx\`, \`.ppt\` | Slide parsing with navigation |
 | Images | \`.png\`, \`.jpg\`, \`.svg\`, etc. | Zoom, rotate, reset |
 | CSV | \`.csv\` | Sortable table with search |
 | Text | \`.txt\`, \`.log\`, \`.env\` | Line numbers, word wrap |

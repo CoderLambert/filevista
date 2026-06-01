@@ -32,8 +32,41 @@ Work Log:
 - Dev server running on port 3000, serving pages correctly
 
 Stage Summary:
-- Complete file preview website built with support for PDF, Markdown, JSON, Code, DOCX, Images, CSV, Text, Video, Audio
+- Complete file preview website built with support for PDF, Markdown, JSON, Code, DOCX, PPT, Images, CSV, Text, Video, Audio
 - All processing happens locally in the browser (privacy-first)
 - Default demo files included for initial exploration
 - Responsive design with sidebar on desktop, tabs on mobile
 - Professional UI with shadcn/ui components and Tailwind CSS
+
+---
+Task ID: 2
+Agent: main
+Task: Add PPT/PPTX file preview support
+
+Work Log:
+- Added "pptx" to FileType union in utils.ts
+- Added PPTX/PPT detection in detectFileType (handles .pptx, .ppt, and relevant MIME types)
+- Added PPTX color styling and label in getFileTypeColor/getFileTypeLabel
+- Installed jszip as direct dependency for PPTX parsing
+- Created PptxPreview.tsx component with:
+  - JSZip-based PPTX file parsing (extracts slides from ZIP structure)
+  - Text extraction from OOXML slide XML (paragraphs, runs, formatting)
+  - Image extraction from slide relationships and embedded media
+  - Slide view mode with current slide + thumbnail strip navigation
+  - Grid view mode showing all slides as cards
+  - Previous/Next slide navigation controls
+  - Slide counter (e.g. "3 / 12 slides")
+- Integrated PptxPreview into FilePreviewRenderer.tsx
+- Updated page.tsx:
+  - Added pptx icon (📊) in FILE_TYPE_ICONS
+  - Added "pptx" to binary file handling (base64 content + object URL)
+  - Added "PPT" to supported formats badges in empty state
+- Updated demos.ts README table to include PPT format
+- Lint passes with no errors
+- Dev server running, pages loading correctly (HTTP 200)
+
+Stage Summary:
+- PPTX support fully implemented with slide parsing, text extraction, image display, and dual view modes
+- Supports .pptx and .ppt file extensions
+- Client-side only processing using JSZip to parse the OOXML ZIP structure
+- Professional slide navigation UI with slide/grid view toggle
