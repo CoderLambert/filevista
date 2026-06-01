@@ -200,3 +200,43 @@ Stage Summary:
 - Supports: cell styles (font, fill, borders, alignment), merged cells, column widths, row heights, number formats
 - Much more accurate representation of the original Excel file appearance
 - Chinese language UI for better user experience
+
+---
+Task ID: 6
+Agent: main
+Task: Add image support to XLSX preview + optimize performance to reduce lag
+
+Work Log:
+- Analyzed the user's xlsx file (禁寄限寄物品清单V2.1.xlsx):
+  - Sheet "常见禁寄品类目" has 46 embedded JPEG images in column F
+  - Images are small product category icons (~90x70px each)
+  - Multiple images per cell row (3 images per row group)
+  - Images are anchored using two-corner positioning (tl/br nativeRow/nativeCol + EMU offsets)
+- Added image extraction using ExcelJS getImages() API:
+  - Extracts image binary data from workbook.getImage(imageId)
+  - Handles Buffer/ArrayBuffer/Uint8Array/base64 formats
+  - Converts to data URL for inline rendering
+  - Calculates pixel positions from EMU offsets (1 EMU = 1/9525 px at 96 DPI)
+  - Uses cumulative column widths and row heights for accurate positioning
+- Implemented image overlay rendering:
+  - Images float above the table using absolute positioning (matching Excel behavior)
+  - Positioned using calculated pixel coordinates from anchor cells + offsets
+  - Lazy-loaded images with loading="lazy"
+  - objectFit: "contain" to preserve aspect ratios
+- Performance optimizations:
+  - Lazy-loaded ExcelJS module (only imported when XLSX file is opened)
+  - Virtual scrolling: only renders visible rows + buffer (reduces DOM nodes from thousands to ~80)
+  - Scroll event handler for dynamic visible range updates
+  - Reduced default visible range from all rows to 60 rows initially
+- Fixed merge cell parsing:
+  - Added fallback from _merges to model.merges (string format "A1:F1")
+  - Handles both numeric model format and string range format
+- Added image count display in toolbar ("46 张图片")
+- Lint passes with no errors
+- Dev server running, pages loading correctly (HTTP 200)
+
+Stage Summary:
+- Excel files with embedded images now display those images correctly
+- Images are rendered as overlays at their exact Excel positions
+- Performance significantly improved with lazy loading and virtual scrolling
+- Supports 46+ images per sheet with correct positioning
