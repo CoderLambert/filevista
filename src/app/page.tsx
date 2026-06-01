@@ -37,6 +37,12 @@ const FILE_TYPE_ICONS: Record<FileType, string> = {
   docx: "📃",
   doc: "📃",
   pptx: "📊",
+  xlsx: "📗",
+  html: "🌐",
+  zip: "📦",
+  svg: "🎨",
+  rtf: "📃",
+  epub: "📖",
   image: "🖼️",
   text: "📄",
   csv: "📊",
@@ -55,7 +61,7 @@ export default function Home() {
 
   const processFile = useCallback(async (file: File): Promise<FileInfo> => {
     const fileType = detectFileType(file.name, file.type);
-    const isBinary = ["pdf", "docx", "doc", "pptx", "image", "video", "audio"].includes(
+    const isBinary = ["pdf", "docx", "doc", "pptx", "xlsx", "zip", "epub", "image", "video", "audio"].includes(
       fileType
     );
 
@@ -63,8 +69,8 @@ export default function Home() {
     let url: string | null = null;
 
     if (isBinary) {
-      // For PDF, DOC, DOCX, PPTX we need base64 content for processing
-      const needsBase64 = ["pdf", "docx", "doc", "pptx"].includes(fileType);
+      // For PDF, DOC, DOCX, PPTX, XLSX, ZIP, EPUB we need base64 content for processing
+      const needsBase64 = ["pdf", "docx", "doc", "pptx", "xlsx", "zip", "epub"].includes(fileType);
       // For images, video, audio we need object URL for display
       const needsUrl = ["image", "video", "audio"].includes(fileType);
 
@@ -457,6 +463,12 @@ export default function Home() {
                       "DOC",
                       "DOCX",
                       "PPT",
+                      "Excel",
+                      "HTML",
+                      "ZIP",
+                      "SVG",
+                      "RTF",
+                      "EPUB",
                       "Images",
                       "CSV",
                       "Text",

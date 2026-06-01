@@ -109,3 +109,58 @@ Stage Summary:
 - PDF files now rendered via pdfjs-dist canvas (no Chrome blocking)
 - PDF features: page navigation, zoom, rotation, download
 - DOC features: text extraction, warning about format limitations, download fallback
+
+---
+Task ID: 4
+Agent: main
+Task: Add 6 new file type previews (Excel, HTML, ZIP, SVG, RTF, EPUB)
+
+Work Log:
+- Updated utils.ts with 6 new FileType entries: xlsx, html, zip, svg, rtf, epub
+- Added detection logic for each new type with extensions and MIME types
+- Added color styling and labels for all new types
+- Created XlsxPreview.tsx:
+  - JSZip-based .xlsx parsing (shared strings, workbook, worksheets)
+  - Multi-sheet support with tab navigation
+  - Sortable/searchable table view
+  - Column letter headers (A, B, C...) for unnamed columns
+- Created HtmlPreview.tsx:
+  - Sandboxed iframe rendering (preview mode)
+  - Raw source code view with toggle
+  - Eye/Code toolbar buttons
+- Created ZipPreview.tsx:
+  - JSZip-based archive content listing
+  - File tree with depth indentation
+  - Context-aware file icons based on extension
+  - Summary bar (folder count, file count, total size)
+- Created SvgPreview.tsx:
+  - Three view modes: Preview, Split, Code
+  - Zoom/rotate controls for rendered view
+  - Copy button for code view
+  - Checkerboard background for transparency
+- Created RtfPreview.tsx:
+  - RTF text extraction (strips control words, braces, metadata)
+  - Paragraph-based display with title detection
+  - Clean document-style rendering
+- Created EpubPreview.tsx:
+  - JSZip-based EPUB parsing (container.xml → content.opf → spine)
+  - Chapter extraction with title detection
+  - Chapter navigation bar with tab buttons
+  - Previous/Next chapter navigation
+  - Book metadata display (title, author)
+- Updated FilePreviewRenderer.tsx with all 6 new cases
+- Updated page.tsx:
+  - Added icons for all new types (📗🌐📦🎨📃📖)
+  - Extended binary file handling (xlsx, zip, epub use base64)
+  - Added all new types to supported formats badges
+- Lint passes with no errors
+- Dev server running, pages loading correctly (HTTP 200)
+
+Stage Summary:
+- 6 new file types added, total now 18 supported types
+- Excel: full sheet parsing with multi-sheet, sort, search
+- HTML: sandboxed preview + source toggle
+- ZIP: file tree listing with icons and sizes
+- SVG: 3-way view (preview/split/code) with zoom/rotate
+- RTF: text extraction from rich text format
+- EPUB: chapter-based e-book reading with navigation

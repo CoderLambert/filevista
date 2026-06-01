@@ -6,6 +6,12 @@ export type FileType =
   | "docx"
   | "doc"
   | "pptx"
+  | "xlsx"
+  | "html"
+  | "zip"
+  | "svg"
+  | "rtf"
+  | "epub"
   | "image"
   | "text"
   | "csv"
@@ -40,7 +46,6 @@ const CODE_EXTENSIONS: Record<string, string> = {
   swift: "swift",
   kt: "kotlin",
   scala: "scala",
-  html: "html",
   css: "css",
   scss: "scss",
   less: "less",
@@ -48,9 +53,6 @@ const CODE_EXTENSIONS: Record<string, string> = {
   sh: "bash",
   bash: "bash",
   zsh: "bash",
-  yml: "yaml",
-  yaml: "yaml",
-  xml: "xml",
   toml: "toml",
   ini: "ini",
   dockerfile: "dockerfile",
@@ -68,7 +70,6 @@ const IMAGE_EXTENSIONS = new Set([
   "jpeg",
   "gif",
   "bmp",
-  "svg",
   "webp",
   "ico",
   "avif",
@@ -120,7 +121,39 @@ export function detectFileType(filename: string, mimeType: string): FileType {
   )
     return "pptx";
 
-  // Images
+  // XLSX / XLS
+  if (
+    ext === "xlsx" ||
+    ext === "xls" ||
+    mimeType ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    mimeType === "application/vnd.ms-excel"
+  )
+    return "xlsx";
+
+  // HTML
+  if (["html", "htm", "xhtml"].includes(ext) || mimeType === "text/html")
+    return "html";
+
+  // SVG (separate from other images for enhanced preview)
+  if (ext === "svg" || mimeType === "image/svg+xml") return "svg";
+
+  // ZIP archives
+  if (
+    ext === "zip" ||
+    mimeType === "application/zip" ||
+    mimeType === "application/x-zip-compressed"
+  )
+    return "zip";
+
+  // RTF
+  if (ext === "rtf" || mimeType === "application/rtf" || mimeType === "text/rtf")
+    return "rtf";
+
+  // EPUB
+  if (ext === "epub" || mimeType === "application/epub+zip") return "epub";
+
+  // Images (non-SVG)
   if (IMAGE_EXTENSIONS.has(ext) || mimeType.startsWith("image/")) return "image";
 
   // Videos
@@ -129,10 +162,13 @@ export function detectFileType(filename: string, mimeType: string): FileType {
   // Audio
   if (AUDIO_EXTENSIONS.has(ext) || mimeType.startsWith("audio/")) return "audio";
 
-  // Code files
+  // Code files (check after HTML since .html/.vue/.svelte should be "html" type)
   if (CODE_EXTENSIONS[ext]) return "code";
   if (["Dockerfile", "Makefile", "Gemfile", "Rakefile"].includes(baseName))
     return "code";
+
+  // YAML / XML get their own code highlighting but are still "code" type
+  if (["yml", "yaml", "xml"].includes(ext)) return "code";
 
   // Text files
   if (
@@ -155,7 +191,18 @@ export function detectFileType(filename: string, mimeType: string): FileType {
 
 export function getLanguageFromFilename(filename: string): string {
   const ext = getFileExtension(filename);
-  return CODE_EXTENSIONS[ext] || "text";
+  // Include HTML/Vue/Svelte here since they use code highlighter
+  const codeExts: Record<string, string> = {
+    ...CODE_EXTENSIONS,
+    html: "html",
+    htm: "html",
+    yml: "yaml",
+    yaml: "yaml",
+    xml: "xml",
+    vue: "html",
+    svelte: "html",
+  };
+  return codeExts[ext] || "text";
 }
 
 export function formatFileSize(bytes: number): string {
@@ -175,6 +222,12 @@ export function getFileTypeColor(fileType: FileType): string {
     docx: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
     doc: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
     pptx: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    xlsx: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    html: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+    zip: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    svg: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
+    rtf: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
+    epub: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
     image: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
     text: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
     csv: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
@@ -194,6 +247,12 @@ export function getFileTypeLabel(fileType: FileType): string {
     docx: "Word",
     doc: "Word",
     pptx: "PPT",
+    xlsx: "Excel",
+    html: "HTML",
+    zip: "ZIP",
+    svg: "SVG",
+    rtf: "RTF",
+    epub: "EPUB",
     image: "Image",
     text: "Text",
     csv: "CSV",

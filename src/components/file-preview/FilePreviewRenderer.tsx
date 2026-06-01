@@ -6,12 +6,18 @@ import { MarkdownPreview } from "./MarkdownPreview";
 import { CodePreview } from "./CodePreview";
 import { DocxPreview } from "./DocxPreview";
 import { DocPreview } from "./DocPreview";
+import { PptxPreview } from "./PptxPreview";
+import { XlsxPreview } from "./XlsxPreview";
+import { HtmlPreview } from "./HtmlPreview";
+import { ZipPreview } from "./ZipPreview";
+import { SvgPreview } from "./SvgPreview";
+import { RtfPreview } from "./RtfPreview";
+import { EpubPreview } from "./EpubPreview";
 import { ImagePreview } from "./ImagePreview";
 import { TextPreview } from "./TextPreview";
 import { CsvPreview } from "./CsvPreview";
 import { VideoPreview } from "./VideoPreview";
 import { AudioPreview } from "./AudioPreview";
-import { PptxPreview } from "./PptxPreview";
 
 interface FilePreviewRendererProps {
   file: FileInfo;
@@ -83,6 +89,48 @@ export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
         <PptxPreview content={file.content} fileName={file.name} />
       ) : (
         <UnsupportedPreview fileType="pptx" />
+      );
+
+    case "xlsx":
+      return file.content ? (
+        <XlsxPreview content={file.content} fileName={file.name} />
+      ) : (
+        <UnsupportedPreview fileType="xlsx" />
+      );
+
+    case "html":
+      return file.content ? (
+        <HtmlPreview content={file.content} fileName={file.name} />
+      ) : (
+        <UnsupportedPreview fileType="html" />
+      );
+
+    case "zip":
+      return file.content ? (
+        <ZipPreview content={file.content} fileName={file.name} />
+      ) : (
+        <UnsupportedPreview fileType="zip" />
+      );
+
+    case "svg":
+      return file.content ? (
+        <SvgPreview content={file.content} fileName={file.name} />
+      ) : (
+        <UnsupportedPreview fileType="svg" />
+      );
+
+    case "rtf":
+      return file.content ? (
+        <RtfPreview content={file.content} fileName={file.name} />
+      ) : (
+        <UnsupportedPreview fileType="rtf" />
+      );
+
+    case "epub":
+      return file.content ? (
+        <EpubPreview content={file.content} fileName={file.name} />
+      ) : (
+        <UnsupportedPreview fileType="epub" />
       );
 
     case "image":
