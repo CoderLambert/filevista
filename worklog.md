@@ -164,3 +164,39 @@ Stage Summary:
 - SVG: 3-way view (preview/split/code) with zoom/rotate
 - RTF: text extraction from rich text format
 - EPUB: chapter-based e-book reading with navigation
+
+---
+Task ID: 5
+Agent: main
+Task: Improve Excel (XLSX) preview for faithful rendering - restore original formatting
+
+Work Log:
+- Installed exceljs@4.4.0 for comprehensive XLSX parsing (replaces custom JSZip XML parser)
+- Completely rewrote XlsxPreview.tsx with ExcelJS integration:
+  - Full cell value formatting (numbers, dates, percentages, currency, rich text, formulas, hyperlinks)
+  - Font style extraction (family, size, bold, italic, underline, color)
+  - Fill/background color extraction (ARGB, theme colors with tint support)
+  - Border extraction (style + color for top/right/bottom/left)
+  - Cell alignment extraction (horizontal, vertical, wrap text, text rotation)
+  - Merged cell support (rowspan/colspan via HTML table attributes)
+  - Column width mapping (character units → pixels)
+  - Row height mapping
+  - Theme color resolution (Office theme palette with tint adjustment)
+  - Number format handling (dates, percentages, currency, fixed decimal, thousands separator)
+- Updated UI:
+  - Chinese language labels (搜索, 正在解析表格, etc.)
+  - Zoom controls (50%-200%)
+  - Column letter headers (A, B, C...) with proper widths
+  - Row number column (sticky left)
+  - Row count and column count display
+  - Excel-like grid appearance (gray background, white table, gray headers)
+  - Default thin borders for cells without explicit borders
+- Removed unused imports (ArrowUpDown, Download, etc.)
+- Lint passes with no errors
+- Dev server running, pages loading correctly (HTTP 200)
+
+Stage Summary:
+- Excel preview now uses ExcelJS for faithful rendering instead of basic JSZip XML parsing
+- Supports: cell styles (font, fill, borders, alignment), merged cells, column widths, row heights, number formats
+- Much more accurate representation of the original Excel file appearance
+- Chinese language UI for better user experience
