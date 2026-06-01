@@ -27,7 +27,7 @@ import {
   FileType,
 } from "@/components/file-preview/utils";
 import { FilePreviewRenderer } from "@/components/file-preview/FilePreviewRenderer";
-import { DEMO_FILES } from "@/components/file-preview/demos";
+import { DEMO_FILES, fetchBinaryDemoFiles } from "@/components/file-preview/demos";
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
   pdf: "📄",
@@ -147,21 +147,46 @@ export default function Home() {
     [activeFileId]
   );
 
-  const loadDemoFiles = useCallback(() => {
-    const demoInfos: FileInfo[] = Object.entries(DEMO_FILES).map(
-      ([, demo]) => ({
+  const [loadingDemo, setLoadingDemo] = useState(false);
+
+  const loadDemoFiles = useCallback(async () => {
+    setLoadingDemo(true);
+    try {
+      // Load text-based demos
+      const textDemos: FileInfo[] = Object.entries(DEMO_FILES).map(
+        ([, demo]) => ({
+          id: generateId(),
+          name: demo.name,
+          size: new Blob([demo.content]).size,
+          type: demo.type,
+          fileType: detectFileType(demo.name, demo.type),
+          content: demo.content,
+          url: null,
+        })
+      );
+
+      // Load binary demos (EPUB, XLSX, DOCX) from public directory
+      const binaryDemos = await fetchBinaryDemoFiles();
+      const binaryInfos: FileInfo[] = binaryDemos.map((demo) => ({
         id: generateId(),
         name: demo.name,
-        size: new Blob([demo.content]).size,
+        size: demo.size,
         type: demo.type,
         fileType: detectFileType(demo.name, demo.type),
         content: demo.content,
         url: null,
-      })
-    );
-    setFiles(demoInfos);
-    setActiveFileId(demoInfos[0].id);
-    toast.success("Demo files loaded!");
+      }));
+
+      const allDemos = [...textDemos, ...binaryInfos];
+      setFiles(allDemos);
+      setActiveFileId(allDemos[0].id);
+      toast.success(`Loaded ${allDemos.length} demo files!`);
+    } catch (err) {
+      console.error("Failed to load demo files:", err);
+      toast.error("Failed to load demo files");
+    } finally {
+      setLoadingDemo(false);
+    }
   }, []);
 
   const clearAllFiles = useCallback(() => {
@@ -231,9 +256,14 @@ export default function Home() {
               variant="outline"
               size="sm"
               onClick={loadDemoFiles}
+              disabled={loadingDemo}
               className="gap-1.5 text-xs h-8"
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              {loadingDemo ? (
+                <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5" />
+              )}
               Demo Files
             </Button>
             {files.length > 0 && (
@@ -442,9 +472,14 @@ export default function Home() {
                   <Button
                     variant="outline"
                     onClick={loadDemoFiles}
+                    disabled={loadingDemo}
                     className="gap-2"
                   >
-                    <Sparkles className="h-4 w-4" />
+                    {loadingDemo ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
                     Load Demo Files
                   </Button>
                 </div>

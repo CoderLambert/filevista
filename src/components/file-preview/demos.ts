@@ -1,3 +1,4 @@
+// ── Text-based demo files (inline content) ──
 export const DEMO_FILES: Record<string, { name: string; content: string; type: string }> = {
   "readme.md": {
     name: "README.md",
@@ -16,6 +17,8 @@ A modern, feature-rich file preview application built with **Next.js** and **sha
 | Code | \`.js\`, \`.ts\`, \`.py\`, etc. | 30+ languages with line numbers |
 | Word | \`.docx\` | HTML conversion with styling |
 | PPT | \`.pptx\`, \`.ppt\` | Slide parsing with navigation |
+| Excel | \`.xlsx\` | Full fidelity with styles, merges & images |
+| EPUB | \`.epub\` | Chapter navigation, TOC & images |
 | Images | \`.png\`, \`.jpg\`, \`.svg\`, etc. | Zoom, rotate, reset |
 | CSV | \`.csv\` | Sortable table with search |
 | Text | \`.txt\`, \`.log\`, \`.env\` | Line numbers, word wrap |
@@ -32,6 +35,8 @@ A modern, feature-rich file preview application built with **Next.js** and **sha
 
 - 🚀 **Zero upload** — All processing happens locally in your browser
 - 🎨 **Syntax highlighting** — Beautiful code rendering for 30+ languages
+- 📊 **Excel preview** — Full fidelity with styles, merged cells & images
+- 📖 **EPUB reader** — Chapter navigation, TOC sidebar & embedded images
 - 📊 **CSV tables** — Sortable, searchable table view
 - 🖼️ **Image controls** — Zoom in/out, rotate, reset
 - 📝 **Markdown** — Full GitHub Flavored Markdown support
@@ -48,6 +53,8 @@ const techStack = {
   markdown: "react-markdown + remark-gfm",
   codeHighlight: "react-syntax-highlighter",
   docx: "mammoth.js",
+  excel: "exceljs",
+  epub: "jszip",
   icons: "Lucide React",
 };
 \`\`\`
@@ -81,6 +88,8 @@ const techStack = {
           "react-markdown": "^10.1.0",
           "react-syntax-highlighter": "^15.6.1",
           mammoth: "^1.8.0",
+          exceljs: "^4.4.0",
+          jszip: "^3.10.1",
           "lucide-react": "^0.525.0",
           "tailwindcss": "^4.0.0",
         },
@@ -217,7 +226,7 @@ const engine = new FilePreviewEngine({
     "pdf", "md", "json", "csv",
     "ts", "js", "py", "rs",
     "png", "jpg", "svg",
-    "docx", "txt",
+    "docx", "xlsx", "epub", "txt",
   ],
   theme: "system",
   enableLineNumbers: true,
@@ -271,7 +280,7 @@ BCRYPT_ROUNDS=12
 # File Upload
 MAX_FILE_SIZE=52428800
 UPLOAD_DIR=./uploads
-ALLOWED_TYPES=pdf,docx,md,json,csv,txt,png,jpg
+ALLOWED_TYPES=pdf,docx,md,json,csv,txt,png,jpg,xlsx,epub
 
 # Logging
 LOG_LEVEL=info
@@ -287,3 +296,64 @@ RATE_LIMIT_WINDOW=60000
 RATE_LIMIT_MAX=100`,
   },
 };
+
+// ── Binary demo files (fetched from public/demo/ at runtime) ──
+export const DEMO_BINARY_FILES: Record<
+  string,
+  { name: string; type: string; url: string }
+> = {
+  epub: {
+    name: "精通Python爬虫框架Scrapy.epub",
+    type: "application/epub+zip",
+    url: "/demo/精通Python爬虫框架Scrapy.epub",
+  },
+  xlsx: {
+    name: "test_features.xlsx",
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    url: "/demo/test_features.xlsx",
+  },
+  docx: {
+    name: "demo.docx",
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    url: "/demo/demo.docx",
+  },
+};
+
+/**
+ * Fetch binary demo files and convert to FileInfo-compatible format.
+ * Returns array of { name, type, content (base64), size } entries.
+ */
+export async function fetchBinaryDemoFiles(): Promise<
+  { name: string; type: string; content: string; size: number }[]
+> {
+  const results: { name: string; type: string; content: string; size: number }[] = [];
+
+  for (const [, demo] of Object.entries(DEMO_BINARY_FILES)) {
+    try {
+      const response = await fetch(demo.url);
+      if (!response.ok) continue;
+
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]); // Remove data:...;base64, prefix
+        };
+        reader.readAsDataURL(blob);
+      });
+
+      results.push({
+        name: demo.name,
+        type: demo.type,
+        content: base64,
+        size: blob.size,
+      });
+    } catch {
+      // Skip files that fail to load
+      console.warn(`Failed to load demo file: ${demo.name}`);
+    }
+  }
+
+  return results;
+}
