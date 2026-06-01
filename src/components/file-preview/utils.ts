@@ -4,6 +4,7 @@ export type FileType =
   | "json"
   | "code"
   | "docx"
+  | "doc"
   | "pptx"
   | "image"
   | "text"
@@ -105,6 +106,10 @@ export function detectFileType(filename: string, mimeType: string): FileType {
   )
     return "docx";
 
+  // DOC (legacy Word format)
+  if (ext === "doc" || mimeType === "application/msword")
+    return "doc";
+
   // PPTX / PPT
   if (
     ext === "pptx" ||
@@ -168,6 +173,7 @@ export function getFileTypeColor(fileType: FileType): string {
     json: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     code: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
     docx: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
+    doc: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
     pptx: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
     image: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
     text: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
@@ -186,6 +192,7 @@ export function getFileTypeLabel(fileType: FileType): string {
     json: "JSON",
     code: "Code",
     docx: "Word",
+    doc: "Word",
     pptx: "PPT",
     image: "Image",
     text: "Text",

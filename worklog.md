@@ -70,3 +70,42 @@ Stage Summary:
 - Supports .pptx and .ppt file extensions
 - Client-side only processing using JSZip to parse the OOXML ZIP structure
 - Professional slide navigation UI with slide/grid view toggle
+
+---
+Task ID: 3
+Agent: main
+Task: Fix DOC file not recognized + Fix PDF blocked by Chrome
+
+Work Log:
+- Added "doc" to FileType union in utils.ts
+- Added .doc detection in detectFileType (ext === "doc" || mimeType === "application/msword")
+- Added doc color styling and label (same as docx - "Word")
+- Installed pdfjs-dist@4.4.168 for proper PDF canvas-based rendering
+- Rewrote PdfPreview.tsx to use pdfjs-dist instead of iframe:
+  - Canvas-based rendering (avoids Chrome blob URL blocking)
+  - Page navigation (prev/next, page counter)
+  - Zoom in/out controls
+  - Rotation controls
+  - Download button
+  - Loading and error states
+- Created DocPreview.tsx for legacy .doc files:
+  - Binary text extraction from .doc (OLE2/BIFF format)
+  - UTF-16LE and Windows-1252 decoding support
+  - Smart paragraph detection and noise filtering
+  - Warning banner explaining .doc limitations
+  - Download fallback button
+- Updated FilePreviewRenderer.tsx:
+  - Added "doc" case using DocPreview
+  - Changed PDF to use base64 content (file.content) instead of object URL (file.url)
+- Updated page.tsx:
+  - Added "doc" icon (📃) in FILE_TYPE_ICONS
+  - Restructured binary file processing: PDF/DOC/DOCX/PPTX use base64, images/video/audio use object URL
+  - Added "DOC" to supported formats badges
+- Lint passes with no errors
+- Dev server running, pages loading correctly (HTTP 200)
+
+Stage Summary:
+- DOC files now properly detected and previewed (text extraction from binary)
+- PDF files now rendered via pdfjs-dist canvas (no Chrome blocking)
+- PDF features: page navigation, zoom, rotation, download
+- DOC features: text extraction, warning about format limitations, download fallback

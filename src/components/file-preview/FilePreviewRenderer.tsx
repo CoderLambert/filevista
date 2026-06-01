@@ -5,6 +5,7 @@ import { PdfPreview } from "./PdfPreview";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { CodePreview } from "./CodePreview";
 import { DocxPreview } from "./DocxPreview";
+import { DocPreview } from "./DocPreview";
 import { ImagePreview } from "./ImagePreview";
 import { TextPreview } from "./TextPreview";
 import { CsvPreview } from "./CsvPreview";
@@ -36,8 +37,8 @@ function UnsupportedPreview({ fileType }: { fileType: FileType }) {
 export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
   switch (file.fileType) {
     case "pdf":
-      return file.url ? (
-        <PdfPreview url={file.url} fileName={file.name} />
+      return file.content ? (
+        <PdfPreview base64Content={file.content} fileName={file.name} />
       ) : (
         <UnsupportedPreview fileType="pdf" />
       );
@@ -68,6 +69,13 @@ export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
         <DocxPreview content={file.content} fileName={file.name} />
       ) : (
         <UnsupportedPreview fileType="docx" />
+      );
+
+    case "doc":
+      return file.content ? (
+        <DocPreview base64Content={file.content} fileName={file.name} />
+      ) : (
+        <UnsupportedPreview fileType="doc" />
       );
 
     case "pptx":

@@ -35,6 +35,7 @@ const FILE_TYPE_ICONS: Record<FileType, string> = {
   json: "🔧",
   code: "💻",
   docx: "📃",
+  doc: "📃",
   pptx: "📊",
   image: "🖼️",
   text: "📄",
@@ -54,7 +55,7 @@ export default function Home() {
 
   const processFile = useCallback(async (file: File): Promise<FileInfo> => {
     const fileType = detectFileType(file.name, file.type);
-    const isBinary = ["pdf", "docx", "pptx", "image", "video", "audio"].includes(
+    const isBinary = ["pdf", "docx", "doc", "pptx", "image", "video", "audio"].includes(
       fileType
     );
 
@@ -62,9 +63,12 @@ export default function Home() {
     let url: string | null = null;
 
     if (isBinary) {
-      url = URL.createObjectURL(file);
-      if (fileType === "docx" || fileType === "pptx") {
-        // Also read as base64 for docx/pptx
+      // For PDF, DOC, DOCX, PPTX we need base64 content for processing
+      const needsBase64 = ["pdf", "docx", "doc", "pptx"].includes(fileType);
+      // For images, video, audio we need object URL for display
+      const needsUrl = ["image", "video", "audio"].includes(fileType);
+
+      if (needsBase64) {
         content = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = () => {
@@ -73,6 +77,10 @@ export default function Home() {
           };
           reader.readAsDataURL(file);
         });
+      }
+
+      if (needsUrl) {
+        url = URL.createObjectURL(file);
       }
     } else {
       content = await new Promise<string>((resolve) => {
@@ -446,6 +454,7 @@ export default function Home() {
                       "Markdown",
                       "JSON",
                       "Code",
+                      "DOC",
                       "DOCX",
                       "PPT",
                       "Images",
