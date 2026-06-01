@@ -247,12 +247,12 @@ function formatCellValue(cell: any): string {
   const v = cell.value;
   if (v === null || v === undefined) return "";
   if (v instanceof Error) return v.message || "#ERROR";
-  if (typeof v === "object" && "richText" in v) return v.richText.map((r: any) => r.text).join("");
-  if (typeof v === "object" && "formula" in v) {
+  if (typeof v === "object" && v !== null && "richText" in v) return v.richText.map((r: any) => r.text).join("");
+  if (typeof v === "object" && v !== null && "formula" in v) {
     const r = v.result;
     return r !== null && r !== undefined ? String(r) : "";
   }
-  if (typeof v === "object" && "hyperlink" in v) return v.text || v.hyperlink;
+  if (typeof v === "object" && v !== null && "hyperlink" in v) return v.text || v.hyperlink;
   if (v instanceof Date) return formatDateValue(v, cell.numFmt);
   if (typeof v === "number") return formatNumberValue(v, cell.numFmt);
   return String(v);
@@ -463,7 +463,7 @@ function extractStyle(cell: any): CellStyle {
   // Hyperlink (ExcelJS v4: cell.hyperlink can be string or {target} object)
   if (cell.hyperlink) {
     s.hyperlink = typeof cell.hyperlink === "string" ? cell.hyperlink : cell.hyperlink.target;
-  } else if (typeof cell.value === "object" && "hyperlink" in cell.value) {
+  } else if (cell.value !== null && typeof cell.value === "object" && "hyperlink" in cell.value) {
     s.hyperlink = cell.value.hyperlink;
   }
   // Comment/note (ExcelJS v4 returns notes as string or object with texts array)
