@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  serverExternalPackages: ["docx-preview"],
+  serverExternalPackages: ["docx-preview", "shiki"],
 };
 
 export default nextConfig;

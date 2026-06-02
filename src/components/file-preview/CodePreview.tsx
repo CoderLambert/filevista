@@ -2,11 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Copy, Check, WrapText } from "lucide-react";
-import {
-  codeToHtml,
-  getShikiLanguage,
-  transformerLineNumbers,
-} from "@/lib/shiki";
+import { highlightCode as shikiHighlight, getShikiLanguage } from "@/lib/shiki";
 
 interface CodePreviewProps {
   content: string;
@@ -45,20 +41,12 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
     [displayContent]
   );
 
-  const highlightCode = useCallback(async () => {
+  const doHighlight = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const result = await codeToHtml(displayContent, {
-        lang: language,
-        themes: {
-          light: "github-light",
-          dark: "github-dark",
-        },
-        defaultColor: false, // Use CSS variables for dual theme
-        transformers: [transformerLineNumbers()],
-      });
+      const result = await shikiHighlight(displayContent, language);
 
       if (mountedRef.current) {
         setHtml(result);
@@ -78,11 +66,11 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
 
   useEffect(() => {
     mountedRef.current = true;
-    highlightCode();
+    doHighlight();
     return () => {
       mountedRef.current = false;
     };
-  }, [highlightCode]);
+  }, [doHighlight]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(displayContent);
