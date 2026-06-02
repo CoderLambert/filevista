@@ -1,13 +1,23 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import JSZip from "jszip";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  Maximize2,
   Grid3X3,
   Monitor,
+  AlertTriangle,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { base64ToUint8Array } from "./utils";
 
@@ -16,330 +26,270 @@ interface PptxPreviewProps {
   fileName: string;
 }
 
-interface SlideData {
-  index: number;
-  texts: SlideText[];
-  images: SlideImage[];
-  rawXml?: string;
-}
-
-interface SlideText {
-  content: string;
-  level: number; // 0 = title-like, 1+ = body text
-  fontSize?: number;
-  bold?: boolean;
-  color?: string;
-}
-
-interface SlideImage {
-  src: string; // base64 data URL
-  width?: number;
-  height?: number;
-  x?: number;
-  y?: number;
-}
-
 type ViewMode = "slide" | "grid";
 
-// Parse XML text runs to extract formatted text
-function extractTextsFromXml(xmlString: string): SlideText[] {
-  const texts: SlideText[] = [];
+// Lazy-load pptx-preview to avoid SSR issues
+let pptxPreviewModule: typeof import("pptx-preview") | null = null;
+async function getPptxPreview() {
+  if (!pptxPreviewModule) {
+    pptxPreviewModule = await import("pptx-preview");
+  }
+  return pptxPreviewModule;
+}
 
-  // Match all <a:p> paragraphs
-  const paragraphRegex = /<a:p\b[^>]*>([\s\S]*?)<\/a:p>/g;
-  let paraMatch;
+export interface PptxRenderHandle {
+  goToSlide: (index: number) => void;
+  nextSlide: () => void;
+  prevSlide: () => void;
+}
 
-  while ((paraMatch = paragraphRegex.exec(xmlString)) !== null) {
-    const paraContent = paraMatch[1];
-    let fullText = "";
-    let isBold = false;
-    let fontSize: number | undefined;
-    let level = 1;
+// Inner component that re-mounts on content/mode changes (avoids setState-in-effect lint issue)
+const PptxRenderContainer = forwardRef<
+  PptxRenderHandle,
+  {
+    content: string;
+    mode: ViewMode;
+    zoom: number;
+    onReady: (info: { slideCount: number; currentIndex: number }) => void;
+    onError: (error: string) => void;
+  }
+>(function PptxRenderContainer(
+  { content, mode, zoom, onReady, onError },
+  ref
+) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<any>(null);
+  const slideCountRef = useRef(0);
 
-    // Check for level attribute on the paragraph
-    const lvlMatch = paraContent.match(/<a:pPr\b[^>]*lvl="(\d+)"[^>]*>/);
-    if (lvlMatch) {
-      level = parseInt(lvlMatch[1]) + 1;
-    }
-
-    // Check if paragraph is a title (usually lvl=0 or in a title placeholder)
-    const isTitle =
-      level === 1 &&
-      (paraContent.includes('ph type="title"') ||
-        paraContent.includes('ph type="ctrTitle"'));
-
-    // Match all <a:r> runs within the paragraph
-    const runRegex = /<a:r\b[^>]*>([\s\S]*?)<\/a:r>/g;
-    let runMatch;
-
-    while ((runMatch = runRegex.exec(paraContent)) !== null) {
-      const runContent = runMatch[1];
-
-      // Check run properties for bold and font size
-      const rPrMatch = runContent.match(/<a:rPr\b[^>]*>/);
-      if (rPrMatch) {
-        const rPr = rPrMatch[0];
-        if (rPr.includes('b="1"') || rPr.includes(' b="true"')) {
-          isBold = true;
+  useImperativeHandle(
+    ref,
+    () => ({
+      goToSlide(index: number) {
+        const viewer = viewerRef.current;
+        if (!viewer) return;
+        const clamped = Math.max(0, Math.min(index, slideCountRef.current - 1));
+        try {
+          viewer.renderSingleSlide(clamped);
+        } catch (err) {
+          console.warn("Slide navigation error:", err);
         }
-        const szMatch = rPr.match(/sz="(\d+)"/);
-        if (szMatch) {
-          fontSize = parseInt(szMatch[1]) / 100; // PPTX uses hundredths of a point
-        }
+      },
+      nextSlide() {
+        const viewer = viewerRef.current;
+        if (!viewer) return;
+        try {
+          viewer.renderNextSlide();
+        } catch {}
+      },
+      prevSlide() {
+        const viewer = viewerRef.current;
+        if (!viewer) return;
+        try {
+          viewer.renderPreSlide();
+        } catch {}
+      },
+    }),
+    []
+  );
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    let cancelled = false;
+
+    async function render() {
+      if (!containerRef.current) return;
+
+      // Destroy previous viewer
+      if (viewerRef.current) {
+        try {
+          viewerRef.current.destroy();
+        } catch {}
+        viewerRef.current = null;
       }
 
-      // Extract text content
-      const tMatch = runContent.match(/<a:t>([\s\S]*?)<\/a:t>/);
-      if (tMatch) {
-        fullText += tMatch[1];
-      }
-    }
+      containerRef.current.innerHTML = "";
 
-    if (fullText.trim()) {
-      texts.push({
-        content: fullText.trim(),
-        level: isTitle ? 0 : level,
-        fontSize,
-        bold: isBold || isTitle,
-      });
-    }
-  }
+      try {
+        const { init } = await getPptxPreview();
+        if (cancelled || !containerRef.current) return;
 
-  return texts;
-}
+        const viewer = init(containerRef.current, {
+          width: 960,
+          height: 540,
+          mode: mode === "grid" ? "list" : "slide",
+        });
 
-// Parse slide relationships to find image references
-function parseSlideRels(relsXml: string): Map<string, string> {
-  const imageMap = new Map<string, string>();
-  const relRegex = /<Relationship\s+Id="([^"]+)"\s+Type="[^"]*image[^"]*"\s+Target="([^"]+)"/g;
-  let match;
-  while ((match = relRegex.exec(relsXml)) !== null) {
-    imageMap.set(match[1], match[2]);
-  }
-  return imageMap;
-}
+        viewerRef.current = viewer;
 
-// Extract image references from slide XML
-function extractImageRefsFromXml(
-  slideXml: string,
-  imageRels: Map<string, string>
-): string[] {
-  const imagePaths: string[] = [];
-  const blipRegex = /<a:blip[^>]*r:embed="([^"]+)"[^>]*>/g;
-  let match;
-  while ((match = blipRegex.exec(slideXml)) !== null) {
-    const relId = match[1];
-    const target = imageRels.get(relId);
-    if (target) {
-      // Normalize path - remove leading "../" or "/"
-      const normalizedPath = target.replace(/^(\.\.\/)+/, "").replace(/^\//, "");
-      imagePaths.push(normalizedPath);
-    }
-  }
-  return imagePaths;
-}
+        const bytes = base64ToUint8Array(content);
+        const arrayBuffer = bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength
+        );
 
-async function parsePptx(base64Content: string): Promise<SlideData[]> {
-  // Decode base64
-  const bytes = base64ToUint8Array(base64Content);
+        if (cancelled) return;
+        await viewer.preview(arrayBuffer);
+        if (cancelled) return;
 
-  const zip = await JSZip.loadAsync(bytes.buffer);
-  const slides: SlideData[] = [];
+        const count = viewer.slideCount || 0;
+        const idx = viewer.currentIndex || 0;
+        slideCountRef.current = count;
 
-  // Find all slide files
-  const slideFiles: { index: number; path: string }[] = [];
-  zip.forEach((relativePath) => {
-    const match = relativePath.match(/^ppt\/slides\/slide(\d+)\.xml$/);
-    if (match) {
-      slideFiles.push({
-        index: parseInt(match[1]),
-        path: relativePath,
-      });
-    }
-  });
+        onReady({ slideCount: count, currentIndex: idx });
 
-  // Sort slides by index
-  slideFiles.sort((a, b) => a.index - b.index);
-
-  for (const slideFile of slideFiles) {
-    const slideXml = await zip.file(slideFile.path)?.async("string");
-    if (!slideXml) continue;
-
-    // Extract texts
-    const texts = extractTextsFromXml(slideXml);
-
-    // Try to load relationships for images
-    const relsPath = `ppt/slides/_rels/slide${slideFile.index}.xml.rels`;
-    const relsXml = await zip.file(relsPath)?.async("string");
-
-    const images: SlideImage[] = [];
-
-    if (relsXml) {
-      const imageRels = parseSlideRels(relsXml);
-      const imageRefs = extractImageRefsFromXml(slideXml, imageRels);
-
-      for (const imageRef of imageRefs) {
-        // Try to find the image file in the zip
-        const imageFile = zip.file(`ppt/${imageRef}`) || zip.file(imageRef);
-        if (imageFile) {
-          const imageBlob = await imageFile.async("blob");
-          const imageUrl = URL.createObjectURL(imageBlob);
-          images.push({ src: imageUrl });
+        // Hide built-in navigation elements rendered by the library
+        try {
+          const navElements = containerRef.current.querySelectorAll(
+            ".pre-btn, .next-btn, .pagination, [class*='pre-btn'], [class*='next-btn'], [class*='pagination'], button"
+          );
+          navElements.forEach((el) => {
+            (el as HTMLElement).style.display = "none";
+          });
+        } catch {}
+      } catch (err) {
+        if (!cancelled) {
+          onError(
+            err instanceof Error
+              ? err.message
+              : "PPTX 预览失败，文件可能已损坏或格式不受支持"
+          );
         }
       }
     }
 
-    slides.push({
-      index: slideFile.index,
-      texts,
-      images,
-    });
-  }
+    render();
 
-  return slides;
-}
-
-function SlideCard({
-  slide,
-  isActive,
-  onClick,
-  compact,
-}: {
-  slide: SlideData;
-  isActive?: boolean;
-  onClick?: () => void;
-  compact?: boolean;
-}) {
-  const title = slide.texts.find((t) => t.level === 0);
-  const bodyTexts = slide.texts.filter((t) => t.level > 0);
+    return () => {
+      cancelled = true;
+      if (viewerRef.current) {
+        try {
+          viewerRef.current.destroy();
+        } catch {}
+        viewerRef.current = null;
+      }
+    };
+  }, [content, mode, onReady, onError]);
 
   return (
     <div
-      onClick={onClick}
-      className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm border transition-all overflow-hidden ${
-        isActive
-          ? "ring-2 ring-primary border-primary/30 shadow-md"
-          : "border-border hover:shadow-md cursor-pointer"
-      } ${compact ? "cursor-pointer hover:ring-1 hover:ring-primary/50" : ""}`}
-      style={{ aspectRatio: "16/9" }}
+      style={{
+        zoom: zoom / 100,
+        maxWidth: "100%",
+        overflow: "hidden",
+      }}
     >
-      <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 overflow-hidden">
-        {/* Slide number */}
-        <div className="text-[10px] text-gray-400 dark:text-gray-600 mb-1 font-mono">
-          Slide {slide.index}
-        </div>
-
-        {/* Title */}
-        {title && (
-          <h3
-            className={`font-bold text-gray-900 dark:text-gray-100 mb-2 leading-tight line-clamp-2 ${
-              compact ? "text-xs" : "text-sm sm:text-base md:text-lg"
-            }`}
-          >
-            {title.content}
-          </h3>
-        )}
-
-        {/* Body texts */}
-        <div className="flex-1 min-h-0 space-y-0.5 sm:space-y-1">
-          {bodyTexts.slice(0, compact ? 3 : 8).map((text, i) => (
-            <p
-              key={i}
-              className={`text-gray-600 dark:text-gray-400 leading-snug ${
-                compact ? "text-[9px]" : "text-xs sm:text-sm"
-              } ${text.level > 1 ? "pl-3" : ""} ${
-                i === (compact ? 2 : 7) ? "line-clamp-1" : ""
-              }`}
-              style={
-                !compact && text.fontSize
-                  ? { fontSize: `${Math.min(text.fontSize, 18)}px` }
-                  : undefined
-              }
-            >
-              {text.bold ? <strong>{text.content}</strong> : text.content}
-            </p>
-          ))}
-          {bodyTexts.length > (compact ? 3 : 8) && (
-            <p className="text-gray-400 text-[10px]">
-              +{bodyTexts.length - (compact ? 3 : 8)} more items
-            </p>
-          )}
-        </div>
-
-        {/* Images preview */}
-        {slide.images.length > 0 && (
-          <div className="mt-2 flex gap-1">
-            {slide.images.slice(0, 2).map((img, i) => (
-              <img
-                key={i}
-                src={img.src}
-                alt={`Slide image ${i + 1}`}
-                className={`rounded object-cover ${
-                  compact ? "h-6 w-8" : "h-10 w-16"
-                }`}
-              />
-            ))}
-            {slide.images.length > 2 && (
-              <span className="text-[9px] text-gray-400 self-center">
-                +{slide.images.length - 2}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      <div
+        ref={containerRef}
+        className="pptx-render-container shadow-lg rounded-lg overflow-hidden bg-white"
+        style={{
+          minWidth: mode === "slide" ? 960 : undefined,
+          minHeight: mode === "slide" ? 540 : undefined,
+        }}
+      />
     </div>
   );
-}
+});
 
 export function PptxPreview({ content, fileName }: PptxPreviewProps) {
-  const [slides, setSlides] = useState<SlideData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [slideCount, setSlideCount] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("slide");
+  const [zoom, setZoom] = useState(100);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [renderKey, setRenderKey] = useState(0);
+  const renderHandleRef = useRef<PptxRenderHandle>(null);
 
-  const parseFile = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await parsePptx(content);
-      setSlides(result);
-    } catch (err) {
-      console.error("Error parsing PPTX:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to parse presentation"
-      );
-    } finally {
+  // Stable callbacks for PptxRenderContainer
+  const handleReady = useCallback(
+    (info: { slideCount: number; currentIndex: number }) => {
+      setSlideCount(info.slideCount);
+      setCurrentSlide(info.currentIndex);
       setLoading(false);
+      setError(null);
+    },
+    []
+  );
+
+  const handleError = useCallback((errMessage: string) => {
+    setError(errMessage);
+    setLoading(false);
+  }, []);
+
+  // Handle view mode switch
+  const switchViewMode = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    setLoading(true);
+    setError(null);
+    setRenderKey((k) => k + 1);
+  }, []);
+
+  // Navigation
+  const goToSlide = useCallback(
+    (index: number) => {
+      if (viewMode !== "slide") return;
+      const clamped = Math.max(0, Math.min(index, slideCount - 1));
+      renderHandleRef.current?.goToSlide(clamped);
+      setCurrentSlide(clamped);
+    },
+    [slideCount, viewMode]
+  );
+
+  const nextSlide = useCallback(() => {
+    goToSlide(currentSlide + 1);
+  }, [currentSlide, goToSlide]);
+
+  const prevSlide = useCallback(() => {
+    goToSlide(currentSlide - 1);
+  }, [currentSlide, goToSlide]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (viewMode !== "slide" || loading) return;
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        nextSlide();
+      }
     }
-  }, [content]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [viewMode, loading, prevSlide, nextSlide]);
+
+  // Fullscreen toggle
+  const toggleFullscreen = useCallback(() => {
+    const el = document.querySelector("[data-preview-container]");
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
-    parseFile();
-  }, [parseFile]);
+    function onFullscreenChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
 
-  // Cleanup image URLs on unmount
-  useEffect(() => {
-    return () => {
-      slides.forEach((slide) => {
-        slide.images.forEach((img) => {
-          if (img.src.startsWith("blob:")) {
-            URL.revokeObjectURL(img.src);
-          }
-        });
-      });
-    };
-  }, [slides]);
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(Math.max(0, Math.min(index, slides.length - 1)));
-  };
-
-  if (loading) {
+  // Detect .ppt files early
+  const ext = fileName.toLowerCase().split(".").pop() || "";
+  if (ext === "ppt") {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        <p className="text-muted-foreground text-sm">
-          Parsing presentation...
+      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
+        <AlertTriangle size={36} />
+        <p className="text-lg font-medium">格式不支持</p>
+        <p className="text-sm text-muted-foreground text-center max-w-md">
+          该文件为旧版 PowerPoint 二进制格式（.ppt），当前仅支持 Open XML
+          格式（.pptx）。建议使用 PowerPoint 或 WPS 将文件另存为 .pptx 格式后重试。
         </p>
       </div>
     );
@@ -347,106 +297,110 @@ export function PptxPreview({ content, fileName }: PptxPreviewProps) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="48"
-          height="48"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        <p className="text-lg font-medium">Parsing Failed</p>
-        <p className="text-sm text-muted-foreground">{error}</p>
-      </div>
-    );
-  }
-
-  if (slides.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-3">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="48"
-          height="48"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-          <path d="M14 2v6h6" />
-        </svg>
-        <p className="text-lg font-medium">No Slides Found</p>
-        <p className="text-sm">
-          The presentation appears to be empty or could not be parsed.
+      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
+        <AlertTriangle size={36} />
+        <p className="text-lg font-medium">预览失败</p>
+        <p className="text-sm text-muted-foreground text-center max-w-md">
+          {error}
         </p>
       </div>
     );
   }
 
-  const activeSlide = slides[currentSlide];
-
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-preview-container>
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/30 gap-3">
+      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30 gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
-            {currentSlide + 1} / {slides.length}
-          </span>
-          <span className="text-xs text-muted-foreground">slides</span>
+          {viewMode === "slide" ? (
+            <>
+              <span className="text-sm font-medium tabular-nums">
+                {currentSlide + 1} / {slideCount}
+              </span>
+              <span className="text-xs text-muted-foreground">页</span>
+            </>
+          ) : (
+            <>
+              <span className="text-sm font-medium tabular-nums">
+                {slideCount}
+              </span>
+              <span className="text-xs text-muted-foreground">页</span>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-1">
+          {/* View mode toggle */}
           <button
-            onClick={() => setViewMode("slide")}
+            onClick={() => switchViewMode("slide")}
             className={`p-1.5 rounded-md transition-colors ${
               viewMode === "slide"
                 ? "bg-primary/10 text-primary"
                 : "hover:bg-muted text-muted-foreground"
             }`}
-            title="Slide view"
+            title="幻灯片视图"
           >
             <Monitor size={16} />
           </button>
           <button
-            onClick={() => setViewMode("grid")}
+            onClick={() => switchViewMode("grid")}
             className={`p-1.5 rounded-md transition-colors ${
               viewMode === "grid"
                 ? "bg-primary/10 text-primary"
                 : "hover:bg-muted text-muted-foreground"
             }`}
-            title="Grid view"
+            title="缩略图视图"
           >
             <Grid3X3 size={16} />
+          </button>
+
+          <div className="w-px h-4 bg-border mx-1" />
+
+          {/* Zoom controls */}
+          <div className="flex items-center gap-0.5 border rounded-md px-1">
+            <button
+              onClick={() => setZoom(Math.max(50, zoom - 10))}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              title="缩小"
+            >
+              <ZoomOut size={14} className="text-muted-foreground" />
+            </button>
+            <span className="text-xs text-muted-foreground w-10 text-center select-none">
+              {zoom}%
+            </span>
+            <button
+              onClick={() => setZoom(Math.min(200, zoom + 10))}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              title="放大"
+            >
+              <ZoomIn size={14} className="text-muted-foreground" />
+            </button>
+          </div>
+
+          <button
+            onClick={toggleFullscreen}
+            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground"
+            title="全屏"
+          >
+            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
         </div>
 
         {viewMode === "slide" && (
           <div className="flex items-center gap-1">
             <button
-              onClick={() => goToSlide(currentSlide - 1)}
-              disabled={currentSlide === 0}
+              onClick={prevSlide}
+              disabled={currentSlide === 0 || loading}
               className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Previous slide"
+              title="上一页 (←)"
             >
               <ChevronLeft size={16} />
             </button>
             <button
-              onClick={() => goToSlide(currentSlide + 1)}
-              disabled={currentSlide === slides.length - 1}
+              onClick={nextSlide}
+              disabled={currentSlide >= slideCount - 1 || loading}
               className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Next slide"
+              title="下一页 (→)"
             >
               <ChevronRight size={16} />
             </button>
@@ -455,75 +409,33 @@ export function PptxPreview({ content, fileName }: PptxPreviewProps) {
       </div>
 
       {/* Content area */}
-      <div className="flex-1 overflow-auto">
-        {viewMode === "slide" ? (
-          <div className="p-4 md:p-8">
-            {/* Main slide */}
-            <div className="max-w-4xl mx-auto">
-              <SlideCard slide={activeSlide} />
-
-              {/* Slide images - show full size below */}
-              {activeSlide.images.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  {activeSlide.images.map((img, i) => (
-                    <div
-                      key={i}
-                      className="rounded-lg overflow-hidden border bg-white dark:bg-gray-900 p-2"
-                    >
-                      <img
-                        src={img.src}
-                        alt={`Slide ${activeSlide.index} - Image ${i + 1}`}
-                        className="max-w-full mx-auto rounded"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Slide thumbnails strip */}
-            <div className="max-w-4xl mx-auto mt-6">
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {slides.map((slide, i) => (
-                  <div
-                    key={slide.index}
-                    onClick={() => goToSlide(i)}
-                    className={`shrink-0 w-28 transition-all ${
-                      i === currentSlide
-                        ? "ring-2 ring-primary rounded-md"
-                        : "opacity-60 hover:opacity-100 cursor-pointer rounded-md"
-                    }`}
-                  >
-                    <SlideCard slide={slide} compact />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Grid view */
-          <div className="p-4 md:p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
-              {slides.map((slide, i) => (
-                <div
-                  key={slide.index}
-                  onClick={() => {
-                    setCurrentSlide(i);
-                    setViewMode("slide");
-                  }}
-                  className="cursor-pointer group"
-                >
-                  <div className="transition-transform group-hover:scale-[1.02]">
-                    <SlideCard slide={slide} compact />
-                  </div>
-                  <p className="text-[10px] text-center text-muted-foreground mt-1 font-mono">
-                    Slide {slide.index}
-                  </p>
-                </div>
-              ))}
-            </div>
+      <div className="flex-1 overflow-auto bg-gray-100 relative">
+        {loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100/80 z-10 gap-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <p className="text-muted-foreground text-sm">
+              正在解析演示文稿...
+            </p>
           </div>
         )}
+
+        <div
+          className={
+            viewMode === "slide"
+              ? "flex items-center justify-center p-4 md:p-8 min-h-full"
+              : "p-4 md:p-6"
+          }
+        >
+          <PptxRenderContainer
+            key={renderKey}
+            ref={renderHandleRef}
+            content={content}
+            mode={viewMode}
+            zoom={zoom}
+            onReady={handleReady}
+            onError={handleError}
+          />
+        </div>
       </div>
     </div>
   );
