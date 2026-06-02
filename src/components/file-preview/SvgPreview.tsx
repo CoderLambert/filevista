@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Code, Eye, Copy, Check, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 
 interface SvgPreviewProps {
@@ -22,8 +22,14 @@ export function SvgPreview({ content, fileName }: SvgPreviewProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const svgBlob = new Blob([content], { type: "image/svg+xml" });
-  const svgUrl = URL.createObjectURL(svgBlob);
+  const svgUrl = useMemo(() => {
+    const blob = new Blob([content], { type: "image/svg+xml" });
+    return URL.createObjectURL(blob);
+  }, [content]);
+
+  useEffect(() => {
+    return () => URL.revokeObjectURL(svgUrl);
+  }, [svgUrl]);
 
   const renderedView = (
     <div className="flex flex-col h-full">

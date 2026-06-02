@@ -11,6 +11,7 @@ import {
   ExternalLink,
   AlertTriangle,
 } from "lucide-react";
+import { base64ToUint8Array } from "./utils";
 
 // Lazy-load ExcelJS
 let ExcelJS: typeof import("exceljs") | null = null;
@@ -352,9 +353,7 @@ async function parseXlsx(base64Content: string, fileName: string): Promise<Sheet
   const ext = fileName.toLowerCase().split(".").pop() || "";
   const isLegacyXls = ext === "xls";
 
-  const binaryString = atob(base64Content);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+  const bytes = base64ToUint8Array(base64Content);
 
   const workbook = new EJS.Workbook();
   await workbook.xlsx.load(bytes);

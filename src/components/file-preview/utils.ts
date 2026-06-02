@@ -266,3 +266,16 @@ export function getFileTypeLabel(fileType: FileType): string {
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
 }
+
+/**
+ * Decode base64 string to Uint8Array.
+ * Shared utility used by PDF, DOCX, DOC, PPTX, XLSX, EPUB, ZIP preview components.
+ */
+export function base64ToUint8Array(base64: string): Uint8Array {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}

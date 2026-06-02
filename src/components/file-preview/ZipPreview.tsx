@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import JSZip from "jszip";
 import { File, Folder, FolderOpen } from "lucide-react";
-import { formatFileSize } from "./utils";
+import { formatFileSize, base64ToUint8Array } from "./utils";
 
 interface ZipPreviewProps {
   content: string; // base64 encoded
@@ -20,11 +20,7 @@ interface ZipEntry {
 }
 
 async function parseZipFile(base64Content: string): Promise<ZipEntry[]> {
-  const binaryString = atob(base64Content);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
+  const bytes = base64ToUint8Array(base64Content);
 
   const zip = await JSZip.loadAsync(bytes.buffer);
   const entries: ZipEntry[] = [];

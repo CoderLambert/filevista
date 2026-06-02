@@ -26,7 +26,7 @@ import {
   generateId,
   FileType,
 } from "@/components/file-preview/utils";
-import { FilePreviewRenderer } from "@/components/file-preview/FilePreviewRenderer";
+import { TabCacheRenderer } from "@/components/file-preview/FilePreviewRenderer";
 import { DEMO_FILES, fetchBinaryDemoFiles } from "@/components/file-preview/demos";
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
@@ -409,9 +409,11 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Preview content */}
-              <div className="flex-1 overflow-auto">
-                <FilePreviewRenderer file={activeFile} />
+              {/* Preview content — TabCache keeps all opened files mounted,
+                  only showing the active one via CSS display toggle.
+                  This prevents re-parsing PDF/DOCX/XLSX on every tab switch. */}
+              <div className="flex-1 min-h-0">
+                <TabCacheRenderer files={files} activeFileId={activeFileId} />
               </div>
             </>
           ) : (

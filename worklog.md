@@ -157,3 +157,93 @@ Stage Summary:
 - Self-contained CSS approach avoids @tailwindcss/typography compatibility issues
 - Explicit rgba colors ensure visibility in both light and dark modes
 - All prose elements properly styled: headings, paragraphs, lists, blockquotes, tables, code, hr, links, images
+
+---
+
+## Task ID: 3 — Convert all heavy preview components to React.lazy dynamic imports
+
+**Agent:** main
+**File changed:** `src/components/file-preview/FilePreviewRenderer.tsx`
+
+### What was done
+
+Converted all 16 preview component imports from eager static imports to `React.lazy()` dynamic imports. Previously, only `MarkdownPreview` and `CodePreview` used lazy loading; the remaining 14 components (`PdfPreview`, `DocxPreview`, `DocPreview`, `PptxPreview`, `XlsxPreview`, `HtmlPreview`, `ZipPreview`, `SvgPreview`, `RtfPreview`, `EpubPreview`, `ImagePreview`, `TextPreview`, `CsvPreview`, `VideoPreview`, `AudioPreview`) were eagerly imported.
+
+### Changes
+
+1. **Removed all static `import { Component } from "./Component"` statements** for preview components.
+2. **Added `lazy()` declarations** for all 16 preview components, using the named-export-to-default pattern: `lazy(() => import("./X").then((m) => ({ default: m.X })))` since all components use named exports.
+3. **Wrapped every lazy component usage** in `<Suspense fallback={<PreviewLoading />}>` where `PreviewLoading` already existed in the file.
+4. **Kept `UnsupportedPreview`** as a regular (non-lazy) component since it is tiny and always used as a fallback.
+
+### Verification
+
+- `bun run lint` — no errors in `FilePreviewRenderer.tsx`. (Pre-existing errors in `SvgPreview.tsx` are unrelated.)
+- Dev server compiles and serves the page successfully.
+
+---
+Task ID: 4
+Agent: code-fix-agent
+Task: Fix memory leaks in HtmlPreview.tsx and SvgPreview.tsx where blob URLs are created in the render body without cleanup
+
+Work Log:
+- Read HtmlPreview.tsx: found `URL.createObjectURL` called directly in render body (lines 17-18), creating a new blob URL on every render with no cleanup
+- Read SvgPreview.tsx: same issue (lines 25-26), blob URL created in render body with no revocation
+- First attempt: Used useState + useEffect pattern with setBlobUrl/setSvgUrl in effect body — lint failed with `react-hooks/set-state-in-effect` error (setState synchronously within an effect causes cascading renders)
+- Second approach: Used useMemo to compute blob URL during render + useEffect with blobUrl dependency for cleanup
+  - useMemo derives the blob URL from content (no setState in effect)
+  - useEffect cleanup revokes the previous blobUrl when it changes (content changes) or on unmount
+- Applied fix to both files:
+  - HtmlPreview.tsx: `const blobUrl = useMemo(() => URL.createObjectURL(new Blob([content], { type: "text/html" })), [content])` + cleanup effect
+  - SvgPreview.tsx: `const svgUrl = useMemo(() => URL.createObjectURL(new Blob([content], { type: "image/svg+xml" })), [content])` + cleanup effect
+- Ran `bun run lint` — 0 errors, 0 warnings
+
+Stage Summary:
+- Fixed memory leak in HtmlPreview.tsx: blob URL now properly revoked when content changes or component unmounts
+- Fixed memory leak in SvgPreview.tsx: same fix applied
+- Pattern: useMemo for blob URL derivation + useEffect with blobUrl dependency for cleanup
+- This avoids the lint error (no setState in effect) while ensuring proper resource cleanup
+
+---
+Task ID: 5
+Agent: main
+Task: Replace duplicate atob() + Uint8Array conversion code with shared base64ToUint8Array utility
+
+Work Log:
+- Read all 7 target files to identify exact atob patterns and prop naming conventions
+- Confirmed `base64ToUint8Array` already exists in `src/components/file-preview/utils.ts`
+- Updated PdfPreview.tsx:
+  - Added `import { base64ToUint8Array } from "./utils"`
+  - Renamed prop `base64Content` → `content` (interface + destructuring)
+  - Replaced 2 atob patterns (lines 112-116 loadPdf, lines 163-167 handleDownload) with `base64ToUint8Array(content)`
+  - Updated useEffect dependency from `[base64Content]` to `[content]`
+- Updated DocxPreview.tsx:
+  - Added `import { base64ToUint8Array } from "./utils"`
+  - Replaced 1 atob pattern (lines 30-34) with `base64ToUint8Array(content)` (prop already named `content`)
+- Updated DocPreview.tsx:
+  - Added `import { base64ToUint8Array } from "./utils"`
+  - Renamed prop `base64Content` → `content` (interface + destructuring)
+  - Replaced 2 atob patterns (lines 166-170 extract, lines 187-191 handleDownload) with `base64ToUint8Array(content)`
+  - Updated useEffect dependency from `[base64Content]` to `[content]`
+- Updated PptxPreview.tsx:
+  - Added `import { base64ToUint8Array } from "./utils"`
+  - Replaced 1 atob pattern (lines 143-147 parsePptx) with `base64ToUint8Array(base64Content)` (local function param, not a prop rename)
+- Updated XlsxPreview.tsx:
+  - Added `import { base64ToUint8Array } from "./utils"`
+  - Replaced 1 atob pattern (lines 355-357 parseXlsx) with `base64ToUint8Array(base64Content)` (local function param)
+- Updated EpubPreview.tsx:
+  - Added `import { base64ToUint8Array } from "./utils"`
+  - Replaced 1 atob pattern (lines 41-45 parseEpub) with `base64ToUint8Array(base64Content)` (local function param)
+- Updated ZipPreview.tsx:
+  - Added `base64ToUint8Array` to existing `import { formatFileSize, ... } from "./utils"`
+  - Replaced 1 atob pattern (lines 23-27 parseZipFile) with `base64ToUint8Array(base64Content)` (local function param)
+- Updated FilePreviewRenderer.tsx:
+  - Changed `<PdfPreview base64Content={file.content}` → `<PdfPreview content={file.content}`
+  - Changed `<DocPreview base64Content={file.content}` → `<DocPreview content={file.content}`
+- Ran `bun run lint` — 0 errors, 0 warnings
+
+Stage Summary:
+- 9 atob+Uint8Array patterns replaced across 7 files with shared `base64ToUint8Array` utility
+- 2 components (PdfPreview, DocPreview) had `base64Content` prop renamed to `content` for unified naming
+- 2 call sites in FilePreviewRenderer.tsx updated for the prop rename
+- All files pass lint cleanly

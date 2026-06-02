@@ -9,13 +9,14 @@ import {
   Download,
   RotateCw,
 } from "lucide-react";
+import { base64ToUint8Array } from "./utils";
 
 interface PdfPreviewProps {
-  base64Content: string;
+  content: string;
   fileName: string;
 }
 
-export function PdfPreview({ base64Content, fileName }: PdfPreviewProps) {
+export function PdfPreview({ content, fileName }: PdfPreviewProps) {
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1.5);
@@ -109,11 +110,7 @@ export function PdfPreview({ base64Content, fileName }: PdfPreviewProps) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
         // Decode base64 to Uint8Array
-        const binaryString = atob(base64Content);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
+        const bytes = base64ToUint8Array(content);
 
         const loadingTask = pdfjsLib.getDocument({ data: bytes });
         const pdf = await loadingTask.promise;
@@ -142,7 +139,7 @@ export function PdfPreview({ base64Content, fileName }: PdfPreviewProps) {
     return () => {
       cancelled = true;
     };
-  }, [base64Content]);
+  }, [content]);
 
   // Render page when parameters change
   useEffect(() => {
@@ -160,11 +157,7 @@ export function PdfPreview({ base64Content, fileName }: PdfPreviewProps) {
   const handleRotate = () => setRotation((prev) => (prev + 90) % 360);
 
   const handleDownload = () => {
-    const binaryString = atob(base64Content);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
+    const bytes = base64ToUint8Array(content);
     const blob = new Blob([bytes], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

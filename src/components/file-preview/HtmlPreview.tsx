@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Code, Eye } from "lucide-react";
 
 interface HtmlPreviewProps {
@@ -13,9 +13,15 @@ type ViewMode = "preview" | "source";
 export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
 
-  // Create a blob URL for sandboxed iframe rendering
-  const blob = new Blob([content], { type: "text/html" });
-  const blobUrl = URL.createObjectURL(blob);
+  // Create a blob URL for sandboxed iframe rendering (with cleanup to avoid memory leaks)
+  const blobUrl = useMemo(() => {
+    const blob = new Blob([content], { type: "text/html" });
+    return URL.createObjectURL(blob);
+  }, [content]);
+
+  useEffect(() => {
+    return () => URL.revokeObjectURL(blobUrl);
+  }, [blobUrl]);
 
   return (
     <div className="flex flex-col h-full">

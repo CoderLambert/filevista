@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { AlertCircle, Download } from "lucide-react";
+import { base64ToUint8Array } from "./utils";
 
 interface DocPreviewProps {
-  base64Content: string;
+  content: string;
   fileName: string;
 }
 
@@ -154,7 +155,7 @@ function extractTextFromDoc(arrayBuffer: ArrayBuffer): DocTextExtraction {
   return { paragraphs, warning };
 }
 
-export function DocPreview({ base64Content, fileName }: DocPreviewProps) {
+export function DocPreview({ content, fileName }: DocPreviewProps) {
   const [extraction, setExtraction] = useState<DocTextExtraction | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -163,11 +164,7 @@ export function DocPreview({ base64Content, fileName }: DocPreviewProps) {
     const extract = async () => {
       try {
         setLoading(true);
-        const binaryString = atob(base64Content);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
+        const bytes = base64ToUint8Array(content);
         const result = extractTextFromDoc(bytes.buffer);
         setExtraction(result);
       } catch (err) {
@@ -181,14 +178,10 @@ export function DocPreview({ base64Content, fileName }: DocPreviewProps) {
     };
 
     extract();
-  }, [base64Content]);
+  }, [content]);
 
   const handleDownload = () => {
-    const binaryString = atob(base64Content);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
+    const bytes = base64ToUint8Array(content);
     const blob = new Blob([bytes], {
       type: "application/msword",
     });

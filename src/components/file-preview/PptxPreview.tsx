@@ -9,6 +9,7 @@ import {
   Grid3X3,
   Monitor,
 } from "lucide-react";
+import { base64ToUint8Array } from "./utils";
 
 interface PptxPreviewProps {
   content: string; // base64 encoded
@@ -140,11 +141,7 @@ function extractImageRefsFromXml(
 
 async function parsePptx(base64Content: string): Promise<SlideData[]> {
   // Decode base64
-  const binaryString = atob(base64Content);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
+  const bytes = base64ToUint8Array(base64Content);
 
   const zip = await JSZip.loadAsync(bytes.buffer);
   const slides: SlideData[] = [];

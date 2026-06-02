@@ -1,35 +1,63 @@
 "use client";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { FileInfo, FileType } from "./utils";
-import { PdfPreview } from "./PdfPreview";
-// Lazy load MarkdownPreview — now uses Shiki for code block highlighting
+
+// Lazy load all preview components — each may pull in heavy dependencies
+// (e.g. PDF renderer, Office parsers, media players, Shiki, etc.)
+const PdfPreview = lazy(() =>
+  import("./PdfPreview").then((m) => ({ default: m.PdfPreview }))
+);
 const MarkdownPreview = lazy(() =>
   import("./MarkdownPreview").then((m) => ({ default: m.MarkdownPreview }))
 );
-import { DocxPreview } from "./DocxPreview";
-import { DocPreview } from "./DocPreview";
-import { PptxPreview } from "./PptxPreview";
-import { XlsxPreview } from "./XlsxPreview";
-import { HtmlPreview } from "./HtmlPreview";
-import { ZipPreview } from "./ZipPreview";
-import { SvgPreview } from "./SvgPreview";
-import { RtfPreview } from "./RtfPreview";
-import { EpubPreview } from "./EpubPreview";
-import { ImagePreview } from "./ImagePreview";
-import { TextPreview } from "./TextPreview";
-import { CsvPreview } from "./CsvPreview";
-import { VideoPreview } from "./VideoPreview";
-import { AudioPreview } from "./AudioPreview";
-
-// Lazy load CodePreview — Shiki + all language grammars only load when needed
 const CodePreview = lazy(() =>
   import("./CodePreview").then((m) => ({ default: m.CodePreview }))
 );
+const DocxPreview = lazy(() =>
+  import("./DocxPreview").then((m) => ({ default: m.DocxPreview }))
+);
+const DocPreview = lazy(() =>
+  import("./DocPreview").then((m) => ({ default: m.DocPreview }))
+);
+const PptxPreview = lazy(() =>
+  import("./PptxPreview").then((m) => ({ default: m.PptxPreview }))
+);
+const XlsxPreview = lazy(() =>
+  import("./XlsxPreview").then((m) => ({ default: m.XlsxPreview }))
+);
+const HtmlPreview = lazy(() =>
+  import("./HtmlPreview").then((m) => ({ default: m.HtmlPreview }))
+);
+const ZipPreview = lazy(() =>
+  import("./ZipPreview").then((m) => ({ default: m.ZipPreview }))
+);
+const SvgPreview = lazy(() =>
+  import("./SvgPreview").then((m) => ({ default: m.SvgPreview }))
+);
+const RtfPreview = lazy(() =>
+  import("./RtfPreview").then((m) => ({ default: m.RtfPreview }))
+);
+const EpubPreview = lazy(() =>
+  import("./EpubPreview").then((m) => ({ default: m.EpubPreview }))
+);
+const ImagePreview = lazy(() =>
+  import("./ImagePreview").then((m) => ({ default: m.ImagePreview }))
+);
+const TextPreview = lazy(() =>
+  import("./TextPreview").then((m) => ({ default: m.TextPreview }))
+);
+const CsvPreview = lazy(() =>
+  import("./CsvPreview").then((m) => ({ default: m.CsvPreview }))
+);
+const VideoPreview = lazy(() =>
+  import("./VideoPreview").then((m) => ({ default: m.VideoPreview }))
+);
+const AudioPreview = lazy(() =>
+  import("./AudioPreview").then((m) => ({ default: m.AudioPreview }))
+);
 
-interface FilePreviewRendererProps {
-  file: FileInfo;
-}
+// ── Single file renderer (extracted for reuse) ──
 
 function UnsupportedPreview({ fileType }: { fileType: FileType }) {
   return (
@@ -59,11 +87,17 @@ function PreviewLoading() {
   );
 }
 
-export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
+/**
+ * Render a single file's preview content (without caching logic).
+ * Used by both direct render and TabCache.
+ */
+export function FilePreviewContent({ file }: { file: FileInfo }) {
   switch (file.fileType) {
     case "pdf":
       return file.content ? (
-        <PdfPreview base64Content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <PdfPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="pdf" />
       );
@@ -97,98 +131,126 @@ export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
 
     case "docx":
       return file.content ? (
-        <DocxPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <DocxPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="docx" />
       );
 
     case "doc":
       return file.content ? (
-        <DocPreview base64Content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <DocPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="doc" />
       );
 
     case "pptx":
       return file.content ? (
-        <PptxPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <PptxPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="pptx" />
       );
 
     case "xlsx":
       return file.content ? (
-        <XlsxPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <XlsxPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="xlsx" />
       );
 
     case "html":
       return file.content ? (
-        <HtmlPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <HtmlPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="html" />
       );
 
     case "zip":
       return file.content ? (
-        <ZipPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <ZipPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="zip" />
       );
 
     case "svg":
       return file.content ? (
-        <SvgPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <SvgPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="svg" />
       );
 
     case "rtf":
       return file.content ? (
-        <RtfPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <RtfPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="rtf" />
       );
 
     case "epub":
       return file.content ? (
-        <EpubPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <EpubPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="epub" />
       );
 
     case "image":
       return file.url ? (
-        <ImagePreview url={file.url} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <ImagePreview url={file.url} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="image" />
       );
 
     case "text":
       return file.content ? (
-        <TextPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <TextPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="text" />
       );
 
     case "csv":
       return file.content ? (
-        <CsvPreview content={file.content} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <CsvPreview content={file.content} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="csv" />
       );
 
     case "video":
       return file.url ? (
-        <VideoPreview url={file.url} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <VideoPreview url={file.url} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="video" />
       );
 
     case "audio":
       return file.url ? (
-        <AudioPreview url={file.url} fileName={file.name} />
+        <Suspense fallback={<PreviewLoading />}>
+          <AudioPreview url={file.url} fileName={file.name} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="audio" />
       );
@@ -196,4 +258,62 @@ export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
     default:
       return <UnsupportedPreview fileType={file.fileType} />;
   }
+}
+
+// ── TabCache: Keep-alive renderer ──
+// Inspired by Magic's TabCache pattern: instead of unmounting preview components
+// on file switch, we use CSS display to hide/show them. This preserves:
+// - PDF parsed state & scroll position
+// - DOCX/XLSX/PPTX rendered output
+// - Shiki highlighter cache
+// - EPUB reading position
+// - Any other component-internal state
+
+interface TabCacheRendererProps {
+  files: FileInfo[];
+  activeFileId: string | null;
+}
+
+export function TabCacheRenderer({ files, activeFileId }: TabCacheRendererProps) {
+  // Memoize file lookup for stable references
+  const activeFile = useMemo(
+    () => files.find((f) => f.id === activeFileId) || null,
+    [files, activeFileId]
+  );
+
+  return (
+    <div className="relative h-full">
+      {files.map((file) => {
+        const isActive = file.id === activeFileId;
+
+        return (
+          <div
+            key={file.id}
+            className="absolute inset-0"
+            style={{
+              display: isActive ? "flex" : "none",
+              flexDirection: "column",
+            }}
+            // Hide from screen readers when inactive
+            aria-hidden={!isActive}
+            tabIndex={isActive ? 0 : -1}
+          >
+            <FilePreviewContent file={file} />
+          </div>
+        );
+      })}
+
+      {/* Show empty state when no file is active */}
+      {files.length === 0 && (
+        <div className="flex items-center justify-center h-full min-h-[300px] text-muted-foreground">
+          <p className="text-sm">No file selected</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Keep backward compatibility: simple single-file renderer
+export function FilePreviewRenderer({ file }: { file: FileInfo }) {
+  return <FilePreviewContent file={file} />;
 }

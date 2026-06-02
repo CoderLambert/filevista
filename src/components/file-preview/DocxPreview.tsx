@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { base64ToUint8Array } from "./utils";
 
 interface DocxPreviewProps {
   content: string; // base64 encoded
@@ -27,11 +28,7 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
       if (!mountedRef.current || !containerRef.current) return;
 
       // Decode base64 to ArrayBuffer
-      const binaryString = atob(content);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
+      const bytes = base64ToUint8Array(content);
 
       // Clear previous content
       containerRef.current.innerHTML = "";
