@@ -1,0 +1,24 @@
+src/components/file-preview/XlsxPreview.tsx
+  s_98ad4b7dddb6fb::t_bed9b0472feeca 14-15
+  s_98ad4b7dddb6fb::t_5b067dd5136c3c 352
+src/components/file-preview/PlainTextLargePreview.tsx
+  s_98ad4b7dddb6fb::t_07e3b07f8dec5d 5-6
+src/components/file-preview/limits.ts
+  s_98ad4b7dddb6fb::t_ee71ea5cf7151e 33-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "9f7e57752e562655841be43725362ec0e35abc3b",
+  "prompts": {},
+  "sessions": {
+    "s_98ad4b7dddb6fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f982d916-d102-47e6-a198-458bbe546970",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
