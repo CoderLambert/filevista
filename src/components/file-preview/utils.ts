@@ -1,3 +1,5 @@
+import type { PreviewSource } from "./core/types";
+
 export type FileType =
   | "pdf"
   | "markdown"
@@ -27,8 +29,30 @@ export interface FileInfo {
   size: number;
   type: string;
   fileType: FileType;
-  content: string | null; // base64 for binary, text for text files
-  url: string | null; // object URL for binary files
+
+  /**
+   * Legacy field.
+   *
+   * 当前仍用于现有预览组件：
+   * - 文本类文件：原始文本
+   * - PDF / Office / ZIP / EPUB：base64
+   */
+  content: string | null;
+
+  /**
+   * Legacy field.
+   *
+   * 当前主要用于 image / video / audio 的 object URL。
+   */
+  url: string | null;
+
+  /**
+   * New source abstraction.
+   *
+   * 08 阶段先作为兼容字段引入，不立即替换 content / url。
+   * 后续 PDF / DOCX / PPTX / XLSX 可以逐步从 source 读取 ArrayBuffer。
+   */
+  source?: PreviewSource;
 }
 
 const CODE_EXTENSIONS: Record<string, string> = {

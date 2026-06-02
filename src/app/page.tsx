@@ -25,6 +25,7 @@ import {
   formatFileSize,
   generateId,
   FileType,
+  base64ToUint8Array,
 } from "@/components/file-preview/utils";
 import { TabCacheRenderer } from "@/components/file-preview/FilePreviewRenderer";
 import { DEMO_FILES, fetchBinaryDemoFiles } from "@/components/file-preview/demos";
@@ -112,6 +113,10 @@ export default function Home() {
       fileType,
       content,
       url,
+      source: {
+        kind: "file",
+        file,
+      },
     };
   }, []);
 
@@ -161,29 +166,51 @@ export default function Home() {
     setLoadingDemo(true);
     try {
       // Load text-based demos
-      const textDemos: FileInfo[] = Object.entries(DEMO_FILES).map(
-        ([, demo]) => ({
+      const textDemos: FileInfo[] = Object.entries(DEMO_FILES).map(([, demo]) => {
+        const blob = new Blob([demo.content], { type: demo.type });
+
+        return {
           id: generateId(),
           name: demo.name,
-          size: new Blob([demo.content]).size,
+          size: blob.size,
           type: demo.type,
           fileType: detectFileType(demo.name, demo.type),
           content: demo.content,
           url: null,
-        })
-      );
+          source: {
+            kind: "blob",
+            blob,
+            name: demo.name,
+            mimeType: demo.type,
+          },
+        };
+      });
 
       // Load binary demos (EPUB, XLSX, DOCX) from public directory
       const binaryDemos = await fetchBinaryDemoFiles();
-      const binaryInfos: FileInfo[] = binaryDemos.map((demo) => ({
-        id: generateId(),
-        name: demo.name,
-        size: demo.size,
-        type: demo.type,
-        fileType: detectFileType(demo.name, demo.type),
-        content: demo.content,
-        url: null,
-      }));
+      const binaryInfos: FileInfo[] = binaryDemos.map((demo) => {
+        const bytes = base64ToUint8Array(demo.content);
+        const buffer = bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength
+        ) as ArrayBuffer;
+
+        return {
+          id: generateId(),
+          name: demo.name,
+          size: demo.size,
+          type: demo.type,
+          fileType: detectFileType(demo.name, demo.type),
+          content: demo.content,
+          url: null,
+          source: {
+            kind: "arrayBuffer",
+            buffer,
+            name: demo.name,
+            mimeType: demo.type,
+          },
+        };
+      });
 
       const allDemos = [...textDemos, ...binaryInfos];
       setFiles(allDemos);
