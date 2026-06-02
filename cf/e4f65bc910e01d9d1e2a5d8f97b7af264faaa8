@@ -1,0 +1,46 @@
+docs/repair-plan/09-p2-plugin-architecture.md
+  s_98ad4b7dddb6fb::t_dfe2c0d930a91d 1-161
+docs/repair-plan/05-p0-resource-cleanup.md
+  s_98ad4b7dddb6fb::t_848ed04a948d32 1-142
+docs/repair-plan/08-p2-preview-source-abstraction.md
+  s_98ad4b7dddb6fb::t_66921c3b6f92e5 1-164
+docs/chatgpt-chat/filevista-fix-plan.md
+  ai_agent 1
+docs/repair-plan/04-p0-preview-security.md
+  s_98ad4b7dddb6fb::t_8f02c226b84eb3 1-122
+docs/repair-plan/07-p1-xlsx-fast-mode.md
+  s_98ad4b7dddb6fb::t_5df64c97bc4a2b 1-117
+"docs/chatgpt-chat/当前main 分支代码分析.md"
+  h_0c102f4798bf38 1-841
+docs/repair-plan/10-p3-engineering-quality-and-tests.md
+  s_98ad4b7dddb6fb::t_7dc0d97ad8cc2d 1-126
+docs/repair-plan/06-p1-large-file-fallback.md
+  s_98ad4b7dddb6fb::t_3507c54ae032c8 1-165
+docs/repair-plan/03-p0-pdf-worker-and-cleanup.md
+  s_98ad4b7dddb6fb::t_71f473c0554e01 1-130
+docs/repair-plan/02-p0-file-type-detection.md
+  s_98ad4b7dddb6fb::t_9ebf588b63b07e 1-173
+pnpm-lock.yaml
+  ai_agent 1-10889
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "cfe4f65bc910e01d9d1e2a5d8f97b7af264faaa8",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  },
+  "sessions": {
+    "s_98ad4b7dddb6fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f982d916-d102-47e6-a198-458bbe546970",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
