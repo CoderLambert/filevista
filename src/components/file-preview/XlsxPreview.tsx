@@ -345,7 +345,7 @@ const ROW_NUM_COL_WIDTH = 45;
 const HEADER_ROW_HEIGHT = 22;
 const DEFAULT_ROW_HEIGHT = 22;
 const DEFAULT_COL_WIDTH = 80;
-const VISIBLE_ROW_BUFFER = 20;
+const MAX_RENDER_ROWS = 5000;
 
 // ---- Main Parser ----
 async function parseXlsx(base64Content: string, fileName: string): Promise<SheetData[]> {
@@ -558,7 +558,6 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [zoom, setZoom] = useState(100);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [visibleRowRange, setVisibleRowRange] = useState({ start: 0, end: 60 });
   const [hoveredComment, setHoveredComment] = useState<{ row: number; col: number; text: string; x: number; y: number } | null>(null);
 
   const debouncedSearch = useDebounce(searchTerm, 300);
@@ -583,18 +582,7 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
 
   useEffect(() => { parseFile(); }, [parseFile]);
 
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const scale = zoom / 100;
-    const approxRowH = DEFAULT_ROW_HEIGHT * scale;
-    const start = Math.max(0, Math.floor(el.scrollTop / approxRowH) - VISIBLE_ROW_BUFFER);
-    const end = Math.min(sheets[activeSheet]?.totalRows || 0, Math.ceil((el.scrollTop + el.clientHeight) / approxRowH) + VISIBLE_ROW_BUFFER);
-    setVisibleRowRange({ start, end });
-  }, [zoom, activeSheet, sheets]);
-
   useEffect(() => {
-    setVisibleRowRange({ start: 0, end: 60 });
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [activeSheet]);
 
@@ -640,28 +628,12 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
 
   const rows = currentSheet?.cellGrid || [];
   const isSearch = !!filteredRowIndices;
-  const displayRows = isSearch
+  const allDisplayRows = isSearch
     ? filteredRowIndices!.map((idx) => ({ row: rows[idx], originalIdx: idx }))
     : rows.map((row, idx) => ({ row, originalIdx: idx }));
 
-  // Virtual scroll with merge awareness
-  const renderedRows = isSearch
-    ? displayRows
-    : displayRows.filter(({ row, originalIdx }) => {
-        if (originalIdx >= visibleRowRange.start && originalIdx < visibleRowRange.end) return true;
-        for (const cell of row) {
-          if (cell?.rowspan && cell.rowspan > 1) {
-            const mergeEnd = originalIdx + cell.rowspan - 1;
-            if (originalIdx < visibleRowRange.end && mergeEnd >= visibleRowRange.start) return true;
-          }
-        }
-        return false;
-      });
-
-  const vPadTop = isSearch ? 0 : (currentSheet?.accRowHeights[visibleRowRange.start] ?? visibleRowRange.start * DEFAULT_ROW_HEIGHT);
-  const totalContentHeight = currentSheet?.accRowHeights[currentSheet.totalRows] ?? currentSheet.totalRows * DEFAULT_ROW_HEIGHT;
-  const visibleEndHeight = currentSheet?.accRowHeights[visibleRowRange.end] ?? visibleRowRange.end * DEFAULT_ROW_HEIGHT;
-  const vPadBottom = isSearch ? 0 : Math.max(0, totalContentHeight - visibleEndHeight);
+  const isTruncated = !isSearch && allDisplayRows.length > MAX_RENDER_ROWS;
+  const displayRows = isTruncated ? allDisplayRows.slice(0, MAX_RENDER_ROWS) : allDisplayRows;
 
   const totalCols = currentSheet?.totalCols || 0;
   const allColWidths = currentSheet?.colWidths || [];
@@ -710,8 +682,8 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
       </div>
 
       {/* Table */}
-      <div ref={scrollRef} className="flex-1 overflow-auto bg-gray-100" onScroll={handleScroll}>
-        <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top left" }}>
+      <div ref={scrollRef} className="flex-1 overflow-auto bg-gray-100">
+        <div style={{ zoom: zoom / 100 }}>
           <table className="border-collapse bg-white" style={{ tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: ROW_NUM_COL_WIDTH }} />
@@ -728,10 +700,7 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
               </tr>
             </thead>
             <tbody>
-              {vPadTop > 0 && (
-                <tr><td colSpan={totalCols + 1} style={{ height: vPadTop, padding: 0, border: "none" }} /></tr>
-              )}
-              {renderedRows.map(({ row, originalIdx }) => {
+              {displayRows.map(({ row, originalIdx }) => {
                 if (!row) return null;
                 const rh = currentSheet?.rowHeights[originalIdx] || 0;
 
@@ -829,15 +798,19 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
                   </tr>
                 );
               })}
+              {isTruncated && (
+                <tr>
+                  <td colSpan={totalCols + 1} className="px-3 py-3 text-center text-amber-600 bg-amber-50 border border-amber-200 text-xs">
+                    数据量较大，仅显示前 {MAX_RENDER_ROWS} 行（共 {allDisplayRows.length} 行）
+                  </td>
+                </tr>
+              )}
               {displayRows.length === 0 && (
                 <tr>
                   <td colSpan={totalCols + 1} className="px-3 py-8 text-center text-muted-foreground bg-white border border-gray-300">
                     {searchTerm ? "未找到匹配数据" : "无数据"}
                   </td>
                 </tr>
-              )}
-              {vPadBottom > 0 && (
-                <tr><td colSpan={totalCols + 1} style={{ height: vPadBottom, padding: 0, border: "none" }} /></tr>
               )}
             </tbody>
           </table>
