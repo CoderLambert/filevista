@@ -16,6 +16,28 @@ interface PdfPreviewProps {
   fileName: string;
 }
 
+interface PdfDocumentLike {
+  numPages: number;
+  getPage(pageNumber: number): Promise<PdfPageLike>;
+  destroy?: () => Promise<void>;
+}
+
+interface PdfPageLike {
+  getViewport(opts: { scale: number; rotation: number }): {
+    width: number;
+    height: number;
+  };
+  render(opts: {
+    canvasContext: CanvasRenderingContext2D;
+    viewport: { width: number; height: number };
+  }): PdfRenderTaskLike;
+}
+
+interface PdfRenderTaskLike {
+  promise: Promise<void>;
+  cancel: () => void;
+}
+
 export function PdfPreview({ content, fileName }: PdfPreviewProps) {
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,20 +46,18 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pdfDocRef = useRef<unknown>(null);
-  const renderTaskRef = useRef<unknown>(null);
+  const pdfDocRef = useRef<PdfDocumentLike | null>(null);
+  const renderTaskRef = useRef<PdfRenderTaskLike | null>(null);
   const renderingRef = useRef(false);
 
   const renderPage = useCallback(async () => {
-    const pdfDoc = pdfDocRef.current as
-      | { getPage: (n: number) => Promise<unknown> }
-      | null;
+    const pdfDoc = pdfDocRef.current;
     if (!pdfDoc || !canvasRef.current) return;
 
     // Prevent concurrent renders
     if (renderingRef.current) {
       // Cancel the in-progress render
-      const prevTask = renderTaskRef.current as { cancel: () => void } | null;
+      const prevTask = renderTaskRef.current;
       if (prevTask) {
         try { prevTask.cancel(); } catch { /* ignore */ }
       }
@@ -46,16 +66,7 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
     renderingRef.current = true;
 
     try {
-      const page = (await pdfDoc.getPage(currentPage)) as {
-        getViewport: (opts: { scale: number; rotation: number }) => {
-          width: number;
-          height: number;
-        };
-        render: (opts: {
-          canvasContext: CanvasRenderingContext2D;
-          viewport: { width: number; height: number };
-        }) => { promise: Promise<void>; cancel: () => void };
-      };
+      const page = await pdfDoc.getPage(currentPage);
 
       const viewport = page.getViewport({ scale, rotation });
       const displayCanvas = canvasRef.current;
@@ -107,7 +118,7 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
         const pdfjsLib = await import("pdfjs-dist");
 
         // Set worker source
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.mjs";
 
         // Decode base64 to Uint8Array
         const bytes = base64ToUint8Array(content);
@@ -138,6 +149,22 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
 
     return () => {
       cancelled = true;
+
+      try {
+        renderTaskRef.current?.cancel();
+      } catch {
+        // ignore
+      }
+
+      try {
+        void pdfDocRef.current?.destroy?.();
+      } catch {
+        // ignore
+      }
+
+      renderTaskRef.current = null;
+      pdfDocRef.current = null;
+      renderingRef.current = false;
     };
   }, [content]);
 
@@ -158,7 +185,7 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
 
   const handleDownload = () => {
     const bytes = base64ToUint8Array(content);
-    const blob = new Blob([bytes], { type: "application/pdf" });
+    const blob = new Blob([bytes as unknown as BlobPart], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
