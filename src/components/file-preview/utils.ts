@@ -6,7 +6,9 @@ export type FileType =
   | "docx"
   | "doc"
   | "pptx"
+  | "ppt"
   | "xlsx"
+  | "xls"
   | "html"
   | "zip"
   | "svg"
@@ -111,25 +113,29 @@ export function detectFileType(filename: string, mimeType: string): FileType {
   if (ext === "doc" || mimeType === "application/msword")
     return "doc";
 
-  // PPTX / PPT
+  // PPTX
   if (
     ext === "pptx" ||
-    ext === "ppt" ||
     mimeType ===
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
-    mimeType === "application/vnd.ms-powerpoint"
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
   )
     return "pptx";
 
-  // XLSX / XLS
+  // PPT (legacy PowerPoint binary format)
+  if (ext === "ppt" || mimeType === "application/vnd.ms-powerpoint")
+    return "ppt";
+
+  // XLSX
   if (
     ext === "xlsx" ||
-    ext === "xls" ||
     mimeType ===
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-    mimeType === "application/vnd.ms-excel"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   )
     return "xlsx";
+
+  // XLS (legacy Excel binary format)
+  if (ext === "xls" || mimeType === "application/vnd.ms-excel")
+    return "xls";
 
   // HTML
   if (["html", "htm", "xhtml"].includes(ext) || mimeType === "text/html")
@@ -164,7 +170,21 @@ export function detectFileType(filename: string, mimeType: string): FileType {
 
   // Code files (check after HTML since .html/.vue/.svelte should be "html" type)
   if (CODE_EXTENSIONS[ext]) return "code";
-  if (["Dockerfile", "Makefile", "Gemfile", "Rakefile"].includes(baseName))
+
+  if (
+    [
+      "dockerfile",
+      "makefile",
+      "gnumakefile",
+      "gemfile",
+      "rakefile",
+      "vagrantfile",
+      ".gitignore",
+      ".env",
+      ".eslintrc",
+      ".prettierrc",
+    ].includes(baseName)
+  )
     return "code";
 
   // YAML / XML get their own code highlighting but are still "code" type
@@ -222,7 +242,9 @@ export function getFileTypeColor(fileType: FileType): string {
     docx: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
     doc: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
     pptx: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    ppt: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
     xlsx: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    xls: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
     html: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
     zip: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
     svg: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
@@ -247,7 +269,9 @@ export function getFileTypeLabel(fileType: FileType): string {
     docx: "Word",
     doc: "Word",
     pptx: "PPT",
+    ppt: "PPT",
     xlsx: "Excel",
+    xls: "Excel",
     html: "HTML",
     zip: "ZIP",
     svg: "SVG",

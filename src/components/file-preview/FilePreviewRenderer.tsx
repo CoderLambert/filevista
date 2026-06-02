@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useMemo } from "react";
 import { FileInfo, FileType } from "./utils";
+import { UnsupportedLegacyOfficePreview } from "./UnsupportedLegacyOfficePreview";
 
 // Lazy load all preview components — each may pull in heavy dependencies
 // (e.g. PDF renderer, Office parsers, media players, Shiki, etc.)
@@ -156,6 +157,21 @@ export function FilePreviewContent({ file }: { file: FileInfo }) {
         <UnsupportedPreview fileType="pptx" />
       );
 
+    case "ppt":
+      return file.content ? (
+        <Suspense fallback={<PreviewLoading />}>
+          <UnsupportedLegacyOfficePreview
+            type="ppt"
+            fileName={file.name}
+            content={file.content}
+            title="旧版 PowerPoint 格式暂不支持"
+            description="该文件为旧版 .ppt 二进制格式，当前浏览器端预览仅支持 .pptx。建议使用 PowerPoint 或 WPS 将文件另存为 .pptx 后重试。"
+          />
+        </Suspense>
+      ) : (
+        <UnsupportedPreview fileType="ppt" />
+      );
+
     case "xlsx":
       return file.content ? (
         <Suspense fallback={<PreviewLoading />}>
@@ -163,6 +179,21 @@ export function FilePreviewContent({ file }: { file: FileInfo }) {
         </Suspense>
       ) : (
         <UnsupportedPreview fileType="xlsx" />
+      );
+
+    case "xls":
+      return file.content ? (
+        <Suspense fallback={<PreviewLoading />}>
+          <UnsupportedLegacyOfficePreview
+            type="xls"
+            fileName={file.name}
+            content={file.content}
+            title="旧版 Excel 格式暂不支持"
+            description="该文件为旧版 .xls 二进制格式，当前浏览器端预览仅支持 .xlsx。建议使用 Excel 或 WPS 将文件另存为 .xlsx 后重试。"
+          />
+        </Suspense>
+      ) : (
+        <UnsupportedPreview fileType="xls" />
       );
 
     case "html":
