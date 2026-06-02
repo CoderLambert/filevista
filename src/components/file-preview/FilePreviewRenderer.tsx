@@ -95,9 +95,13 @@ function PreviewLoading() {
 export function FilePreviewContent({ file }: { file: FileInfo }) {
   switch (file.fileType) {
     case "pdf":
-      return file.content ? (
+      return file.source || file.content ? (
         <Suspense fallback={<PreviewLoading />}>
-          <PdfPreview content={file.content} fileName={file.name} />
+          <PdfPreview
+            content={file.content}
+            source={file.source}
+            fileName={file.name}
+          />
         </Suspense>
       ) : (
         <UnsupportedPreview fileType="pdf" />
@@ -131,9 +135,13 @@ export function FilePreviewContent({ file }: { file: FileInfo }) {
       );
 
     case "docx":
-      return file.content ? (
+      return file.source || file.content ? (
         <Suspense fallback={<PreviewLoading />}>
-          <DocxPreview content={file.content} fileName={file.name} />
+          <DocxPreview
+            content={file.content}
+            source={file.source}
+            fileName={file.name}
+          />
         </Suspense>
       ) : (
         <UnsupportedPreview fileType="docx" />
@@ -149,9 +157,13 @@ export function FilePreviewContent({ file }: { file: FileInfo }) {
       );
 
     case "pptx":
-      return file.content ? (
+      return file.source || file.content ? (
         <Suspense fallback={<PreviewLoading />}>
-          <PptxPreview content={file.content} fileName={file.name} />
+          <PptxPreview
+            content={file.content}
+            source={file.source}
+            fileName={file.name}
+          />
         </Suspense>
       ) : (
         <UnsupportedPreview fileType="pptx" />
@@ -173,9 +185,14 @@ export function FilePreviewContent({ file }: { file: FileInfo }) {
       );
 
     case "xlsx":
-      return file.content ? (
+      return file.source || file.content ? (
         <Suspense fallback={<PreviewLoading />}>
-          <XlsxPreview content={file.content} fileName={file.name} fileSize={file.size} />
+          <XlsxPreview
+            content={file.content}
+            source={file.source}
+            fileName={file.name}
+            fileSize={file.size}
+          />
         </Suspense>
       ) : (
         <UnsupportedPreview fileType="xlsx" />

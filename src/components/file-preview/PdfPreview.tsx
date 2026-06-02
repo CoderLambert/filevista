@@ -9,10 +9,12 @@ import {
   Download,
   RotateCw,
 } from "lucide-react";
-import { base64ToUint8Array } from "./utils";
+import { readBinaryPreviewAsUint8Array } from "./core/binary";
+import type { PreviewSource } from "./core/types";
 
 interface PdfPreviewProps {
-  content: string;
+  content?: string | null;
+  source?: PreviewSource;
   fileName: string;
 }
 
@@ -38,7 +40,7 @@ interface PdfRenderTaskLike {
   cancel: () => void;
 }
 
-export function PdfPreview({ content, fileName }: PdfPreviewProps) {
+export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1.5);
@@ -120,8 +122,7 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
         // Set worker source
         pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.mjs";
 
-        // Decode base64 to Uint8Array
-        const bytes = base64ToUint8Array(content);
+        const bytes = await readBinaryPreviewAsUint8Array({ source, content });
 
         const loadingTask = pdfjsLib.getDocument({ data: bytes });
         const pdf = await loadingTask.promise;
@@ -166,7 +167,7 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
       pdfDocRef.current = null;
       renderingRef.current = false;
     };
-  }, [content]);
+  }, [content, source]);
 
   // Render page when parameters change
   useEffect(() => {
@@ -183,15 +184,20 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.25, 0.5));
   const handleRotate = () => setRotation((prev) => (prev + 90) % 360);
 
-  const handleDownload = () => {
-    const bytes = base64ToUint8Array(content);
-    const blob = new Blob([bytes as unknown as BlobPart], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleDownload = async () => {
+    try {
+      const bytes = await readBinaryPreviewAsUint8Array({ source, content });
+      const blob = new Blob([bytes], { type: "application/pdf" });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download PDF:", err);
+    }
   };
 
   if (loading) {

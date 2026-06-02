@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { base64ToUint8Array } from "./utils";
+import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
+import type { PreviewSource } from "./core/types";
 
 interface DocxPreviewProps {
-  content: string; // base64 encoded
+  content?: string | null;
+  source?: PreviewSource;
   fileName: string;
 }
 
-export function DocxPreview({ content, fileName }: DocxPreviewProps) {
+export function DocxPreview({ content, source, fileName }: DocxPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +29,12 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
 
       if (!mountedRef.current || !containerRef.current) return;
 
-      // Decode base64 to ArrayBuffer
-      const bytes = base64ToUint8Array(content);
+      const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
 
       // Clear previous content
       containerRef.current.innerHTML = "";
 
-      await renderAsync(bytes.buffer, containerRef.current, undefined, {
+      await renderAsync(buffer, containerRef.current, undefined, {
         className: "docx",
         inWrapper: true,
         ignoreWidth: false,
@@ -67,7 +68,7 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
         setLoading(false);
       }
     }
-  }, [content]);
+  }, [content, source]);
 
   useEffect(() => {
     mountedRef.current = true;

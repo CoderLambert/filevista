@@ -12,7 +12,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { XLSX_PREVIEW_LIMITS } from "./limits";
-import { base64ToUint8Array, formatFileSize } from "./utils";
+import { readBinaryPreviewAsUint8Array } from "./core/binary";
+import type { PreviewSource } from "./core/types";
+import { formatFileSize } from "./utils";
 
 // Lazy-load ExcelJS
 let ExcelJS: typeof import("exceljs") | null = null;
@@ -24,7 +26,8 @@ async function getExcelJS() {
 }
 
 interface XlsxPreviewProps {
-  content: string;
+  content?: string | null;
+  source?: PreviewSource;
   fileName: string;
   fileSize: number;
 }
@@ -353,12 +356,16 @@ const DEFAULT_COL_WIDTH = 80;
 const MAX_RENDER_ROWS = 5000;
 
 // ---- Main Parser ----
-async function parseXlsx(base64Content: string, fileName: string, mode: XlsxPreviewMode): Promise<SheetData[]> {
+async function parseXlsx(
+  input: { source?: PreviewSource; content?: string | null },
+  fileName: string,
+  mode: XlsxPreviewMode
+): Promise<SheetData[]> {
   const EJS = await getExcelJS();
   const ext = fileName.toLowerCase().split(".").pop() || "";
   const isLegacyXls = ext === "xls";
 
-  const bytes = base64ToUint8Array(base64Content);
+  const bytes = await readBinaryPreviewAsUint8Array(input);
 
   const workbook = new EJS.Workbook();
   await workbook.xlsx.load(bytes);
@@ -559,7 +566,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced;
 }
 
-export function XlsxPreview({ content, fileName, fileSize }: XlsxPreviewProps) {
+export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreviewProps) {
   const [sheets, setSheets] = useState<SheetData[]>([]);
   const [activeSheet, setActiveSheet] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -595,7 +602,7 @@ export function XlsxPreview({ content, fileName, fileSize }: XlsxPreviewProps) {
   const parseFile = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await parseXlsx(content, fileName, mode);
+      const result = await parseXlsx({ source, content }, fileName, mode);
       setSheets(result);
     } catch (err) {
       console.error("XLSX parse error:", err);
@@ -608,7 +615,7 @@ export function XlsxPreview({ content, fileName, fileSize }: XlsxPreviewProps) {
     } finally {
       setLoading(false);
     }
-  }, [content, fileName, mode]);
+  }, [content, source, fileName, mode]);
 
   useEffect(() => { parseFile(); }, [parseFile]);
 

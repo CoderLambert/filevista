@@ -19,10 +19,12 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import { base64ToUint8Array } from "./utils";
+import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
+import type { PreviewSource } from "./core/types";
 
 interface PptxPreviewProps {
-  content: string; // base64 encoded
+  content?: string | null;
+  source?: PreviewSource;
   fileName: string;
 }
 
@@ -71,14 +73,15 @@ export interface PptxRenderHandle {
 const PptxRenderContainer = forwardRef<
   PptxRenderHandle,
   {
-    content: string;
+    content?: string | null;
+    source?: PreviewSource;
     mode: ViewMode;
     zoom: number;
     onReady: (info: { slideCount: number; currentIndex: number }) => void;
     onError: (error: string) => void;
   }
 >(function PptxRenderContainer(
-  { content, mode, zoom, onReady, onError },
+  { content, source, mode, zoom, onReady, onError },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -148,16 +151,12 @@ const PptxRenderContainer = forwardRef<
 
         viewerRef.current = viewer;
 
-        const bytes = base64ToUint8Array(content);
-        const arrayBuffer = bytes.buffer.slice(
-          bytes.byteOffset,
-          bytes.byteOffset + bytes.byteLength
-        );
+        const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
 
         if (cancelled) return;
 
         // Use preview() for simpler flow (load + render in one call)
-        await viewer.preview(arrayBuffer as ArrayBuffer);
+        await viewer.preview(buffer);
         if (cancelled) return;
 
         const pptx = viewer.pptx;
@@ -211,7 +210,7 @@ const PptxRenderContainer = forwardRef<
         containerRef.current.innerHTML = "";
       }
     };
-  }, [content, mode, onReady, onError]);
+  }, [content, source, mode, onReady, onError]);
 
   return (
     <div
@@ -233,7 +232,7 @@ const PptxRenderContainer = forwardRef<
   );
 });
 
-export function PptxPreview({ content, fileName }: PptxPreviewProps) {
+export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [slideCount, setSlideCount] = useState(0);
@@ -473,6 +472,7 @@ export function PptxPreview({ content, fileName }: PptxPreviewProps) {
             key={renderKey}
             ref={renderHandleRef}
             content={content}
+            source={source}
             mode={viewMode}
             zoom={zoom}
             onReady={handleReady}
