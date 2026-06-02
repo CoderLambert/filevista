@@ -137,8 +137,8 @@ const MARKDOWN_PROSE_STYLES = `
 .md-prose {
   font-size: 0.875rem;
   line-height: 1.75;
-  max-width: 65ch;
-  padding: 1.5rem;
+  max-width: none;
+  padding: 1.5rem 2rem;
   color: var(--color-foreground);
 }
 
