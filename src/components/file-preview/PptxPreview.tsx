@@ -126,8 +126,11 @@ const PptxRenderContainer = forwardRef<
       // Destroy previous viewer
       if (viewerRef.current) {
         try {
-          viewerRef.current.destroy();
-        } catch {}
+          viewerRef.current.destroy?.();
+        } catch {
+          // ignore
+        }
+
         viewerRef.current = null;
       }
 
@@ -154,7 +157,7 @@ const PptxRenderContainer = forwardRef<
         if (cancelled) return;
 
         // Use preview() for simpler flow (load + render in one call)
-        await viewer.preview(arrayBuffer);
+        await viewer.preview(arrayBuffer as ArrayBuffer);
         if (cancelled) return;
 
         const pptx = viewer.pptx;
@@ -193,11 +196,19 @@ const PptxRenderContainer = forwardRef<
 
     return () => {
       cancelled = true;
+
       if (viewerRef.current) {
         try {
-          viewerRef.current.destroy();
-        } catch {}
+          viewerRef.current.destroy?.();
+        } catch {
+          // ignore
+        }
+
         viewerRef.current = null;
+      }
+
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
       }
     };
   }, [content, mode, onReady, onError]);

@@ -74,6 +74,10 @@ export function DocxPreview({ content, fileName }: DocxPreviewProps) {
     renderDocument();
     return () => {
       mountedRef.current = false;
+
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
     };
   }, [renderDocument]);
 

@@ -53,6 +53,12 @@ const FILE_TYPE_ICONS: Record<FileType, string> = {
   unknown: "📎",
 };
 
+function revokeFileResources(file: FileInfo) {
+  if (file.url) {
+    URL.revokeObjectURL(file.url);
+  }
+}
+
 export default function Home() {
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
@@ -132,19 +138,19 @@ export default function Home() {
   const removeFile = useCallback(
     (id: string) => {
       setFiles((prev) => {
-        const file = prev.find((f) => f.id === id);
-        if (file?.url) {
-          URL.revokeObjectURL(file.url);
+        const fileToRemove = prev.find((f) => f.id === id);
+        if (fileToRemove) {
+          revokeFileResources(fileToRemove);
         }
-        return prev.filter((f) => f.id !== id);
-      });
-      if (activeFileId === id) {
-        setFiles((prev) => {
-          const remaining = prev.filter((f) => f.id !== id);
+
+        const remaining = prev.filter((f) => f.id !== id);
+
+        if (activeFileId === id) {
           setActiveFileId(remaining.length > 0 ? remaining[0].id : null);
-          return prev;
-        });
-      }
+        }
+
+        return remaining;
+      });
     },
     [activeFileId]
   );
@@ -192,9 +198,7 @@ export default function Home() {
   }, []);
 
   const clearAllFiles = useCallback(() => {
-    files.forEach((f) => {
-      if (f.url) URL.revokeObjectURL(f.url);
-    });
+    files.forEach(revokeFileResources);
     setFiles([]);
     setActiveFileId(null);
     toast.success("All files cleared");
