@@ -22,17 +22,28 @@ export function PdfPreview({ base64Content, fileName }: PdfPreviewProps) {
   const [rotation, setRotation] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [rendering, setRendering] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pdfDocRef = useRef<unknown>(null);
+  const renderTaskRef = useRef<unknown>(null);
+  const renderingRef = useRef(false);
 
   const renderPage = useCallback(async () => {
     const pdfDoc = pdfDocRef.current as
       | { getPage: (n: number) => Promise<unknown> }
       | null;
-    if (!pdfDoc || !canvasRef.current || rendering) return;
+    if (!pdfDoc || !canvasRef.current) return;
 
-    setRendering(true);
+    // Prevent concurrent renders
+    if (renderingRef.current) {
+      // Cancel the in-progress render
+      const prevTask = renderTaskRef.current as { cancel: () => void } | null;
+      if (prevTask) {
+        try { prevTask.cancel(); } catch { /* ignore */ }
+      }
+    }
+
+    renderingRef.current = true;
+
     try {
       const page = (await pdfDoc.getPage(currentPage)) as {
         getViewport: (opts: { scale: number; rotation: number }) => {
@@ -42,28 +53,45 @@ export function PdfPreview({ base64Content, fileName }: PdfPreviewProps) {
         render: (opts: {
           canvasContext: CanvasRenderingContext2D;
           viewport: { width: number; height: number };
-        }) => { promise: Promise<void> };
+        }) => { promise: Promise<void>; cancel: () => void };
       };
 
       const viewport = page.getViewport({ scale, rotation });
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
-
+      const displayCanvas = canvasRef.current;
+      const context = displayCanvas.getContext("2d");
       if (!context) return;
 
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+      // ── Double buffering: render to offscreen canvas first ──
+      const offscreen = document.createElement("canvas");
+      offscreen.width = viewport.width;
+      offscreen.height = viewport.height;
+      const offCtx = offscreen.getContext("2d");
+      if (!offCtx) return;
 
-      await page.render({
-        canvasContext: context,
+      const renderTask = page.render({
+        canvasContext: offCtx,
         viewport,
-      }).promise;
-    } catch (err) {
+      });
+
+      renderTaskRef.current = renderTask;
+
+      await renderTask.promise;
+
+      // Only swap to display canvas after render completes
+      displayCanvas.width = viewport.width;
+      displayCanvas.height = viewport.height;
+      context.drawImage(offscreen, 0, 0);
+
+    } catch (err: unknown) {
+      // RenderingCancelledException is expected when navigating fast
+      const errObj = err as { name?: string };
+      if (errObj?.name === "RenderingCancelledException") return;
       console.error("Error rendering PDF page:", err);
     } finally {
-      setRendering(false);
+      renderingRef.current = false;
+      renderTaskRef.current = null;
     }
-  }, [currentPage, scale, rotation, rendering]);
+  }, [currentPage, scale, rotation]);
 
   // Load PDF document
   useEffect(() => {
@@ -250,17 +278,10 @@ export function PdfPreview({ base64Content, fileName }: PdfPreviewProps) {
 
       {/* PDF Canvas */}
       <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 flex justify-center p-4">
-        <div className="relative">
-          {rendering && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50 z-10">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-            </div>
-          )}
-          <canvas
-            ref={canvasRef}
-            className="shadow-lg rounded-sm bg-white"
-          />
-        </div>
+        <canvas
+          ref={canvasRef}
+          className="shadow-lg rounded-sm bg-white"
+        />
       </div>
     </div>
   );
