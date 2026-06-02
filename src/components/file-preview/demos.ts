@@ -12,10 +12,10 @@ A modern, feature-rich file preview application built with **Next.js** and **sha
 | Type | Extensions | Features |
 |------|-----------|----------|
 | PDF | \`.pdf\` | Inline browser rendering |
-| Markdown | \`.md\`, \`.mdx\` | Full GFM support with tables |
+| Markdown | \`.md\`, \`.mdx\` | Full GFM + Shiki code highlighting |
 | JSON | \`.json\` | Auto-formatting & syntax highlighting |
-| Code | \`.js\`, \`.ts\`, \`.py\`, etc. | 30+ languages with line numbers |
-| Word | \`.docx\` | HTML conversion with styling |
+| Code | \`.js\`, \`.ts\`, \`.py\`, etc. | 50+ languages with line numbers |
+| Word | \`.docx\` | High-fidelity rendering with docx-preview |
 | PPT | \`.pptx\`, \`.ppt\` | Slide parsing with navigation |
 | Excel | \`.xlsx\` | Full fidelity with styles, merges & images |
 | EPUB | \`.epub\` | Chapter navigation, TOC & images |
@@ -31,17 +31,77 @@ A modern, feature-rich file preview application built with **Next.js** and **sha
 2. Or **click** to browse and select files from your computer
 3. Preview files instantly in the browser — no upload to server needed!
 
+## Code Highlighting
+
+All code blocks in Markdown are syntax-highlighted using **Shiki** — the same engine that powers VS Code. Try it:
+
+\`\`\`typescript
+interface PreviewConfig {
+  maxFileSize: number;
+  theme: "light" | "dark" | "system";
+  highlighter: "shiki";
+}
+
+function createPreview(config: PreviewConfig) {
+  return {
+    ...config,
+    ready: true,
+  };
+}
+\`\`\`
+
+\`\`\`python
+class FilePreviewEngine:
+    """Preview files in the browser."""
+
+    def __init__(self, max_size: int = 50_000_000):
+        self.max_size = max_size
+        self.cache: dict[str, str] = {}
+
+    async def preview(self, file_path: str) -> str:
+        if file_path in self.cache:
+            return self.cache[file_path]
+        content = await self._read(file_path)
+        self.cache[file_path] = content
+        return content
+\`\`\`
+
+\`\`\`css
+.code-block {
+  font-family: "SF Mono", Menlo, monospace;
+  background: var(--shiki-light-bg);
+  color: var(--shiki-light);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .code-block {
+    background: var(--shiki-dark-bg);
+    color: var(--shiki-dark);
+  }
+}
+\`\`\`
+
+\`\`\`bash
+# Install dependencies
+bun add shiki @shikijs/langs @shikijs/themes
+
+# Run dev server
+bun run dev
+\`\`\`
+
 ## Features
 
 - 🚀 **Zero upload** — All processing happens locally in your browser
-- 🎨 **Syntax highlighting** — Beautiful code rendering for 30+ languages
+- 🎨 **Shiki highlighting** — VS Code-quality rendering for 50+ languages
 - 📊 **Excel preview** — Full fidelity with styles, merged cells & images
 - 📖 **EPUB reader** — Chapter navigation, TOC sidebar & embedded images
 - 📊 **CSV tables** — Sortable, searchable table view
 - 🖼️ **Image controls** — Zoom in/out, rotate, reset
-- 📝 **Markdown** — Full GitHub Flavored Markdown support
-- 📄 **Word docs** — Convert .docx to HTML for preview
-- 🌙 **Dark mode** — Comfortable viewing in any lighting
+- 📝 **Markdown** — Full GFM support with code block highlighting
+- 📄 **Word docs** — High-fidelity rendering with docx-preview
+- 🌙 **Dark mode** — Dual-theme code blocks, zero re-render
 
 ## Technical Stack
 
@@ -50,9 +110,9 @@ const techStack = {
   framework: "Next.js 16",
   language: "TypeScript",
   styling: "Tailwind CSS + shadcn/ui",
-  markdown: "react-markdown + remark-gfm",
-  codeHighlight: "react-syntax-highlighter",
-  docx: "mammoth.js",
+  markdown: "react-markdown + remark-gfm + Shiki",
+  codeHighlight: "Shiki (VS Code engine)",
+  docx: "docx-preview",
   excel: "exceljs",
   epub: "jszip",
   icons: "Lucide React",

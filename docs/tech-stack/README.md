@@ -32,7 +32,7 @@
 | react-markdown | 10.1.0 | Markdown | Markdown → React 渲染 |
 | remark-gfm | 4.0.1 | Markdown | GFM 扩展（表格/任务列表/删除线） |
 | react-syntax-highlighter | 15.6.1 | 代码 | Prism 语法高亮引擎（已移除） |
-| shiki | 4.1.0 | 代码 | VS Code 级语法高亮（懒加载） |
+| shiki | 4.1.0 | 代码/Markdown | VS Code 级语法高亮（懒加载，Markdown 代码块复用） |
 | @shikijs/langs | 4.1.0 | 代码 | 50+ 语言按需加载 |
 | @shikijs/themes | 4.1.0 | 代码 | GitHub Dark/Light 双主题 |
 | @shikijs/transformers | 4.1.0 | 代码 | 行号等 Transformer |
@@ -91,7 +91,7 @@ page.tsx
         ├── XlsxPreview ←── exceljs
         ├── EpubPreview ←── jszip
         ├── ZipPreview ←── jszip
-        ├── MarkdownPreview ←── react-markdown + remark-gfm
+        ├── MarkdownPreview ←── react-markdown + remark-gfm + Shiki (React.lazy 懒加载)
         ├── CodePreview ←── shiki (React.lazy 懒加载)
         ├── ImagePreview ←── HTML5 (Object URL)
         ├── VideoPreview ←── HTML5 (Object URL)

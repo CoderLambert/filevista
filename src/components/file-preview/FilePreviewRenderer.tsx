@@ -3,7 +3,10 @@
 import { lazy, Suspense } from "react";
 import { FileInfo, FileType } from "./utils";
 import { PdfPreview } from "./PdfPreview";
-import { MarkdownPreview } from "./MarkdownPreview";
+// Lazy load MarkdownPreview — now uses Shiki for code block highlighting
+const MarkdownPreview = lazy(() =>
+  import("./MarkdownPreview").then((m) => ({ default: m.MarkdownPreview }))
+);
 import { DocxPreview } from "./DocxPreview";
 import { DocPreview } from "./DocPreview";
 import { PptxPreview } from "./PptxPreview";
@@ -67,7 +70,9 @@ export function FilePreviewRenderer({ file }: FilePreviewRendererProps) {
 
     case "markdown":
       return file.content ? (
-        <MarkdownPreview content={file.content} />
+        <Suspense fallback={<PreviewLoading />}>
+          <MarkdownPreview content={file.content} />
+        </Suspense>
       ) : (
         <UnsupportedPreview fileType="markdown" />
       );

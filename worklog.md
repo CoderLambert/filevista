@@ -107,3 +107,30 @@ Stage Summary:
 - Dual theme support: CSS variable switching, no re-render needed
 - No WASM dependency (JS RegExp engine used instead)
 - VS Code-level rendering quality with TextMate grammars
+
+---
+Task ID: 5
+Agent: main
+Task: Integrate Shiki syntax highlighting into Markdown preview for code blocks
+
+Work Log:
+- Analyzed current MarkdownPreview.tsx (react-markdown + remark-gfm, no code highlighting)
+- Designed integration: override react-markdown's `pre` component (not `code`) to avoid nested `<pre>` issue since Shiki's `codeToHtml` outputs full `<pre><code>...</code></pre>`
+- Implemented ShikiPreBlock component that detects language from child `<code>` className
+- Implemented ShikiPreContent async component with key-based remount (avoids setState-in-effect lint error)
+- Added language badge + hover copy button to code blocks
+- Reused `highlightCode()` from src/lib/shiki.ts (shared with CodePreview)
+- Applied same dual-theme CSS variable approach (light/dark auto-switching)
+- Made MarkdownPreview lazy-loaded in FilePreviewRenderer.tsx (React.lazy + Suspense)
+- Updated demo README.md with multi-language code blocks (TypeScript, Python, CSS, Bash)
+- Fixed lint error: replaced setState-in-effect pattern with key-based remount
+- Verified with VLM: TypeScript and Python code blocks both render with syntax highlighting, language badges visible, different colors for keywords/strings/numbers
+- Updated docs/preview-modules/markdown/README.md with Shiki architecture
+- Updated docs/tech-stack/README.md with MarkdownPreview + Shiki dependency
+
+Stage Summary:
+- Markdown code blocks now use Shiki for VS Code-quality syntax highlighting
+- MarkdownPreview and CodePreview share the same `highlightCode()` function and Shiki singleton
+- Key-based remount pattern avoids React 19 lint error (setState-in-effect)
+- Lazy loading: MarkdownPreview not loaded for non-Markdown files, Shiki not loaded for Markdown without code blocks
+- Demo README.md showcases TypeScript, Python, CSS, Bash code blocks
