@@ -3,9 +3,9 @@ export const DEMO_FILES: Record<string, { name: string; content: string; type: s
   "readme.md": {
     name: "README.md",
     type: "text/markdown",
-    content: `# File Preview Hub
+    content: `# FileVista
 
-A modern, feature-rich file preview application built with **Next.js** and **shadcn/ui**.
+纯浏览器端文件预览工具集，基于 **Next.js** 和 **shadcn/ui** 构建。
 
 ## Supported File Types
 
@@ -131,9 +131,9 @@ const techStack = {
     type: "application/json",
     content: JSON.stringify(
       {
-        name: "file-preview-hub",
+        name: "filevista",
         version: "1.0.0",
-        description: "A modern file preview application",
+        description: "A client-side file preview toolset",
         private: true,
         scripts: {
           dev: "next dev",
@@ -166,7 +166,7 @@ const techStack = {
   "example.ts": {
     name: "example.ts",
     type: "text/typescript",
-    content: `// File Preview Hub - TypeScript Example
+    content: `// FileVista - TypeScript Example
 // This file demonstrates various TypeScript features
 
 interface FilePreviewConfig {

@@ -14,24 +14,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "File Preview Hub - Preview Any File in Your Browser",
-  description: "Preview PDF, Markdown, JSON, Code, DOCX, Images, CSV and more directly in your browser. All processing happens locally — your files never leave your device.",
-  keywords: ["File Preview", "PDF Viewer", "Code Viewer", "Markdown", "Next.js", "TypeScript", "Browser Preview"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "FileVista - 纯浏览器端文件预览工具集",
+  description: "支持本地 File、Blob、ArrayBuffer 和远程 URL，面向 React、Vue、Svelte 等主流前端框架提供统一预览能力。所有处理均在浏览器内完成 — 文件不会离开你的设备。",
+  keywords: ["文件预览", "PDF 查看器", "代码查看器", "Markdown", "浏览器预览", "客户端预览", "FileVista"],
+  authors: [{ name: "FileVista Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "FileVista",
+    description: "纯浏览器端文件预览工具集",
+    url: "https://filevista.dev",
+    siteName: "FileVista",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "FileVista",
+    description: "纯浏览器端文件预览工具集",
   },
 };
 

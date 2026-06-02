@@ -243,10 +243,10 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-base font-semibold tracking-tight">
-                File Preview Hub
+                FileVista
               </h1>
               <p className="text-[10px] text-muted-foreground -mt-0.5 hidden sm:block">
-                Preview any file in your browser
+                纯浏览器端文件预览
               </p>
             </div>
           </div>
@@ -292,7 +292,7 @@ export default function Home() {
               onClick={() => fileInputRef.current?.click()}
             >
               <FolderOpen className="h-4 w-4" />
-              Select Files
+              Select Files / 浏览文件
             </Button>
             <input
               ref={fileInputRef}
@@ -453,12 +453,10 @@ export default function Home() {
 
                 <div>
                   <h2 className="text-xl font-semibold mb-2">
-                    {isDragOver ? "Drop your files here" : "Preview Any File"}
+                    {isDragOver ? "将文件拖放到此处" : "FileVista"}
                   </h2>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Drag & drop files here, or click to browse. All processing
-                    happens locally in your browser — your files never leave
-                    your device.
+                    拖拽文件到此处，或点击浏览。所有处理均在浏览器内完成 — 文件不会离开你的设备。
                   </p>
                 </div>
 
