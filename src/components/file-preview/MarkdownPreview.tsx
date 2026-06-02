@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useMemo, type ReactNode } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { highlightCode } from "@/lib/shiki";
+import { Copy, Check, Eye, Code2 } from "lucide-react";
 
 interface MarkdownPreviewProps {
   content: string;
 }
+
+type ViewMode = "preview" | "source";
 
 /**
  * Extract text content from React children recursively.
@@ -113,18 +116,261 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
   );
 }
 
-export function MarkdownPreview({ content }: MarkdownPreviewProps) {
-  const components = useMemo(() => ({ pre: ShikiPreBlock }), []);
+// ── Source View: renders raw markdown with Shiki ──
+function MarkdownSourceView({ content }: { content: string }) {
+  const [html, setHtml] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const mountedRef = useRef(true);
+
+  const lineCount = useMemo(() => content.split("\n").length, [content]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    let cancelled = false;
+
+    highlightCode(content, "markdown")
+      .then((result) => {
+        if (!cancelled && mountedRef.current) {
+          setHtml(result);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.warn("[MarkdownSourceView] Shiki highlight error:", err);
+        if (!cancelled && mountedRef.current) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      mountedRef.current = false;
+    };
+  }, [content]);
+
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [content]);
 
   return (
-    <div className="markdown-preview md-prose">
-      <style dangerouslySetInnerHTML={{ __html: MARKDOWN_PROSE_STYLES }} />
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-        {content}
-      </ReactMarkdown>
+    <div className="flex flex-col h-full">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">
+            md
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {lineCount} line{lineCount !== 1 ? "s" : ""}
+          </span>
+        </div>
+        <button
+          onClick={handleCopy}
+          className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors"
+          title="Copy source"
+        >
+          {copied ? (
+            <Check size={14} className="text-green-500" />
+          ) : (
+            <Copy size={14} />
+          )}
+        </button>
+      </div>
+
+      {/* Code content */}
+      <div className="flex-1 overflow-auto">
+        <style dangerouslySetInnerHTML={{ __html: SOURCE_SHIKI_STYLES }} />
+
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+              <p className="text-xs text-muted-foreground">
+                Loading syntax highlighter...
+              </p>
+            </div>
+          </div>
+        ) : html ? (
+          <div
+            className="md-source-wrapper shiki-wrap"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        ) : (
+          <div className="shiki-plaintext">
+            <pre>
+              <code>
+                {content.split("\n").map((line, i) => (
+                  <div key={i} className="line">
+                    <span className="linenumber">{i + 1}</span>
+                    <span className="linecontent">{line || "\u00A0"}</span>
+                  </div>
+                ))}
+              </code>
+            </pre>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+export function MarkdownPreview({ content }: MarkdownPreviewProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>("preview");
+  const components = useMemo(() => ({ pre: ShikiPreBlock }), []);
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* View mode toggle bar */}
+      <div className="flex items-center border-b bg-muted/20">
+        <div className="flex items-center px-2 py-1 gap-0.5">
+          <button
+            onClick={() => setViewMode("preview")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              viewMode === "preview"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Eye size={13} />
+            预览
+          </button>
+          <button
+            onClick={() => setViewMode("source")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              viewMode === "source"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Code2 size={13} />
+            源码
+          </button>
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 overflow-auto">
+        {viewMode === "preview" ? (
+          <div className="markdown-preview md-prose">
+            <style dangerouslySetInnerHTML={{ __html: MARKDOWN_PROSE_STYLES }} />
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+              {content}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <MarkdownSourceView content={content} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Source view Shiki styles (reuse same pattern as CodePreview) ──
+const SOURCE_SHIKI_STYLES = `
+  /* ── Base wrapper ── */
+  .md-source-wrapper pre {
+    margin: 0 !important;
+    padding: 1rem 1.5rem !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.7 !important;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+      "Liberation Mono", monospace !important;
+    overflow-x: auto;
+    tab-size: 2;
+  }
+
+  /* ── Word wrap ── */
+  .md-source-wrapper.shiki-wrap pre { white-space: pre-wrap !important; word-break: break-word !important; }
+  .md-source-wrapper.shiki-wrap .line { white-space: pre-wrap; word-break: break-word; }
+
+  /* ── Line numbers ── */
+  .md-source-wrapper .line {
+    min-height: 1.7em;
+    padding-left: 3.5em;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+  }
+  .md-source-wrapper .line::before {
+    content: attr(data-line);
+    position: absolute;
+    left: 0;
+    width: 2.5em;
+    text-align: right;
+    opacity: 0.3;
+    user-select: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Dual theme switching ── */
+  .md-source-wrapper .shiki {
+    background-color: var(--shiki-light-bg, #fff) !important;
+    color: var(--shiki-light, #24292e) !important;
+  }
+  .md-source-wrapper .shiki span {
+    color: var(--shiki-light) !important;
+    background-color: var(--shiki-light-bg, transparent) !important;
+  }
+  .dark .md-source-wrapper .shiki,
+  html.dark .md-source-wrapper .shiki {
+    background-color: var(--shiki-dark-bg, #24292e) !important;
+    color: var(--shiki-dark, #e1e4e8) !important;
+  }
+  .dark .md-source-wrapper .shiki span,
+  html.dark .md-source-wrapper .shiki span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg, transparent) !important;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not(:has(.light)) .md-source-wrapper .shiki {
+      background-color: var(--shiki-dark-bg, #24292e) !important;
+      color: var(--shiki-dark, #e1e4e8) !important;
+    }
+    :root:not(:has(.light)) .md-source-wrapper .shiki span {
+      color: var(--shiki-dark) !important;
+      background-color: var(--shiki-dark-bg, transparent) !important;
+    }
+  }
+
+  /* ── Plain text fallback ── */
+  .md-source-wrapper .shiki-plaintext pre {
+    margin: 0;
+    padding: 1rem 1.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+      "Liberation Mono", monospace;
+    background-color: #f6f8fa;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .dark .md-source-wrapper .shiki-plaintext pre {
+    background-color: #1b1f23;
+    color: #e1e4e8;
+  }
+  .shiki-plaintext .line {
+    display: flex;
+    min-height: 1.7em;
+  }
+  .shiki-plaintext .linenumber {
+    display: inline-block;
+    width: 2.5em;
+    text-align: right;
+    padding-right: 1em;
+    opacity: 0.3;
+    user-select: none;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .shiki-plaintext .linecontent {
+    flex: 1;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+`;
 
 // ── Complete Markdown Prose + Shiki Styles ──
 // Uses explicit rgba colors instead of var(--color-border) for visibility
