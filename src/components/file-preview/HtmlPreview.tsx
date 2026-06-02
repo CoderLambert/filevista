@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Code, Eye } from "lucide-react";
+import { Eye, Code2 } from "lucide-react";
+import { ShikiSourceView } from "./ShikiSourceView";
 
 interface HtmlPreviewProps {
   content: string;
@@ -25,37 +26,36 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
-        <span className="text-xs text-muted-foreground">{fileName}</span>
-        <div className="flex items-center gap-1">
+      {/* View mode toggle bar */}
+      <div className="flex items-center border-b bg-muted/20">
+        <div className="flex items-center px-2 py-1 gap-0.5">
           <button
             onClick={() => setViewMode("preview")}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
               viewMode === "preview"
-                ? "bg-primary/10 text-primary"
-                : "hover:bg-muted text-muted-foreground"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}
-            title="Preview mode"
           >
-            <Eye size={16} />
+            <Eye size={13} />
+            预览
           </button>
           <button
             onClick={() => setViewMode("source")}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
               viewMode === "source"
-                ? "bg-primary/10 text-primary"
-                : "hover:bg-muted text-muted-foreground"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}
-            title="Source code"
           >
-            <Code size={16} />
+            <Code2 size={13} />
+            源码
           </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0">
         {viewMode === "preview" ? (
           <iframe
             src={blobUrl}
@@ -65,11 +65,7 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
             title={fileName}
           />
         ) : (
-          <div className="overflow-auto h-full">
-            <pre className="p-4 text-sm font-mono bg-[#282c34] text-[#abb2bf] leading-relaxed overflow-auto">
-              <code>{content}</code>
-            </pre>
-          </div>
+          <ShikiSourceView content={content} fileName={fileName} language="html" />
         )}
       </div>
     </div>

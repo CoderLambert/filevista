@@ -1,26 +1,20 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Code, Eye, Copy, Check, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { Eye, Code2, Columns2, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { ShikiSourceView } from "./ShikiSourceView";
 
 interface SvgPreviewProps {
   content: string;
   fileName: string;
 }
 
-type ViewMode = "rendered" | "code" | "split";
+type ViewMode = "rendered" | "source" | "split";
 
 export function SvgPreview({ content, fileName }: SvgPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("rendered");
-  const [copied, setCopied] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const svgUrl = useMemo(() => {
     const blob = new Blob([content], { type: "image/svg+xml" });
@@ -59,53 +53,57 @@ export function SvgPreview({ content, fileName }: SvgPreviewProps) {
     </div>
   );
 
-  const codeView = (
-    <div className="relative h-full">
-      <button
-        onClick={handleCopy}
-        className="absolute top-3 right-3 z-10 p-1.5 rounded-md bg-white/10 hover:bg-white/20 text-gray-400 hover:text-gray-200 transition-colors"
-        title="Copy SVG code"
-      >
-        {copied ? <Check size={14} /> : <Copy size={14} />}
-      </button>
-      <pre className="p-4 text-xs font-mono bg-[#282c34] text-[#abb2bf] leading-relaxed overflow-auto h-full">
-        <code>{content}</code>
-      </pre>
-    </div>
-  );
-
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
-        <span className="text-xs text-muted-foreground">{fileName}</span>
-        <div className="flex items-center gap-1">
-          {(["rendered", "split", "code"] as ViewMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
-                viewMode === mode
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {mode === "rendered" ? "Preview" : mode === "code" ? "Code" : "Split"}
-            </button>
-          ))}
+      {/* View mode toggle bar */}
+      <div className="flex items-center border-b bg-muted/20">
+        <div className="flex items-center px-2 py-1 gap-0.5">
+          <button
+            onClick={() => setViewMode("rendered")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              viewMode === "rendered"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Eye size={13} />
+            预览
+          </button>
+          <button
+            onClick={() => setViewMode("source")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              viewMode === "source"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Code2 size={13} />
+            源码
+          </button>
+          <button
+            onClick={() => setViewMode("split")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              viewMode === "split"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Columns2 size={13} />
+            分栏
+          </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className={`flex-1 overflow-hidden ${viewMode === "split" ? "flex" : ""}`}>
+      <div className={`flex-1 min-h-0 ${viewMode === "split" ? "flex" : ""}`}>
         {(viewMode === "rendered" || viewMode === "split") && (
           <div className={`${viewMode === "split" ? "w-1/2 border-r" : "w-full h-full"}`}>
             {renderedView}
           </div>
         )}
-        {(viewMode === "code" || viewMode === "split") && (
+        {(viewMode === "source" || viewMode === "split") && (
           <div className={`${viewMode === "split" ? "w-1/2" : "w-full h-full"}`}>
-            {codeView}
+            <ShikiSourceView content={content} fileName={fileName} language="xml" />
           </div>
         )}
       </div>
