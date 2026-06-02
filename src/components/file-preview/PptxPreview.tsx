@@ -28,6 +28,63 @@ interface PptxPreviewProps {
 
 type ViewMode = "slide" | "grid";
 
+// ---- EMF/WMF Image Patch ----
+// Browsers cannot render EMF/WMF images in <img> tags.
+// pptx-preview loads them as data:image/x-emf;base64,... which results in broken images.
+// We patch the viewer's media store to replace unsupported formats with SVG placeholders.
+
+const UNSUPPORTED_IMG_FORMATS = ["image/x-emf", "image/x-wmf", "image/emf", "image/wmf"];
+
+function createImagePlaceholderSvg(width: number, height: number): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+    <rect width="100%" height="100%" fill="#f3f4f6"/>
+    <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="4" fill="#e5e7eb" stroke="#d1d5db" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-family="system-ui,sans-serif" font-size="12">EMF 图片</text>
+    <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-family="system-ui,sans-serif" font-size="10">浏览器暂不支持</text>
+  </svg>`;
+  return "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
+}
+
+/**
+ * Patch the pptx-preview viewer's media store: replace EMF/WMF data URLs
+ * with SVG placeholders so they render as "unsupported format" indicators
+ * instead of broken image icons.
+ */
+function patchUnsupportedImages(viewer: any) {
+  if (!viewer?.pptx?.medias) return;
+  const medias = viewer.pptx.medias;
+  for (const key of Object.keys(medias)) {
+    const value: string = medias[key];
+    if (typeof value !== "string") continue;
+    const isUnsupported = UNSUPPORTED_IMG_FORMATS.some((fmt) =>
+      value.startsWith(`data:${fmt}`)
+    );
+    if (isUnsupported) {
+      medias[key] = createImagePlaceholderSvg(200, 150);
+    }
+  }
+}
+
+/**
+ * Post-render scan: find any <img> elements in the container that failed to load
+ * (e.g., EMF/WMF images that were already rendered before patching) and replace
+ * them with placeholder elements.
+ */
+function fixBrokenImages(container: HTMLElement) {
+  const images = container.querySelectorAll("img");
+  images.forEach((img) => {
+    const src = img.src || "";
+    const isUnsupported = UNSUPPORTED_IMG_FORMATS.some(
+      (fmt) => src.startsWith(`data:${fmt}`) || src.includes(fmt.replace("/", "/"))
+    );
+    if (isUnsupported) {
+      img.src = createImagePlaceholderSvg(200, 150);
+      img.style.objectFit = "contain";
+      img.style.background = "#f3f4f6";
+    }
+  });
+}
+
 // Lazy-load pptx-preview to avoid SSR issues
 let pptxPreviewModule: typeof import("pptx-preview") | null = null;
 async function getPptxPreview() {
@@ -128,23 +185,51 @@ const PptxRenderContainer = forwardRef<
         );
 
         if (cancelled) return;
-        await viewer.preview(arrayBuffer);
+
+        // Use load() instead of preview() so we can patch EMF/WMF images
+        // BEFORE the library renders slides to DOM.
+        // preview() is atomic (loads + renders in one call), but load() only
+        // parses the file, allowing us to patch the media store in between.
+        await viewer.load(arrayBuffer);
         if (cancelled) return;
 
-        const count = viewer.slideCount || 0;
+        // Patch EMF/WMF images in the media store BEFORE rendering.
+        // The library stores media as data URLs. EMF/WMF formats like
+        // data:image/x-emf;base64,... can't be rendered by browsers,
+        // so we replace them with SVG placeholders.
+        patchUnsupportedImages(viewer);
+
+        // Now manually render slides (what preview() would have done)
+        const pptx = viewer.pptx;
+        if (mode === "slide") {
+          viewer.currentIndex = 0;
+          viewer.htmlRender.renderSlide(0);
+        } else {
+          for (let i = 0; i < pptx.slides.length; i++) {
+            viewer.htmlRender.renderSlide(i);
+          }
+        }
+
+        const count = pptx.slides?.length || viewer.slideCount || 0;
         const idx = viewer.currentIndex || 0;
         slideCountRef.current = count;
 
         onReady({ slideCount: count, currentIndex: idx });
 
-        // Hide built-in navigation elements rendered by the library
+        // Post-render fixes
         try {
-          const navElements = containerRef.current.querySelectorAll(
-            ".pre-btn, .next-btn, .pagination, [class*='pre-btn'], [class*='next-btn'], [class*='pagination'], button"
-          );
-          navElements.forEach((el) => {
-            (el as HTMLElement).style.display = "none";
-          });
+          if (containerRef.current) {
+            // Fix any remaining broken images that slipped through
+            fixBrokenImages(containerRef.current);
+
+            // Hide built-in navigation elements rendered by the library
+            const navElements = containerRef.current.querySelectorAll(
+              ".pre-btn, .next-btn, .pagination, [class*='pre-btn'], [class*='next-btn'], [class*='pagination'], button"
+            );
+            navElements.forEach((el) => {
+              (el as HTMLElement).style.display = "none";
+            });
+          }
         } catch {}
       } catch (err) {
         if (!cancelled) {
