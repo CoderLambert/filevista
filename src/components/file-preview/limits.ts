@@ -30,13 +30,15 @@ export function shouldHighlight(content: string): boolean {
   return true;
 }
 
-export function formatFileSize(bytes: number): string {
+export function truncateContent(content: string, maxSize: number = FILE_PREVIEW_LIMITS.MAX_DISPLAY_SIZE): string {
+  if (content.length <= maxSize) return content;
+  return content.slice(0, maxSize) + "\n\n... [内容已截断，仅显示前 " + formatFileSizeForTruncation(maxSize) + "]";
+}
+
+// Private helper for truncateContent message (avoids circular dependency on utils.ts).
+// Uses a simpler format; the public version in utils.ts is the canonical one for UI.
+function formatFileSizeForTruncation(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-export function truncateContent(content: string, maxSize: number = FILE_PREVIEW_LIMITS.MAX_DISPLAY_SIZE): string {
-  if (content.length <= maxSize) return content;
-  return content.slice(0, maxSize) + "\n\n... [内容已截断，仅显示前 " + formatFileSize(maxSize) + "]";
 }

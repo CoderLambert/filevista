@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Copy, Check, WrapText } from "lucide-react";
-import { formatFileSize, truncateContent } from "./limits";
+import { formatFileSize } from "./utils";
+import { truncateContent } from "./limits";
 
 interface PlainTextLargePreviewProps {
   content: string;

@@ -11,8 +11,8 @@ import {
   ExternalLink,
   AlertTriangle,
 } from "lucide-react";
-import { base64ToUint8Array } from "./utils";
-import { XLSX_PREVIEW_LIMITS, formatFileSize } from "./limits";
+import { XLSX_PREVIEW_LIMITS } from "./limits";
+import { base64ToUint8Array, formatFileSize } from "./utils";
 
 // Lazy-load ExcelJS
 let ExcelJS: typeof import("exceljs") | null = null;
@@ -349,6 +349,7 @@ const ROW_NUM_COL_WIDTH = 45;
 const HEADER_ROW_HEIGHT = 22;
 const DEFAULT_ROW_HEIGHT = 22;
 const DEFAULT_COL_WIDTH = 80;
+// Fidelity mode DOM rendering protection; fast mode is already limited by FAST_MODE_ROW_LIMIT at parse time.
 const MAX_RENDER_ROWS = 5000;
 
 // ---- Main Parser ----
