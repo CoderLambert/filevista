@@ -1,0 +1,27 @@
+scripts/copy-pdf-worker.mjs
+  s_98ad4b7dddb6fb::t_b84c9760b74238 1-14
+src/components/file-preview/PdfPreview.tsx
+  s_98ad4b7dddb6fb::t_d54c3719c05ff7 19-40,49-50
+  s_98ad4b7dddb6fb::t_ab906fbcaadf48 121
+  s_98ad4b7dddb6fb::t_1a64fd972c78bf 152-167
+  s_98ad4b7dddb6fb::t_763b55f223038b 54,60,69
+  s_98ad4b7dddb6fb::t_972d90f358848e 188
+package.json
+  s_98ad4b7dddb6fb::t_94a8b0ba885b99 10-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "631cc005a57a1bc46a3cba3ef8b0f0a8b8eec013",
+  "prompts": {},
+  "sessions": {
+    "s_98ad4b7dddb6fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f982d916-d102-47e6-a198-458bbe546970",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
