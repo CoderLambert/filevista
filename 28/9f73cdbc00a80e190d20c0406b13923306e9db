@@ -1,0 +1,35 @@
+src/app/page.tsx
+  s_98ad4b7dddb6fb::t_8dd0dc98a582c0 66
+  s_98ad4b7dddb6fb::t_e9b3f79dc34248 40,42
+  s_98ad4b7dddb6fb::t_5763344e9177c2 75
+src/components/file-preview/FilePreviewRenderer.tsx
+  s_98ad4b7dddb6fb::t_0960603b82a153 5
+  s_98ad4b7dddb6fb::t_76785e4d1753ad 184-198
+  s_98ad4b7dddb6fb::t_e4ea034677bae5 160-174
+src/components/file-preview/UnsupportedLegacyOfficePreview.tsx
+  s_98ad4b7dddb6fb::t_4257c2b40c8d73 25
+  s_98ad4b7dddb6fb::t_cf70c46b3080c7 41
+  s_98ad4b7dddb6fb::t_8a49b9a86a1b02 1-24,26-40,42-60
+src/components/file-preview/utils.ts
+  s_98ad4b7dddb6fb::t_02526c671065c8 9,11
+  s_98ad4b7dddb6fb::t_662b6ecc6c1185 272,274
+  s_98ad4b7dddb6fb::t_0f421ac942c520 116,120,124-128,132,136-138
+  s_98ad4b7dddb6fb::t_ab8316dadf3f93 245,247
+  s_98ad4b7dddb6fb::t_a5e87c999be53f 173-187
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "289f73cdbc00a80e190d20c0406b13923306e9db",
+  "prompts": {},
+  "sessions": {
+    "s_98ad4b7dddb6fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f982d916-d102-47e6-a198-458bbe546970",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
