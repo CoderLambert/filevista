@@ -1,0 +1,56 @@
+src/components/file-preview/EpubPreview.tsx
+  s_201ab6ff0ec7fc::t_848dec40554f74 44
+src/components/file-preview/PptxPreview.tsx
+  s_201ab6ff0ec7fc::t_53ac40168bd74b 157
+docs/gitRecords/react19-type-fixes/react19-type-fixes-2026-06-02.md
+  s_201ab6ff0ec7fc::t_679dfb79821fb8 1-197
+src/components/ui/breadcrumb.tsx
+  s_201ab6ff0ec7fc::t_962b6d9a1b3847 41
+src/global.d.ts
+  s_201ab6ff0ec7fc::t_b5f585fb5a05a9 1-4
+tsconfig.json
+  s_201ab6ff0ec7fc::t_606b6c58d62d3b 40-41
+src/components/file-preview/PdfPreview.tsx
+  s_201ab6ff0ec7fc::t_40849749dc2e25 161
+src/components/file-preview/registry/builtin-preview-plugins.tsx
+  s_201ab6ff0ec7fc::t_1d3d3dc6b095f4 86
+src/lib/shiki.ts
+  s_201ab6ff0ec7fc::t_7d557f86243cd8 15
+src/components/file-preview/ZipPreview.tsx
+  s_201ab6ff0ec7fc::t_3020af8af2a79d 25
+  s_201ab6ff0ec7fc::t_38e630f56810e7 37
+src/components/file-preview/MarkdownPreview.tsx
+  s_201ab6ff0ec7fc::t_1ed9e1961ed69f 24-25
+  s_201ab6ff0ec7fc::t_062957cff50ac0 43
+src/components/file-preview/XlsxPreview.tsx
+  s_201ab6ff0ec7fc::t_63d7e2533b8fa7 359
+src/components/ui/sidebar.tsx
+  s_201ab6ff0ec7fc::t_d7e98aa60a7b39 557
+  s_201ab6ff0ec7fc::t_a5bc20a81601d7 422
+  s_201ab6ff0ec7fc::t_dc04c2bd2759e9 680
+  s_201ab6ff0ec7fc::t_c2c9de902cfb10 401
+  s_201ab6ff0ec7fc::t_b74f47af78888e 511
+src/components/ui/button.tsx
+  s_201ab6ff0ec7fc::t_3c96f9c8063f1e 48
+src/components/file-preview/DocPreview.tsx
+  s_201ab6ff0ec7fc::t_58edf2d5cfda0f 168
+  s_201ab6ff0ec7fc::t_ce02b1c39e7072 185
+src/components/ui/badge.tsx
+  s_201ab6ff0ec7fc::t_6eab2fa38a58eb 35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "bb2c77caeda5b2a654d3db4b68b39c39970f8db5",
+  "prompts": {},
+  "sessions": {
+    "s_201ab6ff0ec7fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0b8244fd-ed9e-4b4c-a66b-530e2d2cb0ad",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
