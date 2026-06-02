@@ -1,0 +1,14 @@
+README.md
+  h_0c102f4798bf38 1-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ed9507ed3fdbd1cd63fbc024f0ba5189f89223b8",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
