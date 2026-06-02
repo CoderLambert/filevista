@@ -1,0 +1,40 @@
+src/components/file-preview/MarkdownPreview.tsx
+  s_98ad4b7dddb6fb::t_f688b2efee2e9a 64-72
+  s_98ad4b7dddb6fb::t_1ec0af6dc13d19 102-115,120
+  s_98ad4b7dddb6fb::t_5e33bc6661168d 9
+src/components/file-preview/PlainTextLargePreview.tsx
+  s_98ad4b7dddb6fb::t_fb7f91c062659f 1-11,13-128
+  s_98ad4b7dddb6fb::t_fa7537ef943ba7 12
+docs/repair-plan/06-p1-large-file-fallback.md
+  s_98ad4b7dddb6fb::t_3ede7a8ee79907 76-82
+  s_98ad4b7dddb6fb::t_65c11712b3d6e1 7,9,11,13-19,22,24,27-36,45,47-51,53,55-56,58,60-62,64,66-68,70-72
+  s_98ad4b7dddb6fb::t_50c8fcaba4c9ab 39,41,43
+src/components/file-preview/CodePreview.tsx
+  s_98ad4b7dddb6fb::t_69d1e6e406930b 47-50
+  s_98ad4b7dddb6fb::t_6fe991bfd4b757 144-145
+  s_98ad4b7dddb6fb::t_69a6973c907884 6-7
+src/components/file-preview/ShikiSourceView.tsx
+  s_98ad4b7dddb6fb::t_066c2fb86a50fc 137-138
+  s_98ad4b7dddb6fb::t_25e79725932498 40-41,43-46,63
+  s_98ad4b7dddb6fb::t_c3e06ade9161cd 6-7
+src/components/file-preview/TextPreview.tsx
+  s_98ad4b7dddb6fb::t_9cf78ee7db5b43 11
+src/components/file-preview/limits.ts
+  s_98ad4b7dddb6fb::t_68ae186502aaeb 1-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "dd93c40bd3ff53017f1a46f507ab77288d98601d",
+  "prompts": {},
+  "sessions": {
+    "s_98ad4b7dddb6fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f982d916-d102-47e6-a198-458bbe546970",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
