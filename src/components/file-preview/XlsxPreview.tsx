@@ -356,7 +356,7 @@ async function parseXlsx(base64Content: string, fileName: string): Promise<Sheet
   const bytes = base64ToUint8Array(base64Content);
 
   const workbook = new EJS.Workbook();
-  await workbook.xlsx.load(bytes);
+  await workbook.xlsx.load(bytes as any);
 
   const sheets: SheetData[] = [];
 

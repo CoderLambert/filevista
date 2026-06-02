@@ -158,7 +158,7 @@ export function PdfPreview({ content, fileName }: PdfPreviewProps) {
 
   const handleDownload = () => {
     const bytes = base64ToUint8Array(content);
-    const blob = new Blob([bytes], { type: "application/pdf" });
+    const blob = new Blob([bytes as unknown as BlobPart], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

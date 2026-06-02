@@ -154,7 +154,7 @@ const PptxRenderContainer = forwardRef<
         if (cancelled) return;
 
         // Use preview() for simpler flow (load + render in one call)
-        await viewer.preview(arrayBuffer);
+        await viewer.preview(arrayBuffer as ArrayBuffer);
         if (cancelled) return;
 
         const pptx = viewer.pptx;

@@ -165,7 +165,7 @@ export function DocPreview({ content, fileName }: DocPreviewProps) {
       try {
         setLoading(true);
         const bytes = base64ToUint8Array(content);
-        const result = extractTextFromDoc(bytes.buffer);
+        const result = extractTextFromDoc(bytes.buffer as ArrayBuffer);
         setExtraction(result);
       } catch (err) {
         console.error("Error extracting .doc text:", err);
@@ -182,7 +182,7 @@ export function DocPreview({ content, fileName }: DocPreviewProps) {
 
   const handleDownload = () => {
     const bytes = base64ToUint8Array(content);
-    const blob = new Blob([bytes], {
+    const blob = new Blob([bytes as unknown as BlobPart], {
       type: "application/msword",
     });
     const url = URL.createObjectURL(blob);

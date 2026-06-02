@@ -41,7 +41,7 @@ async function parseEpub(base64Content: string): Promise<{
 }> {
   const bytes = base64ToUint8Array(base64Content);
 
-  const zip = await JSZip.loadAsync(bytes.buffer);
+  const zip = await JSZip.loadAsync(bytes.buffer as ArrayBuffer);
   const chapters: EpubChapter[] = [];
   const toc: TocItem[] = [];
   let bookTitle = "";

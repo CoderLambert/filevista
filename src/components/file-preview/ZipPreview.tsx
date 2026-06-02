@@ -22,7 +22,7 @@ interface ZipEntry {
 async function parseZipFile(base64Content: string): Promise<ZipEntry[]> {
   const bytes = base64ToUint8Array(base64Content);
 
-  const zip = await JSZip.loadAsync(bytes.buffer);
+  const zip = await JSZip.loadAsync(bytes.buffer as ArrayBuffer);
   const entries: ZipEntry[] = [];
 
   zip.forEach((relativePath, file) => {
@@ -34,7 +34,7 @@ async function parseZipFile(base64Content: string): Promise<ZipEntry[]> {
     entries.push({
       path: relativePath,
       name,
-      size: file._data ? (file._data as { uncompressedSize?: number }).uncompressedSize ?? 0 : 0,
+      size: (file as any)._data?.uncompressedSize ?? 0,
       isDir: file.dir,
       depth,
       ext,
