@@ -28,6 +28,7 @@ import {
   base64ToUint8Array,
 } from "@/components/file-preview/utils";
 import { TabCacheRenderer } from "@/components/file-preview/FilePreviewRenderer";
+import { PluginPreviewRenderer } from "@/components/file-preview/PluginPreviewRenderer";
 import { DEMO_FILES, fetchBinaryDemoFiles } from "@/components/file-preview/demos";
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
@@ -63,6 +64,7 @@ function revokeFileResources(file: FileInfo) {
 export default function Home() {
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
+  const [previewEngine, setPreviewEngine] = useState<"legacy" | "plugin">("legacy");
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -398,7 +400,7 @@ export default function Home() {
           {activeFile ? (
             <>
               {/* File info bar */}
-              <div className="flex items-center gap-3 px-4 py-2.5 border-b bg-muted/20">
+              <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 border-b bg-muted/20">
                 <span className="text-base">
                   {FILE_TYPE_ICONS[activeFile.fileType]}
                 </span>
@@ -411,11 +413,37 @@ export default function Home() {
                     {formatFileSize(activeFile.size)}
                   </p>
                 </div>
-                <Badge
-                  className={`text-xs ${getFileTypeColor(activeFile.fileType)}`}
-                >
-                  {getFileTypeLabel(activeFile.fileType)}
-                </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex h-8 items-center gap-0.5 rounded-md border bg-background p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewEngine("legacy")}
+                      className={`h-6 rounded px-2 text-xs whitespace-nowrap transition-colors ${
+                        previewEngine === "legacy"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      Legacy Renderer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewEngine("plugin")}
+                      className={`h-6 rounded px-2 text-xs whitespace-nowrap transition-colors ${
+                        previewEngine === "plugin"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      Plugin Renderer
+                    </button>
+                  </div>
+                  <Badge
+                    className={`text-xs ${getFileTypeColor(activeFile.fileType)}`}
+                  >
+                    {getFileTypeLabel(activeFile.fileType)}
+                  </Badge>
+                </div>
               </div>
 
               {/* Tabs for multi-file navigation (mobile) */}
@@ -442,11 +470,17 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Preview content — TabCache keeps all opened files mounted,
-                  only showing the active one via CSS display toggle.
-                  This prevents re-parsing PDF/DOCX/XLSX on every tab switch. */}
+              {/* Preview content — Legacy mode keeps TabCache behavior intact. */}
               <div className="flex-1 min-h-0">
-                <TabCacheRenderer files={files} activeFileId={activeFileId} />
+                {previewEngine === "legacy" ? (
+                  <TabCacheRenderer files={files} activeFileId={activeFileId} />
+                ) : activeFile ? (
+                  <PluginPreviewRenderer file={activeFile} />
+                ) : (
+                  <div className="flex h-full min-h-[300px] items-center justify-center text-sm text-muted-foreground">
+                    No file selected
+                  </div>
+                )}
               </div>
             </>
           ) : (
