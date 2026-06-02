@@ -1,0 +1,26 @@
+docs/repair-plan/00-index.md
+  s_98ad4b7dddb6fb::t_b13ece454ca4a8 1-65
+docs/repair-plan/01-p0-project-docs.md
+  s_98ad4b7dddb6fb::t_988f99e883e2f8 1-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "fefe707fe7663de185e1b493d2bf25c33a18ca96",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  },
+  "sessions": {
+    "s_98ad4b7dddb6fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f982d916-d102-47e6-a198-458bbe546970",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
