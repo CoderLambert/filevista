@@ -127,7 +127,10 @@ export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
         const loadingTask = pdfjsLib.getDocument({ data: bytes });
         const pdf = await loadingTask.promise;
 
-        if (cancelled) return;
+        if (cancelled) {
+          await pdf.destroy?.();
+          return;
+        }
 
         pdfDocRef.current = pdf;
         setNumPages(pdf.numPages);
