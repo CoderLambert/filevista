@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Copy, Check, WrapText } from "lucide-react";
-import { formatFileSize } from "./limits";
+import { formatFileSize, truncateContent } from "./limits";
 
 interface PlainTextLargePreviewProps {
   content: string;
@@ -13,6 +13,7 @@ export function PlainTextLargePreview({ content, language }: PlainTextLargePrevi
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(true);
 
+  const displayContent = useMemo(() => truncateContent(content), [content]);
   const lineCount = useMemo(() => content.split("\n").length, [content]);
   const fileSize = useMemo(() => content.length, [content]);
 
@@ -71,7 +72,7 @@ export function PlainTextLargePreview({ content, language }: PlainTextLargePrevi
       <div className={`flex-1 overflow-auto plain-text-wrapper ${wordWrap ? "plain-text-wrap" : "plain-text-nowrap"}`}>
         <pre>
           <code>
-            {content.split("\n").map((line, i) => (
+            {displayContent.split("\n").map((line, i) => (
               <div key={i} className="line">
                 <span className="linenumber">{i + 1}</span>
                 <span className="linecontent">{line || " "}</span>

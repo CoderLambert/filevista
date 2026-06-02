@@ -76,6 +76,11 @@ export function ShikiSourceView({
     setTimeout(() => setCopied(false), 2000);
   }, [content]);
 
+  // Early return for large files — avoids duplicate toolbar
+  if (!canHighlight) {
+    return <PlainTextLargePreview content={content} language={language} />;
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
@@ -134,8 +139,6 @@ export function ShikiSourceView({
             className={`shiki-source-wrapper ${wordWrap ? "shiki-source-wrap" : "shiki-source-nowrap"}`}
             dangerouslySetInnerHTML={{ __html: html }}
           />
-        ) : !canHighlight ? (
-          <PlainTextLargePreview content={content} language={language} />
         ) : (
           <div className="shiki-source-plaintext">
             <pre>

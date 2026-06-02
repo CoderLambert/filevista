@@ -84,6 +84,11 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Early return for large files — avoids duplicate toolbar
+  if (!shouldHighlight(displayContent)) {
+    return <PlainTextLargePreview content={displayContent} language={language} />;
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
@@ -141,8 +146,6 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
             className={`shiki-wrapper ${wordWrap ? "shiki-wrap" : "shiki-nowrap"}`}
             dangerouslySetInnerHTML={{ __html: html }}
           />
-        ) : !shouldHighlight(displayContent) ? (
-          <PlainTextLargePreview content={displayContent} language={language} />
         ) : (
           // Fallback: plain text with line numbers
           <div className="shiki-plaintext">
