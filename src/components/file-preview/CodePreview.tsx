@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Copy, Check, WrapText } from "lucide-react";
 import { highlightCode as shikiHighlight, getShikiLanguage } from "@/lib/shiki";
+import { shouldHighlight } from "./limits";
+import { PlainTextLargePreview } from "./PlainTextLargePreview";
 
 interface CodePreviewProps {
   content: string;
@@ -42,6 +44,10 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
   );
 
   const doHighlight = useCallback(async () => {
+    if (!shouldHighlight(displayContent)) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
@@ -135,6 +141,8 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
             className={`shiki-wrapper ${wordWrap ? "shiki-wrap" : "shiki-nowrap"}`}
             dangerouslySetInnerHTML={{ __html: html }}
           />
+        ) : !shouldHighlight(displayContent) ? (
+          <PlainTextLargePreview content={displayContent} language={language} />
         ) : (
           // Fallback: plain text with line numbers
           <div className="shiki-plaintext">

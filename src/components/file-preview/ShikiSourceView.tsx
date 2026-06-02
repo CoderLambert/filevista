@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Copy, Check, WrapText } from "lucide-react";
 import { highlightCode, getShikiLanguage } from "@/lib/shiki";
+import { shouldHighlight } from "./limits";
+import { PlainTextLargePreview } from "./PlainTextLargePreview";
 
 interface ShikiSourceViewProps {
   content: string;
@@ -35,7 +37,13 @@ export function ShikiSourceView({
     [content]
   );
 
+  const canHighlight = useMemo(() => shouldHighlight(content), [content]);
+
   const doHighlight = useCallback(async () => {
+    if (!canHighlight) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const result = await highlightCode(content, language);
@@ -52,7 +60,7 @@ export function ShikiSourceView({
         setLoading(false);
       }
     }
-  }, [content, language]);
+  }, [content, language, canHighlight]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -126,6 +134,8 @@ export function ShikiSourceView({
             className={`shiki-source-wrapper ${wordWrap ? "shiki-source-wrap" : "shiki-source-nowrap"}`}
             dangerouslySetInnerHTML={{ __html: html }}
           />
+        ) : !canHighlight ? (
+          <PlainTextLargePreview content={content} language={language} />
         ) : (
           <div className="shiki-source-plaintext">
             <pre>

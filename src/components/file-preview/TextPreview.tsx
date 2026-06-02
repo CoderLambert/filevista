@@ -8,5 +8,5 @@ interface TextPreviewProps {
 }
 
 export function TextPreview({ content, fileName }: TextPreviewProps) {
-  return <ShikiSourceView content={content} fileName={fileName} />;
+  return <ShikiSourceView content={content} fileName={fileName} language="text" />;
 }

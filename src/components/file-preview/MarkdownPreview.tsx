@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import { highlightCode } from "@/lib/shiki";
 import { Eye, Code2 } from "lucide-react";
 import { ShikiSourceView } from "./ShikiSourceView";
+import { FILE_PREVIEW_LIMITS } from "./limits";
 
 interface MarkdownPreviewProps {
   content: string;
@@ -60,6 +61,15 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
     mountedRef.current = true;
     let cancelled = false;
 
+    // Skip Shiki for oversized code blocks
+    if (code.length > FILE_PREVIEW_LIMITS.SHIKI_MAX_CODE_BLOCK_SIZE) {
+      if (mountedRef.current) {
+        setLoading(false);
+        setHtml("");
+      }
+      return;
+    }
+
     highlightCode(code, language)
       .then((result) => {
         if (!cancelled && mountedRef.current) {
@@ -89,11 +99,25 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading || error || !html) {
+  const isOversized = code.length > FILE_PREVIEW_LIMITS.SHIKI_MAX_CODE_BLOCK_SIZE;
+
+  if (loading || error || (!html && !isOversized)) {
     return (
       <pre className="md-pre-loading">
         <div className="md-pre-header">
           <span className="md-lang-badge">{language}</span>
+        </div>
+        <code className={`language-${language}`}>{code}</code>
+      </pre>
+    );
+  }
+
+  if (isOversized) {
+    return (
+      <pre className="md-pre-loading">
+        <div className="md-pre-header">
+          <span className="md-lang-badge">{language}</span>
+          <span className="md-lang-badge" style={{ fontSize: "0.6em", opacity: 0.7 }}>大代码块</span>
         </div>
         <code className={`language-${language}`}>{code}</code>
       </pre>

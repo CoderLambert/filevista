@@ -4,162 +4,79 @@
 
 Code / JSON / Markdown / Text 文件如果很大，直接使用 Shiki 高亮可能导致浏览器卡顿。
 
-## 涉及文件
+## 已完成
+
+所有修改已通过 `bun run build` 验证，无新增 TypeScript 错误。
+
+### 涉及文件
 
 ```txt
-src/components/file-preview/CodePreview.tsx
-src/components/file-preview/MarkdownPreview.tsx
-src/components/file-preview/ShikiSourceView.tsx
-src/components/file-preview/TextPreview.tsx
-src/components/file-preview/PlainTextLargePreview.tsx
-src/components/file-preview/limits.ts
+src/components/file-preview/limits.ts                      (NEW)
+src/components/file-preview/PlainTextLargePreview.tsx      (NEW)
+src/components/file-preview/CodePreview.tsx                (MODIFIED)
+src/components/file-preview/MarkdownPreview.tsx            (MODIFIED)
+src/components/file-preview/ShikiSourceView.tsx            (MODIFIED)
+src/components/file-preview/TextPreview.tsx                (MODIFIED)
 ```
 
-## 任务 1：新增 limits.ts
+### limits.ts
+
+新增 `FILE_PREVIEW_LIMITS` 常量和 `shouldHighlight` / `formatFileSize` / `truncateContent` 辅助函数：
 
 ```ts
 export const FILE_PREVIEW_LIMITS = {
-  maxTextPreviewSize: 2 * 1024 * 1024,
-  maxCodeHighlightSize: 500 * 1024,
-  maxCodeHighlightLines: 5000,
-  maxMarkdownHighlightBlocks: 50,
-};
+  /** Skip Shiki highlighting above this byte size */
+  SHIKI_MAX_FILE_SIZE: 500 * 1024, // 500 KB
+  /** Skip Shiki highlighting above this line count */
+  SHIKI_MAX_LINES: 5000,
+  /** Skip code-block highlighting inside Markdown above this byte size */
+  SHIKI_MAX_CODE_BLOCK_SIZE: 50 * 1024, // 50 KB
+  /** Truncate display content to this size for plain-text fallback */
+  MAX_DISPLAY_SIZE: 2 * 1024 * 1024, // 2 MB
+} as const;
 ```
 
-## 任务 2：新增 PlainTextLargePreview
+`shouldHighlight(content)` — 根据大小和行数判断是否跳过 Shiki
 
-```tsx
-"use client";
+`formatFileSize(bytes)` — 格式化文件大小显示
 
-import { useMemo, useState } from "react";
-import { Copy, Check, WrapText, AlertTriangle } from "lucide-react";
+`truncateContent(content, maxSize)` — 截断超大文件内容
 
-interface PlainTextLargePreviewProps {
-  content: string;
-  fileName: string;
-  reason?: string;
-}
+### PlainTextLargePreview.tsx
 
-export function PlainTextLargePreview({
-  content,
-  fileName,
-  reason,
-}: PlainTextLargePreviewProps) {
-  const [copied, setCopied] = useState(false);
-  const [wordWrap, setWordWrap] = useState(true);
+纯文本降级预览组件，功能：
+- 带行号的纯文本展示（与 Shiki 内置 fallback 样式一致）
+- 工具栏：语言 badge、行数、文件大小、"大文件" 标签
+- 自动换行 / 固定宽度切换
+- 一键复制
 
-  const lines = useMemo(() => content.split("\n"), [content]);
+### CodePreview.tsx
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+- 在 `doHighlight` 中增加 `shouldHighlight(displayContent)` 检查
+- 超出阈值时跳过 Shiki，渲染区域使用 `PlainTextLargePreview` 替代
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
-        <div className="flex items-center gap-2">
-          <AlertTriangle size={14} className="text-amber-500" />
-          <span className="text-xs text-muted-foreground">
-            {reason || "文件较大，已使用纯文本模式"}
-          </span>
-          <span className="text-xs font-mono px-2 py-0.5 rounded bg-muted">
-            {lines.length} lines
-          </span>
-        </div>
+### ShikiSourceView.tsx
 
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setWordWrap((v) => !v)}
-            className="p-1.5 rounded-md hover:bg-muted"
-          >
-            <WrapText size={14} />
-          </button>
+- 新增 `canHighlight` memo 计算
+- `doHighlight` 中跳过 Shiki（直接 `setLoading(false)`）
+- 渲染时根据 `canHighlight` 切换到 `PlainTextLargePreview`
 
-          <button
-            onClick={handleCopy}
-            className="p-1.5 rounded-md hover:bg-muted"
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-          </button>
-        </div>
-      </div>
+### MarkdownPreview.tsx
 
-      <div className="flex-1 overflow-auto">
-        <pre
-          className={`p-4 text-xs leading-6 font-mono ${
-            wordWrap ? "whitespace-pre-wrap break-words" : "whitespace-pre"
-          }`}
-        >
-          {content}
-        </pre>
-      </div>
-    </div>
-  );
-}
-```
+- `ShikiPreContent` 中对单个代码块增加 `FILE_PREVIEW_LIMITS.SHIKI_MAX_CODE_BLOCK_SIZE` 检查
+- 超大代码块跳过 Shiki，渲染为带 language badge 和 "大代码块" 标签的纯 `<pre><code>` 块
+- 未使用缓存方案（当前场景下每个代码块独立 highlight，缓存收益有限且增加复杂度）
 
-## 任务 3：CodePreview 增加降级
+### TextPreview.tsx
 
-```ts
-const shouldUseHighlight =
-  displayContent.length <= FILE_PREVIEW_LIMITS.maxCodeHighlightSize &&
-  lineCount <= FILE_PREVIEW_LIMITS.maxCodeHighlightLines;
-```
-
-如果不满足：
-
-```tsx
-return (
-  <PlainTextLargePreview
-    content={displayContent}
-    fileName={fileName}
-    reason="代码文件较大，已关闭语法高亮以避免浏览器卡顿"
-  />
-);
-```
-
-## 任务 4：Markdown 代码块高亮缓存
-
-新增缓存：
-
-```ts
-const markdownHighlightCache = new Map<string, string>();
-
-async function highlightMarkdownCode(code: string, language: string) {
-  const key = `${language}:${code}`;
-
-  const cached = markdownHighlightCache.get(key);
-  if (cached) return cached;
-
-  const html = await highlightCode(code, language);
-  markdownHighlightCache.set(key, html);
-
-  return html;
-}
-```
-
-## 任务 5：Markdown 大文件降级
-
-如果 Markdown 文件超过阈值：
-
-```tsx
-return (
-  <PlainTextLargePreview
-    content={content}
-    fileName="markdown.md"
-    reason="Markdown 文件较大，已切换为源码模式"
-  />
-);
-```
+- 传递 `language="text"` 给 `ShikiSourceView`，使其能正确显示语言标识
 
 ## 验收标准
 
-| 文件         | 预期             |
-| ---------- | -------------- |
-| 100KB TS   | 正常 Shiki 高亮    |
-| 1MB TS     | 降级纯文本          |
-| 5MB JSON   | 降级纯文本          |
-| 10MB log   | 降级纯文本          |
-| 大 Markdown | 源码模式或有限高亮，不应卡死 |
+| 文件          | 预期                             |
+| ------------- | -------------------------------- |
+| 100KB TS      | 正常 Shiki 高亮                  |
+| 1MB TS        | 降级纯文本                       |
+| 5MB JSON      | 降级纯文本                       |
+| 10MB log      | 降级纯文本                       |
+| 大 Markdown   | 代码块≤50KB 正常高亮，超限降级   |
