@@ -3,6 +3,15 @@
  * Prevents Shiki from hanging or crashing on very large files.
  */
 
+export const XLSX_PREVIEW_LIMITS = {
+  /** Fast mode renders at most this many rows */
+  FAST_MODE_ROW_LIMIT: 1000,
+  /** Files larger than this default to fast mode */
+  LARGE_FILE_SIZE: 10 * 1024 * 1024, // 10 MB
+  /** Files larger than this are not recommended for fidelity mode */
+  MAX_FIDELITY_FILE_SIZE: 30 * 1024 * 1024, // 30 MB
+} as const;
+
 export const FILE_PREVIEW_LIMITS = {
   /** Skip Shiki highlighting above this byte size */
   SHIKI_MAX_FILE_SIZE: 500 * 1024, // 500 KB

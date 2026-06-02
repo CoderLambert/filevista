@@ -175,7 +175,7 @@ export function FilePreviewContent({ file }: { file: FileInfo }) {
     case "xlsx":
       return file.content ? (
         <Suspense fallback={<PreviewLoading />}>
-          <XlsxPreview content={file.content} fileName={file.name} />
+          <XlsxPreview content={file.content} fileName={file.name} fileSize={file.size} />
         </Suspense>
       ) : (
         <UnsupportedPreview fileType="xlsx" />

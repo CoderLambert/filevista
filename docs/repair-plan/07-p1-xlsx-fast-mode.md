@@ -4,114 +4,66 @@
 
 当前 XLSX 预览偏高保真，适合小型 Excel 文件。真实业务中的 Excel 可能行列很多、图片很多、样式复杂，全量解析会导致卡顿。
 
-## 涉及文件
+## 已完成
+
+所有修改已通过 `bun run build` 验证，无新增 TypeScript 错误。
+
+### 涉及文件
 
 ```txt
-src/components/file-preview/XlsxPreview.tsx
-src/components/file-preview/limits.ts
+src/components/file-preview/limits.ts                (MODIFIED)
+src/components/file-preview/FilePreviewRenderer.tsx  (MODIFIED)
+src/components/file-preview/XlsxPreview.tsx          (MODIFIED)
 ```
 
-## 目标
+### limits.ts
 
-增加两种模式：
-
-```ts
-type XlsxPreviewMode = "fast" | "fidelity";
-```
-
-## 模式说明
-
-| 模式       | 说明                          |
-| -------- | --------------------------- |
-| fast     | 快速预览，只读取前 N 行，不渲染图片，不处理复杂样式 |
-| fidelity | 高保真预览，保留样式、合并单元格、图片、批注等     |
-
-## 任务 1：新增阈值
+新增 `XLSX_PREVIEW_LIMITS` 常量：
 
 ```ts
 export const XLSX_PREVIEW_LIMITS = {
-  fastModeRowLimit: 1000,
-  largeFileSize: 10 * 1024 * 1024,
-  maxFidelityFileSize: 30 * 1024 * 1024,
-};
+  /** Fast mode renders at most this many rows */
+  FAST_MODE_ROW_LIMIT: 1000,
+  /** Files larger than this default to fast mode */
+  LARGE_FILE_SIZE: 10 * 1024 * 1024, // 10 MB
+  /** Files larger than this are not recommended for fidelity mode */
+  MAX_FIDELITY_FILE_SIZE: 30 * 1024 * 1024, // 30 MB
+} as const;
 ```
 
-## 任务 2：新增 mode 状态
+### FilePreviewRenderer.tsx
 
-```ts
-const [mode, setMode] = useState<XlsxPreviewMode>(() => {
-  return fileSize > XLSX_PREVIEW_LIMITS.largeFileSize ? "fast" : "fidelity";
-});
-```
+`case "xlsx"` 中增加 `fileSize={file.size}` 透传。
 
-如果当前组件拿不到 `fileSize`，需要先把 `file.size` 透传到 `XlsxPreview`：
+### XlsxPreview.tsx
 
-```tsx
-<XlsxPreview
-  content={file.content}
-  fileName={file.name}
-  fileSize={file.size}
-/>
-```
+**Props 扩展：** 新增 `fileSize: number`。
 
-## 任务 3：快速模式限制行数
+**模式类型：** `XlsxPreviewMode = "fast" | "fidelity"`，默认根据 `LARGE_FILE_SIZE` 阈值决定。
 
-解析 worksheet 时：
+**`parseXlsx` 函数改造：** 接受 `mode` 参数，fast 模式下：
 
-```ts
-const rowLimit =
-  mode === "fast"
-    ? XLSX_PREVIEW_LIMITS.fastModeRowLimit
-    : worksheet.rowCount;
-```
+- 行数限制为 `FAST_MODE_ROW_LIMIT`（1000 行），但 `totalRows` 仍保留真实行数
+- 跳过图片解析（`worksheet.getImages()` 不执行）
+- 跳过样式提取（`extractStyle` 返回空对象）
+- 合并单元格解析仍正常执行
 
-循环时：
+**模式切换：** 工具栏增加"快速/高保真"切换按钮。超大文件（>30MB）切高保真时弹出确认提示。
 
-```ts
-for (let rowIndex = 1; rowIndex <= rowLimit; rowIndex++) {
-  // parse row
-}
-```
+**大文件提示：**
 
-## 任务 4：快速模式跳过图片
+- fast 模式：显示黄色横幅，说明当前限制
+- fidelity 模式：显示红色横幅，警告可能卡顿
 
-```ts
-if (mode === "fidelity") {
-  // parse images
-}
-```
-
-## 任务 5：增加 UI 切换
-
-工具栏增加：
-
-```tsx
-<button onClick={() => setMode("fast")}>快速模式</button>
-<button onClick={() => setMode("fidelity")}>高保真模式</button>
-```
-
-当大文件选择高保真时提示：
-
-```txt
-当前文件较大，高保真模式可能导致浏览器卡顿。
-```
-
-## 任务 6：增加大文件提示
-
-```tsx
-{fileSize > XLSX_PREVIEW_LIMITS.largeFileSize && (
-  <div className="px-4 py-2 text-xs bg-amber-50 text-amber-700 border-b">
-    当前 Excel 文件较大，已默认使用快速预览模式。
-  </div>
-)}
-```
+**行数显示：** fast 模式下工具栏显示"显示前 1000 行 / 共 XXXXX 行 × XX 列"。
 
 ## 验收标准
 
-| 文件             | 预期     |
-| -------------- | ------ |
-| 小型 xlsx        | 默认高保真  |
-| 大型 xlsx        | 默认快速模式 |
-| 大型 xlsx 切高保真   | 有明确提示  |
-| 含图片 xlsx 快速模式  | 不解析图片  |
-| 含图片 xlsx 高保真模式 | 尽量显示图片 |
+| 文件              | 预期                               |
+| ----------------- | ---------------------------------- |
+| 小型 xlsx         | 默认高保真                         |
+| 大于 10MB xlsx    | 默认快速模式                       |
+| 大于 30MB xlsx 切高保真 | 弹确认提示                  |
+| fast 模式         | 只显示前 1000 行，不解析图片       |
+| fidelity 模式     | 尽量保留图片、样式、批注           |
+| 切换模式          | 重新解析 workbook                  |

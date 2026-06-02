@@ -12,6 +12,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { base64ToUint8Array } from "./utils";
+import { XLSX_PREVIEW_LIMITS, formatFileSize } from "./limits";
 
 // Lazy-load ExcelJS
 let ExcelJS: typeof import("exceljs") | null = null;
@@ -25,7 +26,10 @@ async function getExcelJS() {
 interface XlsxPreviewProps {
   content: string;
   fileName: string;
+  fileSize: number;
 }
+
+type XlsxPreviewMode = "fast" | "fidelity";
 
 interface CellStyle {
   fontFamily?: string;
@@ -348,7 +352,7 @@ const DEFAULT_COL_WIDTH = 80;
 const MAX_RENDER_ROWS = 5000;
 
 // ---- Main Parser ----
-async function parseXlsx(base64Content: string, fileName: string): Promise<SheetData[]> {
+async function parseXlsx(base64Content: string, fileName: string, mode: XlsxPreviewMode): Promise<SheetData[]> {
   const EJS = await getExcelJS();
   const ext = fileName.toLowerCase().split(".").pop() || "";
   const isLegacyXls = ext === "xls";
@@ -359,6 +363,8 @@ async function parseXlsx(base64Content: string, fileName: string): Promise<Sheet
   await workbook.xlsx.load(bytes);
 
   const sheets: SheetData[] = [];
+  const isFast = mode === "fast";
+  const fastRowLimit = isFast ? XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT : Infinity;
 
   workbook.eachSheet((worksheet: any) => {
     const rowCount = worksheet.rowCount;
@@ -369,6 +375,8 @@ async function parseXlsx(base64Content: string, fileName: string): Promise<Sheet
       return;
     }
 
+    const effectiveRowCount = Math.min(rowCount, fastRowLimit);
+
     // Column widths
     const colWidths: number[] = [];
     for (let c = 1; c <= colCount; c++) {
@@ -376,9 +384,9 @@ async function parseXlsx(base64Content: string, fileName: string): Promise<Sheet
       colWidths.push(col.width ? Math.round(Math.max(col.width * 7.5, 50)) : DEFAULT_COL_WIDTH);
     }
 
-    // Row heights
+    // Row heights (only up to effectiveRowCount in fast mode)
     const rowHeights: number[] = [];
-    for (let r = 1; r <= rowCount; r++) {
+    for (let r = 1; r <= effectiveRowCount; r++) {
       const row = worksheet.getRow(r);
       rowHeights.push(row.height ? Math.round(row.height * 1.333) : 0);
     }
@@ -439,57 +447,57 @@ async function parseXlsx(base64Content: string, fileName: string): Promise<Sheet
       }
     }
 
-    // ---- Extract images & group by anchor cell ----
-    // Key: "row-col" (0-based). For merged cells, redirect to top-left.
+    // ---- Extract images & group by anchor cell (fidelity mode only) ----
     const cellImages = new Map<string, EmbeddedImage[]>();
     let totalImages = 0;
 
-    try {
-      const wsImages = worksheet.getImages();
-      for (const img of wsImages) {
-        const imageId = parseInt(img.imageId, 10);
-        if (isNaN(imageId)) continue;
-        const imageData = workbook.getImage(imageId);
-        if (!imageData?.buffer) continue;
+    if (!isFast) {
+      try {
+        const wsImages = worksheet.getImages();
+        for (const img of wsImages) {
+          const imageId = parseInt(img.imageId, 10);
+          if (isNaN(imageId)) continue;
+          const imageData = workbook.getImage(imageId);
+          if (!imageData?.buffer) continue;
 
-        const buf = imageData.buffer;
-        const format = detectImageFormat(buf);
-        const isSupported = BROWSER_SUPPORTED_FORMATS.has(format);
-        const mimeType = getMimeType(format);
-        const base64 = bufferToBase64(buf);
+          const buf = imageData.buffer;
+          const format = detectImageFormat(buf);
+          const isSupported = BROWSER_SUPPORTED_FORMATS.has(format);
+          const mimeType = getMimeType(format);
+          const base64 = bufferToBase64(buf);
 
-        const range = img.range;
-        if (!range?.tl) continue;
+          const range = img.range;
+          if (!range?.tl) continue;
 
-        const tlRow = range.tl.nativeRow ?? 0;
-        const tlCol = range.tl.nativeCol ?? 0;
-        const key = `${tlRow}-${tlCol}`;
+          const tlRow = range.tl.nativeRow ?? 0;
+          const tlCol = range.tl.nativeCol ?? 0;
+          const key = `${tlRow}-${tlCol}`;
 
-        // Redirect: if this cell is part of a merge (not the top-left), use the top-left cell
-        const effectiveKey = mergeRedirect.get(key) || key;
+          const effectiveKey = mergeRedirect.get(key) || key;
 
-        const dims = parseImageDimensions(buf);
+          const dims = parseImageDimensions(buf);
 
-        const embedded: EmbeddedImage = {
-          dataUrl: isSupported ? `data:${mimeType};base64,${base64}` : null,
-          naturalWidth: dims.width,
-          naturalHeight: dims.height,
-          unsupported: !isSupported,
-          formatName: format.toUpperCase(),
-        };
+          const embedded: EmbeddedImage = {
+            dataUrl: isSupported ? `data:${mimeType};base64,${base64}` : null,
+            naturalWidth: dims.width,
+            naturalHeight: dims.height,
+            unsupported: !isSupported,
+            formatName: format.toUpperCase(),
+          };
 
-        if (!cellImages.has(effectiveKey)) cellImages.set(effectiveKey, []);
-        cellImages.get(effectiveKey)!.push(embedded);
-        totalImages++;
+          if (!cellImages.has(effectiveKey)) cellImages.set(effectiveKey, []);
+          cellImages.get(effectiveKey)!.push(embedded);
+          totalImages++;
+        }
+      } catch (err) {
+        console.warn("Image extraction error:", err);
       }
-    } catch (err) {
-      console.warn("Image extraction error:", err);
     }
 
     // ---- Build cell grid ----
     const cellGrid: (CellData | null)[][] = [];
 
-    for (let r = 0; r < rowCount; r++) {
+    for (let r = 0; r < effectiveRowCount; r++) {
       const row: (CellData | null)[] = [];
       const excelRow = worksheet.getRow(r + 1);
 
@@ -499,7 +507,7 @@ async function parseXlsx(base64Content: string, fileName: string): Promise<Sheet
 
         const cell = excelRow.getCell(c + 1);
         const value = formatCellValue(cell);
-        const style = extractStyle(cell);
+        const style: CellStyle = isFast ? {} : extractStyle(cell);
         const merge = merges.get(key);
         const images = cellImages.get(key);
 
@@ -550,7 +558,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced;
 }
 
-export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
+export function XlsxPreview({ content, fileName, fileSize }: XlsxPreviewProps) {
   const [sheets, setSheets] = useState<SheetData[]>([]);
   const [activeSheet, setActiveSheet] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -560,12 +568,33 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [hoveredComment, setHoveredComment] = useState<{ row: number; col: number; text: string; x: number; y: number } | null>(null);
 
+  const [mode, setMode] = useState<XlsxPreviewMode>(() => {
+    return fileSize > XLSX_PREVIEW_LIMITS.LARGE_FILE_SIZE ? "fast" : "fidelity";
+  });
+
+  const isLargeFile = fileSize > XLSX_PREVIEW_LIMITS.LARGE_FILE_SIZE;
+  const isTooLargeForFidelity = fileSize > XLSX_PREVIEW_LIMITS.MAX_FIDELITY_FILE_SIZE;
+
+  const switchMode = useCallback(
+    (nextMode: XlsxPreviewMode) => {
+      if (nextMode === mode) return;
+      if (nextMode === "fidelity" && isTooLargeForFidelity) {
+        const confirmed = window.confirm(
+          `当前 Excel 文件大小为 ${formatFileSize(fileSize)}，高保真模式可能导致浏览器卡顿甚至无响应。是否继续？`
+        );
+        if (!confirmed) return;
+      }
+      setMode(nextMode);
+    },
+    [mode, isTooLargeForFidelity, fileSize]
+  );
+
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const parseFile = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await parseXlsx(content, fileName);
+      const result = await parseXlsx(content, fileName, mode);
       setSheets(result);
     } catch (err) {
       console.error("XLSX parse error:", err);
@@ -578,7 +607,7 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
     } finally {
       setLoading(false);
     }
-  }, [content, fileName]);
+  }, [content, fileName, mode]);
 
   useEffect(() => { parseFile(); }, [parseFile]);
 
@@ -661,6 +690,31 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
               ))}
             </div>
           )}
+          {/* Mode switch */}
+          <div className="flex items-center gap-0.5 border rounded-md p-0.5 bg-background ml-2">
+            <button
+              onClick={() => switchMode("fast")}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                mode === "fast"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+              title="快速模式：限制行数，跳过图片和复杂样式"
+            >
+              快速
+            </button>
+            <button
+              onClick={() => switchMode("fidelity")}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                mode === "fidelity"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+              title="高保真模式：保留样式、图片、批注"
+            >
+              高保真
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative max-w-xs">
@@ -675,11 +729,31 @@ export function XlsxPreview({ content, fileName }: XlsxPreviewProps) {
             <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="p-1 hover:bg-muted rounded transition-colors" title="放大"><ZoomIn size={14} className="text-muted-foreground" /></button>
           </div>
           <span className="text-xs text-muted-foreground select-none">
-            {currentSheet?.totalRows || 0} 行 × {currentSheet?.totalCols || 0} 列
-            {currentSheet?.imageCount ? ` · ${currentSheet.imageCount} 张图片` : ""}
+            {mode === "fast" && currentSheet?.totalRows > XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT ? (
+              <>
+                显示前 {XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT.toLocaleString()} 行 / 共 {currentSheet.totalRows.toLocaleString()} 行 × {currentSheet.totalCols} 列
+              </>
+            ) : (
+              <>
+                {currentSheet?.totalRows?.toLocaleString() || 0} 行 × {currentSheet?.totalCols || 0} 列
+                {currentSheet?.imageCount ? ` · ${currentSheet.imageCount} 张图片` : ""}
+              </>
+            )}
           </span>
         </div>
       </div>
+
+      {/* Large file banner */}
+      {isLargeFile && mode === "fast" && (
+        <div className="px-4 py-2 text-xs bg-amber-50 text-amber-700 border-b dark:bg-amber-950/20 dark:text-amber-300">
+          当前 Excel 文件较大（{formatFileSize(fileSize)}），已默认使用快速模式：仅渲染前 {XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT.toLocaleString()} 行，并跳过图片解析。
+        </div>
+      )}
+      {isLargeFile && mode === "fidelity" && (
+        <div className="px-4 py-2 text-xs bg-red-50 text-red-700 border-b dark:bg-red-950/20 dark:text-red-300">
+          当前正在使用高保真模式预览大文件，可能导致浏览器卡顿。
+        </div>
+      )}
 
       {/* Table */}
       <div ref={scrollRef} className="flex-1 overflow-auto bg-gray-100">
