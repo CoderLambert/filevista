@@ -134,3 +134,26 @@ Stage Summary:
 - Key-based remount pattern avoids React 19 lint error (setState-in-effect)
 - Lazy loading: MarkdownPreview not loaded for non-Markdown files, Shiki not loaded for Markdown without code blocks
 - Demo README.md showcases TypeScript, Python, CSS, Bash code blocks
+
+---
+Task ID: 6
+Agent: main
+Task: Fix Markdown preview typography/layout styles (missing prose styling)
+
+Work Log:
+- Identified that `prose` class from @tailwindcss/typography was not working
+- Root cause: @tailwindcss/typography was NOT installed in the project
+- Installed @tailwindcss/typography@0.5.19 and added `@plugin "@tailwindcss/typography"` to globals.css
+- However, prose styles still didn't appear in the CSSOM — likely Tailwind v4 compatibility issue with `@plugin` directive
+- Decided to take a self-contained approach: wrote complete prose CSS directly in MarkdownPreview.tsx
+- Removed `@plugin "@tailwindcss/typography"` from globals.css (no longer needed)
+- Replaced all `var(--color-border)` with explicit `rgba()` colors because the CSS variable resolves too light in bright mode (lab(90.952...) ≈ near-white)
+- Added proper dark mode styles with inverted rgba polarities
+- Styles cover: headings (h1-h6 with hierarchy), paragraphs, links, lists, blockquote (left border + bg), hr, inline code, tables, images, Shiki code blocks
+- Verified with VLM: blockquote has visible left border, hr is visible, italic text renders, code blocks highlight, headings have proper hierarchy
+
+Stage Summary:
+- Markdown preview now has complete, professional typography without external dependencies
+- Self-contained CSS approach avoids @tailwindcss/typography compatibility issues
+- Explicit rgba colors ensure visibility in both light and dark modes
+- All prose elements properly styled: headings, paragraphs, lists, blockquotes, tables, code, hr, links, images

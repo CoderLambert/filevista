@@ -23,18 +23,7 @@ function getTextContent(node: ReactNode): string {
   return "";
 }
 
-/**
- * Shiki-powered code block renderer.
- *
- * - Detects language from the child <code> element's className (e.g. "language-typescript")
- * - Calls highlightCode() asynchronously (lazy loads Shiki + grammar on demand)
- * - Renders dual-theme CSS variable output (consistent with CodePreview)
- * - Falls back to plain <pre><code> while loading or on error
- *
- * Uses key={code+language} from parent to reset on prop changes (avoids setState in effect).
- */
 function ShikiPreBlock({ children, ...rest }: React.HTMLAttributes<HTMLPreElement> & { children?: ReactNode }) {
-  // Extract language from child <code> element's className
   const childArray = React.Children.toArray(children);
   const codeElement = childArray.find(
     (child) => React.isValidElement(child) && (child.type === "code" || (child.props as { className?: string })?.className?.includes("language-"))
@@ -46,26 +35,17 @@ function ShikiPreBlock({ children, ...rest }: React.HTMLAttributes<HTMLPreElemen
   const langMatch = /language-(\w+)/.exec(codeClassName);
   const language = langMatch ? langMatch[1] : "";
 
-  // Get the raw code text
   const codeText = codeElement && React.isValidElement(codeElement)
     ? getTextContent(codeElement.props.children).replace(/\n$/, "")
     : getTextContent(children).replace(/\n$/, "");
 
-  // If no language detected, render as plain pre
   if (!language) {
     return <pre {...rest}>{children}</pre>;
   }
 
-  // Key forces remount when code/language changes — avoids setState-in-effect
   return <ShikiPreContent key={`${language}:${codeText}`} code={codeText} language={language} />;
 }
 
-/**
- * Async pre block: loads Shiki highlight and renders the result.
- *
- * Initial state is loading=true. Key changes from parent cause full remount
- * (fresh loading state) instead of setState-in-effect.
- */
 function ShikiPreContent({ code, language }: { code: string; language: string }) {
   const [html, setHtml] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -105,28 +85,22 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Loading or error — render plain code block
   if (loading || error || !html) {
     return (
-      <pre className="shiki-pre-loading">
-        <div className="shiki-pre-header">
-          <span className="shiki-lang-badge">{language}</span>
+      <pre className="md-pre-loading">
+        <div className="md-pre-header">
+          <span className="md-lang-badge">{language}</span>
         </div>
         <code className={`language-${language}`}>{code}</code>
       </pre>
     );
   }
 
-  // Success — render Shiki highlighted HTML (already includes <pre><code>)
   return (
-    <div className="shiki-code-block group relative">
-      <div className="shiki-pre-header">
-        <span className="shiki-lang-badge">{language}</span>
-        <button
-          onClick={handleCopy}
-          className="shiki-copy-btn"
-          title="Copy code"
-        >
+    <div className="md-code-block group relative">
+      <div className="md-pre-header">
+        <span className="md-lang-badge">{language}</span>
+        <button onClick={handleCopy} className="md-copy-btn" title="Copy code">
           {copied ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           ) : (
@@ -140,18 +114,11 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
 }
 
 export function MarkdownPreview({ content }: MarkdownPreviewProps) {
-  // Memoize components to avoid re-creating on every render
-  const components = useMemo(
-    () => ({
-      pre: ShikiPreBlock,
-    }),
-    []
-  );
+  const components = useMemo(() => ({ pre: ShikiPreBlock }), []);
 
   return (
-    <div className="markdown-preview prose prose-sm dark:prose-invert max-w-none p-6">
-      {/* Dual-theme CSS for Shiki-highlighted code blocks inside Markdown */}
-      <style dangerouslySetInnerHTML={{ __html: MARKDOWN_SHIKI_STYLES }} />
+    <div className="markdown-preview md-prose">
+      <style dangerouslySetInnerHTML={{ __html: MARKDOWN_PROSE_STYLES }} />
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>
@@ -159,150 +126,381 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
   );
 }
 
-// ── Styles for Shiki code blocks within Markdown ──
-const MARKDOWN_SHIKI_STYLES = `
-  /* ── Shiki code block wrapper ── */
-  .markdown-preview .shiki-code-block {
-    margin: 1em 0;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    position: relative;
-  }
+// ── Complete Markdown Prose + Shiki Styles ──
+// Uses explicit rgba colors instead of var(--color-border) for visibility
+// (the CSS variable resolves too light in bright mode)
+const MARKDOWN_PROSE_STYLES = `
+/* ══════════════════════════════════════════════════
+   Markdown Prose Typography — self-contained
+   ══════════════════════════════════════════════════ */
 
-  /* ── Code block header (language badge + copy button) ── */
-  .markdown-preview .shiki-pre-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.375rem 0.75rem;
-    background: rgba(0, 0, 0, 0.03);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  }
-  .dark .markdown-preview .shiki-pre-header {
-    background: rgba(255, 255, 255, 0.04);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-  }
+.md-prose {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  max-width: 65ch;
+  padding: 1.5rem;
+  color: var(--color-foreground);
+}
 
-  .markdown-preview .shiki-lang-badge {
-    font-size: 0.6875rem;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    padding: 0.1em 0.5em;
-    border-radius: 0.25rem;
-    background: rgba(0, 0, 0, 0.06);
-    opacity: 0.7;
-  }
-  .dark .markdown-preview .shiki-lang-badge {
-    background: rgba(255, 255, 255, 0.1);
-  }
+/* ── Headings ── */
+.md-prose :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--color-foreground);
+}
+.md-prose h1 {
+  font-size: 2.25em;
+  font-weight: 800;
+  margin-top: 0;
+  margin-bottom: 0.8em;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+.md-prose h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+.md-prose h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+}
+.md-prose h4 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 1.4em;
+  margin-bottom: 0.4em;
+}
+.md-prose h5, .md-prose h6 {
+  font-size: 1em;
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+}
+.md-prose h6 {
+  color: var(--color-muted-foreground);
+}
 
-  .markdown-preview .shiki-copy-btn {
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-    color: inherit;
-    opacity: 0;
-    transition: opacity 0.15s;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  .markdown-preview .shiki-code-block:hover .shiki-copy-btn,
-  .markdown-preview .shiki-code-block .shiki-copy-btn:focus {
-    opacity: 0.6;
-  }
-  .markdown-preview .shiki-copy-btn:hover {
-    opacity: 1 !important;
-    background: rgba(0, 0, 0, 0.06);
-  }
-  .dark .markdown-preview .shiki-copy-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
+/* ── Paragraph ── */
+.md-prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
 
-  /* ── Loading state pre ── */
-  .markdown-preview .shiki-pre-loading {
-    margin: 1em 0;
-    padding: 0.75rem 1rem;
-    font-size: 0.8125rem;
-    line-height: 1.7;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-    overflow-x: auto;
-    tab-size: 2;
-    border-radius: 0.5rem;
-  }
+/* ── Links ── */
+.md-prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+.md-prose a:hover {
+  opacity: 0.8;
+}
 
-  /* ── Shiki output styling ── */
-  .markdown-preview .shiki-code-block pre {
-    margin: 0 !important;
-    padding: 1rem 1.25rem !important;
-    font-size: 0.8125rem !important;
-    line-height: 1.7 !important;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-      "Liberation Mono", monospace !important;
-    overflow-x: auto;
-    tab-size: 2;
-  }
+/* ── Strong / Em ── */
+.md-prose strong {
+  font-weight: 700;
+}
+.md-prose em {
+  font-style: italic;
+}
 
-  /* ── Dual-theme switching via CSS variables ── */
-  .markdown-preview .shiki-code-block .shiki {
-    background-color: var(--shiki-light-bg, #f6f8fa) !important;
-    color: var(--shiki-light, #24292e) !important;
-  }
-  .markdown-preview .shiki-code-block .shiki span {
-    color: var(--shiki-light) !important;
-    background-color: var(--shiki-light-bg, transparent) !important;
-  }
+/* ── Horizontal Rule ── */
+.md-prose hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 2em 0;
+}
 
-  .dark .markdown-preview .shiki-code-block .shiki,
-  html.dark .markdown-preview .shiki-code-block .shiki {
+/* ── Lists ── */
+.md-prose ul {
+  list-style-type: disc;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+.md-prose ol {
+  list-style-type: decimal;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+.md-prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.md-prose li::marker {
+  color: var(--color-muted-foreground);
+}
+.md-prose li > ul,
+.md-prose li > ol {
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+
+/* ── Task Lists (GFM) ── */
+.md-prose ul:has(> li > input[type="checkbox"]) {
+  list-style-type: none;
+  padding-left: 0.25em;
+}
+.md-prose li > input[type="checkbox"] {
+  margin-right: 0.5em;
+  accent-color: var(--color-primary);
+  transform: scale(1.1);
+  vertical-align: middle;
+}
+
+/* ── Blockquote ── */
+.md-prose blockquote {
+  border-left: 4px solid rgba(0, 0, 0, 0.15);
+  padding: 0.5em 0 0.5em 1em;
+  margin: 1.5em 0;
+  color: var(--color-muted-foreground);
+  font-style: italic;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+.md-prose blockquote p:first-child {
+  margin-top: 0.25em;
+}
+.md-prose blockquote p:last-child {
+  margin-bottom: 0.25em;
+}
+
+/* ── Inline Code ── */
+.md-prose code:not(pre code) {
+  font-size: 0.875em;
+  font-weight: 600;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-primary);
+}
+
+/* ── Plain Pre (no language) ── */
+.md-prose pre:not(.md-pre-loading):not(.md-code-block pre) {
+  margin: 1.5em 0;
+  padding: 1rem 1.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* ── Table ── */
+.md-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.875em;
+}
+.md-prose th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.5em 0.75em;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+}
+.md-prose td {
+  padding: 0.5em 0.75em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.md-prose tr:last-child td {
+  border-bottom: none;
+}
+.md-prose th:first-child,
+.md-prose td:first-child {
+  padding-left: 0;
+}
+.md-prose th:last-child,
+.md-prose td:last-child {
+  padding-right: 0;
+}
+.md-prose tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* ── Images ── */
+.md-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1.5em 0;
+}
+
+/* ══════════════════════════════════════════════════
+   Shiki Code Block Styles
+   ══════════════════════════════════════════════════ */
+
+.md-prose .md-code-block {
+  margin: 1.5em 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.md-prose .md-pre-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0.75rem;
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.md-prose .md-lang-badge {
+  font-size: 0.6875rem;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  padding: 0.1em 0.5em;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.06);
+  opacity: 0.75;
+  font-weight: 500;
+}
+.md-prose .md-copy-btn {
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  color: inherit;
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.md-prose .md-code-block:hover .md-copy-btn,
+.md-prose .md-code-block .md-copy-btn:focus {
+  opacity: 0.5;
+}
+.md-prose .md-copy-btn:hover {
+  opacity: 1 !important;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.md-prose .md-pre-loading {
+  margin: 1.5em 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  overflow-x: auto;
+  tab-size: 2;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.md-prose .md-code-block pre {
+  margin: 0 !important;
+  padding: 1rem 1.25rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.7 !important;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace) !important;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+/* ── Dual-theme CSS variable switching ── */
+.md-prose .md-code-block .shiki {
+  background-color: var(--shiki-light-bg, #f6f8fa) !important;
+  color: var(--shiki-light, #24292e) !important;
+}
+.md-prose .md-code-block .shiki span {
+  color: var(--shiki-light) !important;
+  background-color: var(--shiki-light-bg, transparent) !important;
+}
+.dark .md-prose .md-code-block .shiki,
+html.dark .md-prose .md-code-block .shiki {
+  background-color: var(--shiki-dark-bg, #24292e) !important;
+  color: var(--shiki-dark, #e1e4e8) !important;
+}
+.dark .md-prose .md-code-block .shiki span,
+html.dark .md-prose .md-code-block .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg, transparent) !important;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(:has(.light)) .md-prose .md-code-block .shiki {
     background-color: var(--shiki-dark-bg, #24292e) !important;
     color: var(--shiki-dark, #e1e4e8) !important;
   }
-  .dark .markdown-preview .shiki-code-block .shiki span,
-  html.dark .markdown-preview .shiki-code-block .shiki span {
+  :root:not(:has(.light)) .md-prose .md-code-block .shiki span {
     color: var(--shiki-dark) !important;
     background-color: var(--shiki-dark-bg, transparent) !important;
   }
+}
 
-  @media (prefers-color-scheme: dark) {
-    :root:not(:has(.light)) .markdown-preview .shiki-code-block .shiki {
-      background-color: var(--shiki-dark-bg, #24292e) !important;
-      color: var(--shiki-dark, #e1e4e8) !important;
-    }
-    :root:not(:has(.light)) .markdown-preview .shiki-code-block .shiki span {
-      color: var(--shiki-dark) !important;
-      background-color: var(--shiki-dark-bg, transparent) !important;
-    }
-  }
+/* ── Line numbers ── */
+.md-prose .md-code-block .shiki .line {
+  min-height: 1.7em;
+  padding-left: 3.5em;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+.md-prose .md-code-block .shiki .line::before {
+  content: attr(data-line);
+  position: absolute;
+  left: 0;
+  width: 2.5em;
+  text-align: right;
+  opacity: 0.3;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
 
-  /* ── Line numbers (via data-line from transformer) ── */
-  .markdown-preview .shiki-code-block .shiki .line {
-    min-height: 1.7em;
-    padding-left: 3.5em;
-    position: relative;
-    display: inline-block;
-    width: 100%;
-  }
-  .markdown-preview .shiki-code-block .shiki .line::before {
-    content: attr(data-line);
-    position: absolute;
-    left: 0;
-    width: 2.5em;
-    text-align: right;
-    opacity: 0.3;
-    user-select: none;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── Inline code (no language) ── */
-  .markdown-preview code:not(pre code) {
-    font-size: 0.85em;
-    padding: 0.15em 0.4em;
-    border-radius: 0.25rem;
-    font-weight: 500;
-  }
-
-  /* ── Override prose pre styles for Shiki blocks ── */
-  .markdown-preview .shiki-code-block + pre,
-  .markdown-preview pre + .shiki-code-block {
-    margin-top: 0;
-  }
+/* ══════════════════════════════════════════════════
+   Dark mode — invert rgba polarities
+   ══════════════════════════════════════════════════ */
+.dark .md-prose h2 {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+.dark .md-prose hr {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+.dark .md-prose blockquote {
+  border-left-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+}
+.dark .md-prose code:not(pre code) {
+  background: rgba(255, 255, 255, 0.08);
+}
+.dark .md-prose pre:not(.md-pre-loading):not(.md-code-block pre) {
+  background: rgba(255, 255, 255, 0.04);
+}
+.dark .md-prose th {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+.dark .md-prose td {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+.dark .md-prose tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.dark .md-prose .md-code-block {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.dark .md-prose .md-pre-header {
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+.dark .md-prose .md-lang-badge {
+  background: rgba(255, 255, 255, 0.1);
+}
+.dark .md-prose .md-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.dark .md-prose .md-pre-loading {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
 `;
