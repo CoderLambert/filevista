@@ -10,9 +10,15 @@ interface HtmlPreviewProps {
 }
 
 type ViewMode = "preview" | "source";
+type HtmlSecurityMode = "safe" | "trusted";
 
 export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
+
+  // Sandbox HTML content by default (no scripts, no same-origin access)
+  const [securityMode] = useState<HtmlSecurityMode>("safe");
+  const sandbox =
+    securityMode === "trusted" ? "allow-scripts allow-same-origin" : "";
 
   // Create a blob URL for sandboxed iframe rendering (with cleanup to avoid memory leaks)
   const blobUrl = useMemo(() => {
@@ -59,7 +65,8 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
         {viewMode === "preview" ? (
           <iframe
             src={blobUrl}
-            sandbox="allow-same-origin"
+            sandbox={sandbox}
+            referrerPolicy="no-referrer"
             className="w-full h-full border-0"
             style={{ minHeight: "500px" }}
             title={fileName}
