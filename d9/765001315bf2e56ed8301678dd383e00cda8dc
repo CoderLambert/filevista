@@ -1,0 +1,27 @@
+src/components/file-preview/DocxPreview.tsx
+  s_98ad4b7dddb6fb::t_f99d3b071bc6ee 77-80
+src/app/page.tsx
+  s_98ad4b7dddb6fb::t_903d2047b5fe9d 201
+  s_98ad4b7dddb6fb::t_7782cfad82faf5 56-61
+  s_98ad4b7dddb6fb::t_efd1f902e5ba72 141-143,145-148,150-153
+src/components/file-preview/PptxPreview.tsx
+  s_98ad4b7dddb6fb::t_0e6c56daf7ff86 129-133
+  s_98ad4b7dddb6fb::t_3c85793133c328 199,202-206,209-211
+  s_98ad4b7dddb6fb::t_ef8ff4e03d9968 160
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d9765001315bf2e56ed8301678dd383e00cda8dc",
+  "prompts": {},
+  "sessions": {
+    "s_98ad4b7dddb6fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f982d916-d102-47e6-a198-458bbe546970",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
