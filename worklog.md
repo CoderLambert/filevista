@@ -4,27 +4,28 @@ Agent: main
 Task: Add EPUB and DOCX/XLSX files as default demo files
 
 Work Log:
-- Analyzed current demo file system (demos.ts with inline text content only)
-- Identified binary files from upload directory: EPUB (5MB), XLSX (8.6KB)
-- Found a small DOCX file from mammoth test data for demo
-- Created public/demo/ directory and copied 3 binary demo files
-- Updated demos.ts with DEMO_BINARY_FILES config and fetchBinaryDemoFiles() async function
-- Updated page.tsx loadDemoFiles to be async, loading both text and binary demos
-- Added loading spinner state for demo file button while fetching
-- Verified all 3 demo files are accessible via HTTP (200 status)
+  - Analyzed current demo file system (demos.ts with inline text content only)
+  - Identified binary files from upload directory: EPUB (5MB), XLSX (8.6KB)
+  - Found a small DOCX file from mammoth test data for demo
+  - Created public/demo/ directory and copied 3 binary demo files
+  - Updated demos.ts with DEMO_BINARY_FILES config and fetchBinaryDemoFiles() async function
+  - Updated page.tsx loadDemoFiles to be async, loading both text and binary demos
+  - Added loading spinner state for demo file button while fetching
+  - Verified all 3 demo files are accessible via HTTP (200 status)
 
 Stage Summary:
-- 3 binary demo files added: demo.docx, test_features.xlsx, 精通Python爬虫框架Scrapy.epub
-- Demo system now supports both inline text and URL-fetched binary files
-- loadDemoFiles is now async with loading indicator
-- Total demo files: 5 text + 3 binary = 8 files
-
+  - 3 binary demo files added: demo.docx, test_features.xlsx, 精通Python爬虫框架Scrapy.epub
+  - Demo system now supports both inline text and URL-fetched binary files
+  - loadDemoFiles is now async with loading indicator
+  - Total demo files: 5 text + 3 binary = 8 files
 ---
+
 Task ID: 2
 Agent: main
 Task: Replace mammoth.js with docx-preview for better DOCX rendering
 
 Work Log:
+
 - Compared mammoth.js vs docx-preview across 10+ dimensions
 - mammoth: semantic HTML, loses colors/fonts/layout/pagination — only good for text extraction
 - docx-preview: pixel-accurate rendering, preserves fonts/colors/pagination/images/headers/footers
@@ -36,17 +37,20 @@ Work Log:
 - Updated docs/tech-stack/README.md with new dependency info
 
 Stage Summary:
+
 - DOCX rendering upgraded from mammoth → docx-preview for high-fidelity rendering
 - Heading colors, fonts, layout, pagination, images, headers/footers now fully preserved
 - mammoth retained only for legacy .doc format text extraction
 - Package: docx-preview@0.3.7 added (~74KB gzip)
 
 ---
+
 Task ID: 3
 Agent: main
 Task: Fix DOCX preview infinite "Rendering document..." loading bug
 
 Work Log:
+
 - Investigated user report: clicking demo.docx shows "Rendering document..." forever
 - Found root cause: React ref timing bug — when `loading` state is `true`, the component renders a spinner instead of the container div with `containerRef`, so `containerRef.current` is `null` when `renderDocument()` runs in `useEffect`, causing it to silently return without ever rendering
 - Also found: `docx-preview` is a browser-only library that was imported statically at top level, causing potential SSR issues in Next.js
@@ -59,17 +63,20 @@ Work Log:
 - Tested with agent-browser: demo.docx now renders correctly showing document content with table
 
 Stage Summary:
+
 - DOCX preview now works: renders document with text ("Above", "Below") and 2x2 table
 - Key fix: always-render-container pattern prevents ref null issue
 - Dynamic import prevents SSR module loading issues
 - Docs updated with SSR compatibility section
 
 ---
+
 Task ID: 4
 Agent: main
 Task: Replace react-syntax-highlighter with Shiki for code preview optimization
 
 Work Log:
+
 - Evaluated Shiki vs highlight.js vs react-syntax-highlighter for code syntax highlighting
 - Shiki wins: VS Code-level fidelity, native lazy loading, CSS variable dual themes, no WASM needed
 - Installed shiki@4.1.0 + @shikijs/langs@4.1.0 + @shikijs/themes@4.1.0 + @shikijs/transformers@4.1.0
@@ -100,6 +107,7 @@ Work Log:
   - docs/tech-stack/README.md: updated dependency list and bundle sizes
 
 Stage Summary:
+
 - Code preview upgraded from react-syntax-highlighter → Shiki
 - First code file load: ~49KB gzip (core + 1 lang + 2 themes, all lazy)
 - Subsequent languages: +4-20KB gzip each (on demand)
@@ -109,11 +117,13 @@ Stage Summary:
 - VS Code-level rendering quality with TextMate grammars
 
 ---
+
 Task ID: 5
 Agent: main
 Task: Integrate Shiki syntax highlighting into Markdown preview for code blocks
 
 Work Log:
+
 - Analyzed current MarkdownPreview.tsx (react-markdown + remark-gfm, no code highlighting)
 - Designed integration: override react-markdown's `pre` component (not `code`) to avoid nested `<pre>` issue since Shiki's `codeToHtml` outputs full `<pre><code>...</code></pre>`
 - Implemented ShikiPreBlock component that detects language from child `<code>` className
@@ -129,6 +139,7 @@ Work Log:
 - Updated docs/tech-stack/README.md with MarkdownPreview + Shiki dependency
 
 Stage Summary:
+
 - Markdown code blocks now use Shiki for VS Code-quality syntax highlighting
 - MarkdownPreview and CodePreview share the same `highlightCode()` function and Shiki singleton
 - Key-based remount pattern avoids React 19 lint error (setState-in-effect)
@@ -136,11 +147,13 @@ Stage Summary:
 - Demo README.md showcases TypeScript, Python, CSS, Bash code blocks
 
 ---
+
 Task ID: 6
 Agent: main
 Task: Fix Markdown preview typography/layout styles (missing prose styling)
 
 Work Log:
+
 - Identified that `prose` class from @tailwindcss/typography was not working
 - Root cause: @tailwindcss/typography was NOT installed in the project
 - Installed @tailwindcss/typography@0.5.19 and added `@plugin "@tailwindcss/typography"` to globals.css
@@ -153,6 +166,7 @@ Work Log:
 - Verified with VLM: blockquote has visible left border, hr is visible, italic text renders, code blocks highlight, headings have proper hierarchy
 
 Stage Summary:
+
 - Markdown preview now has complete, professional typography without external dependencies
 - Self-contained CSS approach avoids @tailwindcss/typography compatibility issues
 - Explicit rgba colors ensure visibility in both light and dark modes
@@ -182,11 +196,13 @@ Converted all 16 preview component imports from eager static imports to `React.l
 - Dev server compiles and serves the page successfully.
 
 ---
+
 Task ID: 4
 Agent: code-fix-agent
 Task: Fix memory leaks in HtmlPreview.tsx and SvgPreview.tsx where blob URLs are created in the render body without cleanup
 
 Work Log:
+
 - Read HtmlPreview.tsx: found `URL.createObjectURL` called directly in render body (lines 17-18), creating a new blob URL on every render with no cleanup
 - Read SvgPreview.tsx: same issue (lines 25-26), blob URL created in render body with no revocation
 - First attempt: Used useState + useEffect pattern with setBlobUrl/setSvgUrl in effect body — lint failed with `react-hooks/set-state-in-effect` error (setState synchronously within an effect causes cascading renders)
@@ -199,17 +215,20 @@ Work Log:
 - Ran `bun run lint` — 0 errors, 0 warnings
 
 Stage Summary:
+
 - Fixed memory leak in HtmlPreview.tsx: blob URL now properly revoked when content changes or component unmounts
 - Fixed memory leak in SvgPreview.tsx: same fix applied
 - Pattern: useMemo for blob URL derivation + useEffect with blobUrl dependency for cleanup
 - This avoids the lint error (no setState in effect) while ensuring proper resource cleanup
 
 ---
+
 Task ID: 5
 Agent: main
 Task: Replace duplicate atob() + Uint8Array conversion code with shared base64ToUint8Array utility
 
 Work Log:
+
 - Read all 7 target files to identify exact atob patterns and prop naming conventions
 - Confirmed `base64ToUint8Array` already exists in `src/components/file-preview/utils.ts`
 - Updated PdfPreview.tsx:
@@ -243,6 +262,7 @@ Work Log:
 - Ran `bun run lint` — 0 errors, 0 warnings
 
 Stage Summary:
+
 - 9 atob+Uint8Array patterns replaced across 7 files with shared `base64ToUint8Array` utility
 - 2 components (PdfPreview, DocPreview) had `base64Content` prop renamed to `content` for unified naming
 - 2 call sites in FilePreviewRenderer.tsx updated for the prop rename
