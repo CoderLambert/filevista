@@ -1,0 +1,37 @@
+docs/preview-plugin-validation-matrix.md
+  s_38fc455731367f::t_894ff6a5d0e25b 472-502
+.github/workflows/ci.yml
+  s_38fc455731367f::t_cbe578d87e4636 1-51
+eslint.config.mjs
+  s_38fc455731367f::t_5ebf6edbdc1779 17
+  s_38fc455731367f::t_fd848a00d31eca 43
+docs/stage-16-ci-baseline.md
+  s_38fc455731367f::t_d3006379586911 1-170
+src/components/file-preview/MarkdownPreview.tsx
+  s_38fc455731367f::t_66e8cd50cb6937 66-71
+.bun-version
+  s_38fc455731367f::t_7cc5353eb98fb8 1
+package.json
+  s_38fc455731367f::t_1e35d329a97ebc 10,19-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "e2bacc875ca7362974b95c94024d361c439d7cb3",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  },
+  "sessions": {
+    "s_38fc455731367f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a7a94f98-df3c-4871-b1dc-eeb6f23b79c9",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
