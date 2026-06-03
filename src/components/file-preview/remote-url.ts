@@ -1,6 +1,23 @@
 import { detectFileType, generateId } from "./utils";
 import type { FileInfo, FileType } from "./utils";
 
+export type RemoteUrlErrorCode =
+  | "INVALID_URL"
+  | "UNSUPPORTED_PROTOCOL"
+  | "NETWORK_OR_CORS"
+  | "HTTP_ERROR";
+
+export class RemoteUrlError extends Error {
+  constructor(
+    public code: RemoteUrlErrorCode,
+    message: string,
+    public url?: string
+  ) {
+    super(message);
+    this.name = "RemoteUrlError";
+  }
+}
+
 type FileNameSource =
   | "content-disposition"
   | "query"
@@ -493,23 +510,11 @@ function shouldDecodeAsText(fileType: FileType, mimeType: string): boolean {
   );
 }
 
-function getRemoteLoadErrorMessage(error: unknown): string {
-  if (error instanceof TypeError && error.message.includes("fetch")) {
-    return "无法加载远程文件。可能是 URL 不可访问，或目标服务器未允许浏览器跨域访问。";
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Failed to load remote URL";
-}
-
 export async function processRemoteUrl(rawUrl: string): Promise<FileInfo> {
   const trimmedUrl = rawUrl.trim();
 
   if (!trimmedUrl) {
-    throw new Error("Remote URL is empty");
+    throw new RemoteUrlError("INVALID_URL", "Remote URL is empty");
   }
 
   let parsedUrl: URL;
@@ -517,23 +522,35 @@ export async function processRemoteUrl(rawUrl: string): Promise<FileInfo> {
   try {
     parsedUrl = new URL(trimmedUrl);
   } catch {
-    throw new Error("Please enter a valid URL");
+    throw new RemoteUrlError("INVALID_URL", "Please enter a valid URL");
   }
 
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    throw new Error("Only http/https URLs are supported");
+    throw new RemoteUrlError(
+      "UNSUPPORTED_PROTOCOL",
+      "Only http/https URLs are supported",
+      parsedUrl.toString()
+    );
   }
 
   let response: Response;
 
   try {
     response = await fetch(parsedUrl.toString());
-  } catch (error) {
-    throw new Error(getRemoteLoadErrorMessage(error));
+  } catch {
+    throw new RemoteUrlError(
+      "NETWORK_OR_CORS",
+      "无法加载远程文件。可能是 URL 不可访问，或目标服务器未允许浏览器跨域访问。",
+      parsedUrl.toString()
+    );
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch remote file: ${response.status}`);
+    throw new RemoteUrlError(
+      "HTTP_ERROR",
+      `远程文件请求失败：HTTP ${response.status}`,
+      parsedUrl.toString()
+    );
   }
 
   const headerMimeType = getHeaderMimeType(response);

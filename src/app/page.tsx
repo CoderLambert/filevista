@@ -245,23 +245,39 @@ export default function Home() {
       return;
     }
 
+    const currentUrl = remoteUrl.trim();
+
     setLoadingRemoteUrl(true);
 
     try {
-      const info = await processRemoteUrl(remoteUrl);
+      const info = await processRemoteUrl(currentUrl);
 
       setFiles((prev) => [...prev, info]);
       setActiveFileId(info.id);
       setRemoteUrl("");
 
       toast.success(`Loaded remote file: ${info.name}`);
-    } catch (err) {
-      console.error("Failed to load remote URL:", err);
 
+      if (["ppt", "xls"].includes(info.fileType)) {
+        toast.warning(
+          `${info.name} is a legacy Office format. Preview is not supported. Please convert to .pptx / .xlsx.`
+        );
+      }
+    } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load remote URL";
 
-      toast.error(message);
+      console.warn("[remote-url] load failed:", message);
+
+      toast.error(message, {
+        description: "你可以在新标签页打开原始链接下载。",
+        action: {
+          label: "Open",
+          onClick: () => {
+            window.open(currentUrl, "_blank", "noopener,noreferrer");
+          },
+        },
+      });
     } finally {
       setLoadingRemoteUrl(false);
     }
@@ -423,6 +439,17 @@ export default function Home() {
                   <Link2 className="h-3.5 w-3.5" />
                 )}
                 URL
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!remoteUrl.trim()}
+                onClick={() => {
+                  window.open(remoteUrl, "_blank", "noopener,noreferrer");
+                }}
+                className="h-9 shrink-0 text-xs"
+              >
+                Open
               </Button>
             </div>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
