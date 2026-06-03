@@ -10,6 +10,8 @@ import {
   File,
   FolderOpen,
   Sparkles,
+  Github,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -281,12 +283,39 @@ export default function Home() {
                 FileVista
               </h1>
               <p className="text-[10px] text-muted-foreground -mt-0.5 hidden sm:block">
-                纯浏览器端文件预览
+                纯浏览器端文件预览 · 文件不上传
               </p>
             </div>
           </div>
 
           <div className="ml-auto flex items-center gap-2">
+            <a
+              href="https://github.com/CoderLambert/filevista"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors h-8 px-2"
+            >
+              <Github className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">GitHub</span>
+            </a>
+            <a
+              href="https://github.com/CoderLambert/filevista/tree/main/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors h-8 px-2"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Docs</span>
+            </a>
+            <a
+              href="https://github.com/CoderLambert/filevista/blob/main/docs/user-facing-preview-support.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors h-8 px-2"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Support</span>
+            </a>
             <Button
               variant="outline"
               size="sm"
@@ -528,6 +557,9 @@ export default function Home() {
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     拖拽文件到此处，或点击浏览。所有处理均在浏览器内完成 — 文件不会离开你的设备。
                   </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Pure browser-side file preview. No upload. No server processing.
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-2.5 w-full max-w-xs">
@@ -565,10 +597,10 @@ export default function Home() {
                       "Markdown",
                       "JSON",
                       "Code",
-                      "DOC",
                       "DOCX",
-                      "PPT",
-                      "Excel",
+                      "PPTX",
+                      "XLSX",
+                      "DOC limited",
                       "HTML",
                       "ZIP",
                       "SVG",

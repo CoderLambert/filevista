@@ -500,3 +500,40 @@ CI 配置文件：
 ```txt
 docs/stage-16-ci-baseline.md
 ```
+
+---
+
+## 13. Stage 17 发布态体验检查
+
+Stage 17 不新增文件类型，不调整 Plugin Registry，不修改 Preview Adapter 行为。
+
+本阶段新增文档：
+
+```txt
+docs/stage-17-release-experience-prd.md
+docs/user-facing-preview-support.md
+docs/plugin-development-guide.md
+docs/github-pages-release-checklist.md
+```
+
+本阶段修改：
+
+```txt
+README.md
+src/app/page.tsx
+docs/preview-plugin-validation-matrix.md
+```
+
+发布后检查：
+
+```txt
+1. README 在线 Demo 地址正确
+2. GitHub Pages 可以正常访问
+3. Demo Files 可以正常加载
+4. PDF worker 没有 404
+5. Plugin Renderer debug bar 在生产环境不显示
+6. 用户版支持矩阵与 support-status.ts 保持一致
+7. README 不过度承诺旧版 Office 支持
+```
+
+Stage 17 完成后，FileVista 进入公开展示与持续维护状态。
