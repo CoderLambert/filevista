@@ -1,0 +1,19 @@
+src/components/file-preview/PluginPreviewRenderer.tsx
+  s_9cd56578cf3ba9::t_effd0653008a21 4,6,32,47,51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "eee921e9d90c3826878f84d90f95c53d7921de0a",
+  "prompts": {},
+  "sessions": {
+    "s_9cd56578cf3ba9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "72d3f596-66f8-4653-9059-349c457abae2",
+        "model": "glm-5"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
