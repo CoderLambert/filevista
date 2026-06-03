@@ -1,27 +1,39 @@
 import type { FileInfo } from "../utils";
 import type { PreviewPlugin } from "./plugin";
 
-const plugins: PreviewPlugin[] = [];
+export class PreviewPluginRegistry {
+  private plugins: PreviewPlugin[] = [];
 
-function sortPlugins(items: PreviewPlugin[]): PreviewPlugin[] {
-  return [...items].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-}
+  register(plugin: PreviewPlugin): void {
+    const existingIndex = this.plugins.findIndex((item) => item.id === plugin.id);
 
-export function registerPreviewPlugin(plugin: PreviewPlugin): void {
-  const existingIndex = plugins.findIndex((item) => item.id === plugin.id);
+    if (existingIndex >= 0) {
+      this.plugins[existingIndex] = plugin;
+      return;
+    }
 
-  if (existingIndex >= 0) {
-    plugins[existingIndex] = plugin;
-    return;
+    this.plugins.push(plugin);
   }
 
-  plugins.push(plugin);
+  resolve(file: FileInfo): PreviewPlugin | null {
+    return this.list().find((plugin) => plugin.match(file)) ?? null;
+  }
+
+  list(): PreviewPlugin[] {
+    return [...this.plugins].sort(
+      (a, b) => (b.priority ?? 0) - (a.priority ?? 0)
+    );
+  }
 }
 
-export function matchPreviewPlugin(file: FileInfo): PreviewPlugin | null {
-  return sortPlugins(plugins).find((plugin) => plugin.match(file)) ?? null;
-}
+export function createPreviewPluginRegistry(
+  plugins: PreviewPlugin[]
+): PreviewPluginRegistry {
+  const registry = new PreviewPluginRegistry();
 
-export function getPreviewPlugins(): PreviewPlugin[] {
-  return sortPlugins(plugins);
+  for (const plugin of plugins) {
+    registry.register(plugin);
+  }
+
+  return registry;
 }
