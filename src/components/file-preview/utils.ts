@@ -1,27 +1,30 @@
 import type { PreviewSource } from "./core/types";
 
-export type FileType =
-  | "pdf"
-  | "markdown"
-  | "json"
-  | "code"
-  | "docx"
-  | "doc"
-  | "pptx"
-  | "ppt"
-  | "xlsx"
-  | "xls"
-  | "html"
-  | "zip"
-  | "svg"
-  | "rtf"
-  | "epub"
-  | "image"
-  | "text"
-  | "csv"
-  | "video"
-  | "audio"
-  | "unknown";
+export const ALL_FILE_TYPES = [
+  "pdf",
+  "markdown",
+  "json",
+  "code",
+  "docx",
+  "doc",
+  "pptx",
+  "ppt",
+  "xlsx",
+  "xls",
+  "html",
+  "zip",
+  "svg",
+  "rtf",
+  "epub",
+  "image",
+  "text",
+  "csv",
+  "video",
+  "audio",
+  "unknown",
+] as const;
+
+export type FileType = (typeof ALL_FILE_TYPES)[number];
 
 export interface FileInfo {
   id: string;

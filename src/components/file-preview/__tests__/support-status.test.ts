@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { FileType } from "../utils";
+import { ALL_FILE_TYPES } from "../utils";
 import {
   getPreviewSupportMeta,
   isDegradedFileType,
@@ -8,31 +8,11 @@ import {
   PREVIEW_SUPPORT_MATRIX,
 } from "../support-status";
 
-const ALL_FILE_TYPES: FileType[] = [
-  "pdf",
-  "markdown",
-  "json",
-  "code",
-  "docx",
-  "doc",
-  "pptx",
-  "ppt",
-  "xlsx",
-  "xls",
-  "html",
-  "zip",
-  "svg",
-  "rtf",
-  "epub",
-  "image",
-  "text",
-  "csv",
-  "video",
-  "audio",
-  "unknown",
-];
-
 describe("preview support status matrix", () => {
+  it("keeps ALL_FILE_TYPES unique", () => {
+    expect(new Set(ALL_FILE_TYPES).size).toBe(ALL_FILE_TYPES.length);
+  });
+
   it("covers every FileType", () => {
     expect(Object.keys(PREVIEW_SUPPORT_MATRIX).sort()).toEqual(
       [...ALL_FILE_TYPES].sort()
