@@ -1,0 +1,14 @@
+docs/stage-14-plugin-renderer-closure-prd.md
+  h_0c102f4798bf38 1-1158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "7ba122c7f256da2247549616ba3434b84b39d04c",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
