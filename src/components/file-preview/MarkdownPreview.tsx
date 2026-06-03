@@ -63,10 +63,12 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
 
     // Skip Shiki for oversized code blocks
     if (code.length > FILE_PREVIEW_LIMITS.SHIKI_MAX_CODE_BLOCK_SIZE) {
-      if (mountedRef.current) {
-        setLoading(false);
-        setHtml("");
-      }
+      queueMicrotask(() => {
+        if (mountedRef.current) {
+          setLoading(false);
+          setHtml("");
+        }
+      });
       return;
     }
 

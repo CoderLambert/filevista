@@ -469,3 +469,34 @@ epub
 ```
 
 该提示只做用户体验兜底，不改变任何文件解析逻辑。
+
+---
+
+## 12. 16 阶段 CI 基线
+
+16 阶段新增 GitHub Actions CI，用于在 push / pull_request 时自动运行：
+
+```bash
+bun install --frozen-lockfile
+bun run lint
+bun run test:run
+bun run build
+```
+
+本地统一验证命令：
+
+```bash
+bun run check
+```
+
+CI 配置文件：
+
+```txt
+.github/workflows/ci.yml
+```
+
+详细说明见：
+
+```txt
+docs/stage-16-ci-baseline.md
+```
