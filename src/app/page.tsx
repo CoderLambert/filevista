@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   Upload,
   FileText,
@@ -280,6 +280,15 @@ export default function Home() {
       setLoadingRemoteUrl(false);
     }
   }, [remoteUrl]);
+
+  const DEFAULT_REMOTE_URL = "https://501351981.github.io/vue-office/examples/dist/static/test-files/test.pptx";
+
+  useEffect(() => {
+    if (files.length === 0) {
+      setRemoteUrl(DEFAULT_REMOTE_URL);
+      loadRemoteUrl();
+    }
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
