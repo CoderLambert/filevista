@@ -10,6 +10,7 @@ import { svgPlugin } from "./svg-plugin";
 import { csvPlugin } from "./csv-plugin";
 import { markdownPlugin } from "./markdown-plugin";
 import { htmlPlugin } from "./html-plugin";
+import { rtfPlugin } from "./rtf-plugin";
 
 export const builtinPreviewPlugins: PreviewPlugin[] = [
   pdfPlugin,
@@ -22,6 +23,7 @@ export const builtinPreviewPlugins: PreviewPlugin[] = [
   csvPlugin,
   markdownPlugin,
   htmlPlugin,
+  rtfPlugin,
 ];
 
 export function createBuiltinPreviewRegistry(): PreviewPluginRegistry {
