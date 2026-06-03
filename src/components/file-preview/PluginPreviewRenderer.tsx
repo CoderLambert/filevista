@@ -57,6 +57,7 @@ export function PluginPreviewRenderer({
 
   if (!PreviewComponent || !plugin) {
     const support = getPreviewSupportMeta(file.fileType);
+    const canDownloadOriginal = ["doc", "ppt", "xls"].includes(file.fileType);
 
     if (support.status === "legacy-only") {
       return (
@@ -74,8 +75,8 @@ export function PluginPreviewRenderer({
       return (
         <UnsupportedPluginPreview
           fileType={file.fileType}
-          fileName={file.name}
-          content={file.content}
+          fileName={canDownloadOriginal ? file.name : undefined}
+          content={canDownloadOriginal ? file.content : null}
           title={undefined}
           description={
             support.note ??
@@ -88,8 +89,8 @@ export function PluginPreviewRenderer({
     return (
       <UnsupportedPluginPreview
         fileType={file.fileType}
-        fileName={file.name}
-        content={file.content}
+        fileName={canDownloadOriginal ? file.name : undefined}
+        content={canDownloadOriginal ? file.content : null}
         title={undefined}
         description={
           support.note ??

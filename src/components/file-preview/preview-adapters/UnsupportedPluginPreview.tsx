@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, CheckCircle, Download, FileQuestion, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle, Download, FileQuestion } from "lucide-react";
 import type { FileType } from "../utils";
 import { base64ToUint8Array } from "../utils";
 
@@ -76,7 +76,7 @@ export function UnsupportedPluginPreview({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-75 text-muted-foreground gap-4 px-6">
+    <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-4 px-6 text-center">
       {fileType === "unknown" ? (
         <FileQuestion className="h-10 w-10 text-muted-foreground" />
       ) : (
@@ -105,11 +105,7 @@ export function UnsupportedPluginPreview({
             </>
           ) : (
             <>
-              {downloading ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Download size={14} />
-              )}
+              <Download size={14} />
               下载原文件
             </>
           )}
