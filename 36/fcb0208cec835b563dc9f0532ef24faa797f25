@@ -1,0 +1,32 @@
+src/components/file-preview/__tests__/LargeFileHint.test.tsx
+  s_38fc455731367f::t_9da3f232c931c1 1-2,5-19,24-55
+  s_38fc455731367f::t_d6a24d10c4a9a7 3-4,20-23
+src/components/file-preview/PluginPreviewRenderer.tsx
+  s_38fc455731367f::t_067f44c898c45a 117-118
+  s_38fc455731367f::t_74f4d6052dd069 11
+docs/preview-plugin-validation-matrix.md
+  s_38fc455731367f::t_6ff358fa0a4739 428,436-471
+src/components/file-preview/LargeFileHint.tsx
+  s_38fc455731367f::t_9d9f8e2a685674 1-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "36fcb0208cec835b563dc9f0532ef24faa797f25",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  },
+  "sessions": {
+    "s_38fc455731367f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a7a94f98-df3c-4871-b1dc-eeb6f23b79c9",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
