@@ -8,6 +8,7 @@ import type { PreviewPluginRegistry } from "./core/registry";
 import { createBuiltinPreviewRegistry } from "./plugins/builtin-plugins";
 import { UnsupportedPluginPreview } from "./preview-adapters/UnsupportedPluginPreview";
 import { getPreviewSupportMeta } from "./support-status";
+import { LargeFileHint } from "./LargeFileHint";
 
 function PreviewLoading() {
   return (
@@ -112,6 +113,8 @@ export function PluginPreviewRenderer({
           </span>
         </div>
       )}
+
+      <LargeFileHint file={file} />
 
       <div className="flex-1 min-h-0">
         <Suspense fallback={<PreviewLoading />}>

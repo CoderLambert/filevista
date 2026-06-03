@@ -425,7 +425,7 @@ legacy-only 没命中 plugin = 才显示 Not Migrated Yet
 后续新增文件类型时，需要同步维护：
 
 ```txt
-1. FileType 类型定义
+1. ALL_FILE_TYPES（utils.ts 唯一事实源）
 2. detectFileType
 3. plugin 文件
 4. builtinPreviewPlugins 注册
@@ -433,3 +433,39 @@ legacy-only 没命中 plugin = 才显示 Not Migrated Yet
 6. docs/preview-plugin-validation-matrix.md
 7. README 支持类型说明
 ```
+
+---
+
+## 11. 15 阶段稳定性与体验测试
+
+### 11.1 Vitest 测试
+
+当前测试覆盖：
+
+- Plugin Registry 与 support-status 矩阵一致性
+- plugin-supported 类型命中预期 plugin
+- degraded / unsupported 类型不命中 plugin
+- UnsupportedPluginPreview 的文案、下载按钮和下载副作用
+- legacy Office 下载 MIME 类型
+- LargeFileHint 大文件提示展示规则
+
+### 11.2 大文件提示
+
+Plugin Renderer 对以下类型显示大文件提示：
+
+```txt
+pdf
+docx
+pptx
+xlsx
+zip
+epub
+```
+
+当文件大小大于或等于 20MB 时，显示提示：
+
+```txt
+当前文件较大，浏览器端解析可能需要更长时间，期间页面可能短暂卡顿。
+```
+
+该提示只做用户体验兜底，不改变任何文件解析逻辑。
