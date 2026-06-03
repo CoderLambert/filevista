@@ -11,6 +11,7 @@ import { csvPlugin } from "./csv-plugin";
 import { markdownPlugin } from "./markdown-plugin";
 import { htmlPlugin } from "./html-plugin";
 import { rtfPlugin } from "./rtf-plugin";
+import { zipPlugin } from "./zip-plugin";
 
 export const builtinPreviewPlugins: PreviewPlugin[] = [
   pdfPlugin,
@@ -24,6 +25,7 @@ export const builtinPreviewPlugins: PreviewPlugin[] = [
   markdownPlugin,
   htmlPlugin,
   rtfPlugin,
+  zipPlugin,
 ];
 
 export function createBuiltinPreviewRegistry(): PreviewPluginRegistry {
