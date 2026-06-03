@@ -12,6 +12,7 @@ import { markdownPlugin } from "./markdown-plugin";
 import { htmlPlugin } from "./html-plugin";
 import { rtfPlugin } from "./rtf-plugin";
 import { zipPlugin } from "./zip-plugin";
+import { epubPlugin } from "./epub-plugin";
 
 export const builtinPreviewPlugins: PreviewPlugin[] = [
   pdfPlugin,
@@ -26,6 +27,7 @@ export const builtinPreviewPlugins: PreviewPlugin[] = [
   htmlPlugin,
   rtfPlugin,
   zipPlugin,
+  epubPlugin,
 ];
 
 export function createBuiltinPreviewRegistry(): PreviewPluginRegistry {
