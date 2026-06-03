@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>订单详情 · ORD-2026-0513-8847</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2ed;
+    --surface: #ffffff;
+    --surface-2: #faf8f5;
+    --border: #e8e4dd;
+    --border-light: #f0ece6;
+    --text: #1a1816;
+    --text-secondary: #6b6560;
+    --text-tertiary: #a09890;
+    --accent: #c45d3e;
+    --accent-soft: #fdf0eb;
+    --success: #2d8a5e;
+    --success-soft: #e8f5ef;
+    --warning: #d4922a;
+    --warning-soft: #fdf4e3;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow-sm: 0 1px 3px rgba(26,24,22,0.04), 0 1px 2px rgba(26,24,22,0.06);
+    --shadow-md: 0 4px 16px rgba(26,24,22,0.06), 0 1px 4px rgba(26,24,22,0.04);
+    --shadow-lg: 0 8px 32px rgba(26,24,22,0.08), 0 2px 8px rgba(26,24,22,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Sans 3', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Animated background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 50% at 20% 40%, rgba(196,93,62,0.03), transparent),
+      radial-gradient(ellipse 60% 80% at 80% 20%, rgba(45,138,94,0.02), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .header-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+
+  .header-left .order-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .status-badge.shipping {
+    background: var(--success-soft);
+    color: var(--success);
+  }
+
+  .status-badge.shipping::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .btn-primary {
+    background: var(--text);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: #2a2622;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--text-tertiary);
+    color: var(--text);
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: box-shadow 0.25s ease;
+  }
+
+  .card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-tertiary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    width: 3px;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  /* ── Order Timeline ── */
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+    padding: 8px 0;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 26px;
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background: var(--border);
+  }
+
+  .timeline::after {
+    content: '';
+    position: absolute;
+    top: 26px;
+    left: 40px;
+    width: calc(100% - 80px);
+    height: 2px;
+    background: linear-gradient(90deg, var(--success) 0%, var(--success) 66%, var(--border) 66%);
+  }
+
+  .timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .timeline-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    background: var(--surface);
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .timeline-step.completed .timeline-dot {
+    background: var(--success);
+    border-color: var(--success);
+    box-shadow: 0 0 0 4px rgba(45,138,94,0.12);
+  }
+
+  .timeline-step.active .timeline-dot {
+    border-color: var(--success);
+    background: var(--surface);
+    box-shadow: 0 0 0 4px rgba(45,138,94,0.12);
+    position: relative;
+  }
+
+  .timeline-step.active .timeline-dot::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .timeline-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .timeline-step.completed .timeline-label,
+  .timeline-step.active .timeline-label {
+    color: var(--text);
+  }
+
+  .timeline-time {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  /* ── Product Items ── */
+  .item {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-light);
+    align-items: center;
+  }
+
+  .item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .item:first-child {
+    padding-top: 0;
+  }
+
+  .item-image {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+  }
+
+  .item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .item-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .item-variant {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+
+  .item-sku {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .item-meta {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .item-price {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+  }
+
+  .item-qty {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  /* ── Summary Grid ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .summary-block h4 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-tertiary);
+    margin-bottom: 10px;
+  }
+
+  .summary-block p {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .summary-block .label {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  /* ── Pricing Table ── */
+  .pricing {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pricing-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .pricing-row.discount {
+    color: var(--success);
+  }
+
+  .pricing-row.total {
+    padding-top: 12px;
+    margin-top: 4px;
+    border-top: 1.5px solid var(--text);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .pricing-row .value {
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .pricing-row.total .value {
+    font-size: 18px;
+  }
+
+  /* ── Info Row ── */
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+  }
+
+  .info-label {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  .info-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .info-value.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* ── Actions ── */
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .page { padding: 20px 16px 60px; }
+    .header { flex-direction: column; }
+    .header-right { width: 100%; }
+    .timeline {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .timeline::before, .timeline::after {
+      left: 24px;
+      right: 24px;
+    }
+    .timeline-label { font-size: 11px; }
+    .timeline-time { display: none; }
+    .summary-grid { grid-template-columns: 1fr; gap: 16px; }
+    .item { flex-direction: column; align-items: flex-start; }
+    .item-meta { text-align: left; margin-top: 8px; }
+    .actions { flex-direction: column; }
+    .actions .btn { justify-content: center; }
+  }
+
+  /* ── Entrance Animations ── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    animation: fade-up 0.5s ease both;
+  }
+
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.12s; }
+  .card:nth-child(3) { animation-delay: 0.19s; }
+  .card:nth-child(4) { animation-delay: 0.26s; }
+  .card:nth-child(5) { animation-delay: 0.33s; }
+
+  .header {
+    animation: fade-up 0.4s ease both;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>订单详情</h1>
+      <div class="order-id">ORD-2026-0513-8847</div>
+    </div>
+    <div class="header-right">
+      <span class="status-badge shipping">运输中</span>
+      <button class="btn btn-outline">📋 复制单号</button>
+      <button class="btn btn-primary">联系客服</button>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="card">
+    <div class="card-title">物流进度</div>
+    <div class="timeline">
+      <div class="timeline-step completed">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">已下单</div>
+        <div class="timeline-time">5月12日 14:30</div>
+      </div>
+      <div class="timeline-step completed">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">已发货</div>
+        <div class="timeline-time">5月12日 18:05</div>
+      </div>
+      <div class="timeline-step active">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">运输中</div>
+        <div class="timeline-time">5月13日 09:20</div>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">已签收</div>
+        <div class="timeline-time">预计 5月14日</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products -->
+  <div class="card">
+    <div class="card-title">商品明细</div>
+    <div class="item">
+      <div class="item-image">🎧</div>
+      <div class="item-info">
+        <div class="item-name">Sony WH-1000XM5 降噪耳机</div>
+        <div class="item-variant">颜色：铂金银 · 版本：国行</div>
+        <div class="item-sku">SKU: SNY-WH1000XM5-S</div>
+      </div>
+      <div class="item-meta">
+        <div class="item-price">¥ 2,499</div>
+        <div class="item-qty">× 1</div>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-image">⌨️</div>
+      <div class="item-info">
+        <div class="item-name">HHKB Professional HYBRID Type-S</div>
+        <div class="item-variant">轴体：静音 · 配列：无刻印</div>
+        <div class="item-sku">SKU: HHKB-HYBRID-BK</div>
+      </div>
+      <div class="item-meta">
+        <div class="item-price">¥ 2,180</div>
+        <div class="item-qty">× 1</div>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-image">🖱️</div>
+      <div class="item-info">
+        <div class="item-name">Logitech MX Master 3S 鼠标</div>
+        <div class="item-variant">颜色：石墨黑</div>
+        <div class="item-sku">SKU: LGC-MXM3S-G</div>
+      </div>
+      <div class="item-meta">
+        <div class="item-price">¥ 699</div>
+        <div class="item-qty">× 1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipping & Payment -->
+  <div class="card">
+    <div class="card-title">收货与支付</div>
+    <div class="summary-grid">
+      <div class="summary-block">
+        <h4>收货地址</h4>
+        <p>
+          张三<br>
+          <span class="label">138****6789</span><br>
+          上海市浦东新区张江高科技园区<br>
+          碧波路 690 号 A 座 1201 室<br>
+          邮编：201203
+        </p>
+      </div>
+      <div class="summary-block">
+        <h4>支付信息</h4>
+        <p>
+          <span class="label">支付方式：</span> 支付宝<br>
+          <span class="label">支付时间：</span> 2026-05-12 14:32<br>
+          <span class="label">交易号：</span> <span style="font-family:'JetBrains Mono',monospace;font-size:12px;">2026051222001438921</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pricing -->
+  <div class="card">
+    <div class="card-title">费用明细</div>
+    <div class="pricing">
+      <div class="pricing-row">
+        <span>商品小计</span>
+        <span class="value">¥ 5,378.00</span>
+      </div>
+      <div class="pricing-row">
+        <span>运费</span>
+        <span class="value">¥ 0.00</span>
+      </div>
+      <div class="pricing-row">
+        <span>包装费</span>
+        <span class="value">¥ 12.00</span>
+      </div>
+      <div class="pricing-row discount">
+        <span>优惠券（满 5000 减 300）</span>
+        <span class="value">- ¥ 300.00</span>
+      </div>
+      <div class="pricing-row total">
+        <span>实付金额</span>
+        <span class="value">¥ 5,090.00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn btn-outline">申请售后</button>
+    <button class="btn btn-outline">查看发票</button>
+    <button class="btn btn-primary">再次购买</button>
+  </div>
+
+</div>
+</body>
+</html>
