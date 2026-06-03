@@ -1,0 +1,34 @@
+src/components/file-preview/PdfPreview.tsx
+  s_38fc455731367f::t_0b31538172dcab 123-124
+docs/stage-16-ci-baseline.md
+  s_38fc455731367f::t_70f377d1d87af0 13,34-39,68,70-72,77,79-81,94,98,102-134,139,141,143-153,155-163,166,168-170,173-183,187,195,210,217,232-269,275-280
+package.json
+  s_38fc455731367f::t_4a62ce33cecc67 8
+src/components/file-preview/demos.ts
+  s_38fc455731367f::t_81643180d3bf66 361-366,374,379,384
+.github/workflows/pages.yml
+  s_38fc455731367f::t_e4e9d1dc8abd6c 1-65
+next.config.ts
+  s_38fc455731367f::t_48c32245450005 3-7,9-19,23,25-26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "84efac56aefd34166ba2e608df3dd7887895c293",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  },
+  "sessions": {
+    "s_38fc455731367f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a7a94f98-df3c-4871-b1dc-eeb6f23b79c9",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
