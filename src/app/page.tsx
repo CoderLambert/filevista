@@ -267,8 +267,6 @@ export default function Home() {
       const message =
         err instanceof Error ? err.message : "Failed to load remote URL";
 
-      console.warn("[remote-url] load failed:", message);
-
       toast.error(message, {
         description: "你可以在新标签页打开原始链接下载。",
         action: {
