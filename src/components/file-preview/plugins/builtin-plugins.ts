@@ -15,6 +15,7 @@ import { zipPlugin } from "./zip-plugin";
 import { epubPlugin } from "./epub-plugin";
 import { docxPlugin } from "./docx-plugin";
 import { pptxPlugin } from "./pptx-plugin";
+import { xlsxPlugin } from "./xlsx-plugin";
 
 export const builtinPreviewPlugins: PreviewPlugin[] = [
   pdfPlugin,
@@ -32,6 +33,7 @@ export const builtinPreviewPlugins: PreviewPlugin[] = [
   epubPlugin,
   docxPlugin,
   pptxPlugin,
+  xlsxPlugin,
 ];
 
 export function createBuiltinPreviewRegistry(): PreviewPluginRegistry {
