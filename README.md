@@ -9,7 +9,7 @@ https://coderlambert.github.io/filevista/
 ## Features
 
 - 纯浏览器端文件预览，文件不上传服务器
-- 支持本地 File / Blob / ArrayBuffer / 远程 URL
+- 预览内核支持 File / Blob / ArrayBuffer 等数据源
 - 拖拽上传、多文件切换、TabCache 状态保持
 - Legacy Renderer / Plugin Renderer 双引擎切换
 - 按文件类型懒加载 Preview Adapter
