@@ -1,8 +1,9 @@
 "use client";
 
 import { lazy, Suspense, useMemo, useRef } from "react";
-import type { ComponentType } from "react";
+import type { ComponentType, LazyExoticComponent } from "react";
 import type { FileInfo } from "./utils";
+import type { PreviewPlugin } from "./core/plugin";
 import type { PreviewPluginRegistry } from "./core/registry";
 import { createBuiltinPreviewRegistry } from "./plugins/builtin-plugins";
 import { UnsupportedPluginPreview } from "./preview-adapters/UnsupportedPluginPreview";
@@ -28,7 +29,7 @@ export function PluginPreviewRenderer({
   registry,
 }: PluginPreviewRendererProps) {
   const componentCache = useRef(
-    new Map<string, React.LazyExoticComponent<ComponentType<{ file: FileInfo }>>>()
+    new WeakMap<PreviewPlugin, LazyExoticComponent<ComponentType<{ file: FileInfo }>>>()
   );
 
   const finalRegistry = useMemo(() => {
@@ -43,11 +44,11 @@ export function PluginPreviewRenderer({
   const PreviewComponent = useMemo(() => {
     if (!plugin) return null;
 
-    const cached = componentCache.current.get(plugin.id);
+    const cached = componentCache.current.get(plugin);
     if (cached) return cached;
 
     const component = lazy(plugin.load);
-    componentCache.current.set(plugin.id, component);
+    componentCache.current.set(plugin, component);
     return component;
   }, [plugin]);
 
