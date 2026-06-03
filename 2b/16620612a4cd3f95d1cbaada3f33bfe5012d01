@@ -1,0 +1,18 @@
+package.json
+  ai_agent 109
+upload/order-detail.html
+  ai_agent 1-650
+bun.lock
+  ai_agent 93,1047-1048,2007,2411
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "2b16620612a4cd3f95d1cbaada3f33bfe5012d01",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
