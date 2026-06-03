@@ -1,0 +1,24 @@
+src/components/file-preview/PluginPreviewRenderer.tsx
+  s_5bc3b096467c2e::t_bd9222a72d6d33 25,31
+  s_5bc3b096467c2e::t_7ea0cce9ef998e 57-64,68-85
+src/app/page.tsx
+  s_5bc3b096467c2e::t_31ac7daed062f2 478-481
+src/components/file-preview/preview-adapters/UnsupportedPluginPreview.tsx
+  s_5bc3b096467c2e::t_714819de96cbc4 1-2,7-8,11-15,17,34-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "0fcec6ed761ccc3c0d5e5186ae152c33b3da096a",
+  "prompts": {},
+  "sessions": {
+    "s_5bc3b096467c2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "52b09b2b-e31f-469a-ae57-9c2379c41492",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
