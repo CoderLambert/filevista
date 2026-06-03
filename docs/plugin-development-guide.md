@@ -80,6 +80,20 @@ Adapter rules:
 5. Do not modify file.content / file.source / file.url
 ```
 
+Adapter must default-export a React component:
+
+```ts
+export default function ExamplePreviewAdapter({ file }: { file: FileInfo }) {
+  // ...
+}
+```
+
+The return type of `PreviewPlugin.load()` requires a `default` export:
+
+```ts
+Promise<{ default: ComponentType<{ file: FileInfo }> }>
+```
+
 ## 5. Register Plugin
 
 Update:

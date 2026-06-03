@@ -15,9 +15,12 @@ export const DEMO_FILES: Record<string, { name: string; content: string; type: s
 | Markdown | \`.md\`, \`.mdx\` | Full GFM + Shiki code highlighting |
 | JSON | \`.json\` | Auto-formatting & syntax highlighting |
 | Code | \`.js\`, \`.ts\`, \`.py\`, etc. | 50+ languages with line numbers |
-| Word | \`.docx\` | High-fidelity rendering with docx-preview |
-| PPT | \`.pptx\`, \`.ppt\` | Slide parsing with navigation |
-| Excel | \`.xlsx\` | Full fidelity with styles, merges & images |
+| Word | \`.docx\` | Modern Word browser-side preview |
+| Legacy Word | \`.doc\` | Limited / degraded support |
+| PowerPoint | \`.pptx\` | Modern PowerPoint browser-side preview |
+| Legacy PowerPoint | \`.ppt\` | Unsupported, convert to \`.pptx\` |
+| Excel | \`.xlsx\` | Modern Excel browser-side preview |
+| Legacy Excel | \`.xls\` | Unsupported, convert to \`.xlsx\` |
 | EPUB | \`.epub\` | Chapter navigation, TOC & images |
 | Images | \`.png\`, \`.jpg\`, \`.svg\`, etc. | Zoom, rotate, reset |
 | CSV | \`.csv\` | Sortable table with search |
@@ -95,12 +98,12 @@ bun run dev
 
 - 🚀 **Zero upload** — All processing happens locally in your browser
 - 🎨 **Shiki highlighting** — VS Code-quality rendering for 50+ languages
-- 📊 **Excel preview** — Full fidelity with styles, merged cells & images
+- 📊 **Excel preview** — Browser-side preview for modern .xlsx files
 - 📖 **EPUB reader** — Chapter navigation, TOC sidebar & embedded images
 - 📊 **CSV tables** — Sortable, searchable table view
 - 🖼️ **Image controls** — Zoom in/out, rotate, reset
 - 📝 **Markdown** — Full GFM support with code block highlighting
-- 📄 **Word docs** — High-fidelity rendering with docx-preview
+- 📄 **Word docs** — Best-effort browser-side preview for .docx
 - 🌙 **Dark mode** — Dual-theme code blocks, zero re-render
 
 ## Technical Stack

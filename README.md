@@ -1,6 +1,6 @@
 # FileVista
 
-FileVista 是一个纯浏览器端文件预览工具集，基于 Next.js、React、TypeScript 和插件化 Preview Renderer 构建。支持 20+ 文件格式（PDF、Markdown、JSON、代码、DOCX、PPTX、XLSX、EPUB、图片、视频、音频等），支持本地 File/Blob/ArrayBuffer 和远程 URL。所有处理均在浏览器内完成，文件不会上传服务器。
+FileVista 是一个纯浏览器端文件预览工具集，基于 Next.js、React、TypeScript 和插件化 Preview Renderer 构建。支持 20+ 文件格式（PDF、Markdown、JSON、代码、DOCX、PPTX、XLSX、EPUB、图片、视频、音频等），预览内核支持本地 File/Blob/ArrayBuffer 等数据源，当前公开 Demo 以本地文件上传与预览为主。所有处理均在浏览器内完成，文件不会上传服务器。
 
 在线 Demo：
 
