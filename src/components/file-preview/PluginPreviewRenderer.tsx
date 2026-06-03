@@ -22,11 +22,13 @@ function PreviewLoading() {
 export interface PluginPreviewRendererProps {
   file: FileInfo;
   registry?: PreviewPluginRegistry;
+  showPluginDebug?: boolean;
 }
 
 export function PluginPreviewRenderer({
   file,
   registry,
+  showPluginDebug = false,
 }: PluginPreviewRendererProps) {
   const componentCache = useRef(
     new WeakMap<PreviewPlugin, LazyExoticComponent<ComponentType<{ file: FileInfo }>>>()
@@ -52,13 +54,34 @@ export function PluginPreviewRenderer({
     return component;
   }, [plugin]);
 
-  if (!PreviewComponent) {
-    return <UnsupportedPluginPreview fileType={file.fileType} />;
+  if (!PreviewComponent || !plugin) {
+    return (
+      <UnsupportedPluginPreview
+        fileType={file.fileType}
+        title="Not Migrated Yet"
+        description={`This file type (${file.fileType}) has not been migrated to the plugin renderer yet. You can switch back to Legacy Renderer to preview it.`}
+      />
+    );
   }
 
   return (
-    <Suspense fallback={<PreviewLoading />}>
-      <PreviewComponent file={file} />
-    </Suspense>
+    <div className="flex flex-col h-full min-h-0">
+      {showPluginDebug && (
+        <div className="flex items-center gap-2 border-b bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
+          <span className="font-medium text-foreground">Plugin Renderer</span>
+          <span>→</span>
+          <span>{plugin.name}</span>
+          <span className="rounded bg-muted px-1.5 py-0.5 font-mono">
+            {plugin.id}
+          </span>
+        </div>
+      )}
+
+      <div className="flex-1 min-h-0">
+        <Suspense fallback={<PreviewLoading />}>
+          <PreviewComponent file={file} />
+        </Suspense>
+      </div>
+    </div>
   );
 }

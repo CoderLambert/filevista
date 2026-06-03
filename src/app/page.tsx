@@ -475,7 +475,10 @@ export default function Home() {
                 {previewEngine === "legacy" ? (
                   <TabCacheRenderer files={files} activeFileId={activeFileId} />
                 ) : activeFile ? (
-                  <PluginPreviewRenderer file={activeFile} />
+                  <PluginPreviewRenderer
+                    file={activeFile}
+                    showPluginDebug={process.env.NODE_ENV === "development"}
+                  />
                 ) : (
                   <div className="flex h-full min-h-[300px] items-center justify-center text-sm text-muted-foreground">
                     No file selected
