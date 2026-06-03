@@ -1,0 +1,24 @@
+src/components/file-preview/preview-adapters/ZipPreviewAdapter.tsx
+  s_5bc3b096467c2e::t_025388fdce0ffe 1-11
+src/components/file-preview/plugins/zip-plugin.ts
+  s_5bc3b096467c2e::t_4f5512e45cb1dd 1-9
+src/components/file-preview/plugins/builtin-plugins.ts
+  s_5bc3b096467c2e::t_2b24be411b31c6 14
+  s_5bc3b096467c2e::t_683dfb533d778c 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f10017b9d6f7a01cb2240467796157cc762762d8",
+  "prompts": {},
+  "sessions": {
+    "s_5bc3b096467c2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "52b09b2b-e31f-469a-ae57-9c2379c41492",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
