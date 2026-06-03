@@ -147,6 +147,36 @@ describe("UnsupportedPluginPreview", () => {
     ).toBeEnabled();
   });
 
+  it.each([
+    ["doc", "legacy.doc", "application/msword"],
+    ["ppt", "legacy.ppt", "application/vnd.ms-powerpoint"],
+    ["xls", "legacy.xls", "application/vnd.ms-excel"],
+  ] as const)(
+    "uses correct MIME type when downloading %s files",
+    (fileType, fileName, expectedMimeType) => {
+      render(
+        <UnsupportedPluginPreview
+          fileType={fileType}
+          fileName={fileName}
+          content={DOC_BASE64}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /下载原文件/ }));
+
+      expect(createObjectURLMock).toHaveBeenCalledTimes(1);
+
+      const blob = createObjectURLMock.mock.calls[0][0] as Blob;
+      expect(blob).toBeInstanceOf(Blob);
+      expect(blob.type).toBe(expectedMimeType);
+
+      expect(lastAnchor).not.toBeNull();
+      expect(lastAnchor?.download).toBe(fileName);
+      expect(anchorClickMock).toHaveBeenCalledTimes(1);
+      expect(revokeObjectURLMock).toHaveBeenCalledWith("blob:mock-download-url");
+    }
+  );
+
   it("uses custom title and description when provided", () => {
     render(
       <UnsupportedPluginPreview
