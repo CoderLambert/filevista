@@ -12,6 +12,7 @@ import {
   Sparkles,
   Github,
   BookOpen,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ import {
 import { TabCacheRenderer } from "@/components/file-preview/FilePreviewRenderer";
 import { PluginPreviewRenderer } from "@/components/file-preview/PluginPreviewRenderer";
 import { DEMO_FILES, fetchBinaryDemoFiles } from "@/components/file-preview/demos";
+import { processRemoteUrl } from "@/components/file-preview/remote-url";
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
   pdf: "📄",
@@ -69,6 +71,8 @@ export default function Home() {
   const [previewEngine, setPreviewEngine] = useState<"legacy" | "plugin">("legacy");
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [remoteUrl, setRemoteUrl] = useState("");
+  const [loadingRemoteUrl, setLoadingRemoteUrl] = useState(false);
 
   const activeFile = files.find((f) => f.id === activeFileId) || null;
 
@@ -235,6 +239,34 @@ export default function Home() {
     toast.success("All files cleared");
   }, [files]);
 
+  const loadRemoteUrl = useCallback(async () => {
+    if (!remoteUrl.trim()) {
+      toast.error("Remote URL is empty");
+      return;
+    }
+
+    setLoadingRemoteUrl(true);
+
+    try {
+      const info = await processRemoteUrl(remoteUrl);
+
+      setFiles((prev) => [...prev, info]);
+      setActiveFileId(info.id);
+      setRemoteUrl("");
+
+      toast.success(`Loaded remote file: ${info.name}`);
+    } catch (err) {
+      console.error("Failed to load remote URL:", err);
+
+      const message =
+        err instanceof Error ? err.message : "Failed to load remote URL";
+
+      toast.error(message);
+    } finally {
+      setLoadingRemoteUrl(false);
+    }
+  }, [remoteUrl]);
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -349,7 +381,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col lg:flex-row max-w-[1600px] mx-auto w-full">
         {/* Sidebar - File List */}
         <aside className="w-full lg:w-72 xl:w-80 border-b lg:border-b-0 lg:border-r bg-muted/20">
-          <div className="p-3 border-b">
+          <div className="p-3 border-b space-y-2">
             <Button
               variant="outline"
               className="w-full gap-2 h-10 border-dashed"
@@ -366,6 +398,36 @@ export default function Home() {
               onChange={handleFileInput}
               accept="*"
             />
+            <div className="flex gap-2">
+              <input
+                value={remoteUrl}
+                onChange={(e) => setRemoteUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    loadRemoteUrl();
+                  }
+                }}
+                placeholder="Paste remote file URL"
+                className="h-9 min-w-0 flex-1 rounded-md border bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-ring"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadRemoteUrl}
+                disabled={loadingRemoteUrl || !remoteUrl.trim()}
+                className="h-9 shrink-0 gap-1.5 text-xs"
+              >
+                {loadingRemoteUrl ? (
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
+                ) : (
+                  <Link2 className="h-3.5 w-3.5" />
+                )}
+                URL
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Supports remote URLs when the target server allows browser CORS.
+            </p>
           </div>
 
           <ScrollArea className="h-[200px] lg:h-[calc(100vh-10rem)]">

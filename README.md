@@ -1,6 +1,6 @@
 # FileVista
 
-FileVista 是一个纯浏览器端文件预览工具集，基于 Next.js、React、TypeScript 和插件化 Preview Renderer 构建。支持 20+ 文件格式（PDF、Markdown、JSON、代码、DOCX、PPTX、XLSX、EPUB、图片、视频、音频等），预览内核支持本地 File/Blob/ArrayBuffer 等数据源，当前公开 Demo 以本地文件上传与预览为主。所有处理均在浏览器内完成，文件不会上传服务器。
+FileVista 是一个纯浏览器端文件预览工具集，基于 Next.js、React、TypeScript 和插件化 Preview Renderer 构建。支持 20+ 文件格式（PDF、Markdown、JSON、代码、DOCX、PPTX、XLSX、EPUB、图片、视频、音频等），预览内核支持 File / Blob / ArrayBuffer / URL 等数据源，当前公开 Demo 支持本地文件上传和可跨域访问的远程 URL 预览。所有处理均在浏览器内完成，文件不会上传服务器。
 
 在线 Demo：
 
@@ -8,8 +8,8 @@ https://coderlambert.github.io/filevista/
 
 ## Features
 
-- 纯浏览器端文件预览，文件不上传服务器
-- 预览内核支持 File / Blob / ArrayBuffer 等数据源
+- 支持本地文件上传，也支持可跨域访问的远程 URL 预览
+- 预览内核支持 File / Blob / ArrayBuffer / URL 等数据源
 - 拖拽上传、多文件切换、TabCache 状态保持
 - Legacy Renderer / Plugin Renderer 双引擎切换
 - 按文件类型懒加载 Preview Adapter
@@ -92,6 +92,7 @@ CI 会自动执行 lint、test、build。Pages workflow 会自动构建并部署
 - `.ppt` / `.xls` 暂不支持浏览器端预览
 - PPTX 中的 EMF / WMF 图片无法被浏览器原生显示
 - 大文件在浏览器端解析时可能卡顿，受浏览器性能限制
+- 远程 URL 预览依赖目标服务器 CORS 配置，若目标服务器未允许浏览器跨域访问，则无法直接预览
 - 所有预览均在浏览器端执行，最终效果受浏览器能力影响
 
 ## 文档

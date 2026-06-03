@@ -36,6 +36,35 @@ For large PDF / DOCX / PPTX / XLSX / ZIP / EPUB files (>= 20MB), FileVista may s
 
 This does not block preview. It only indicates that browser-side parsing may take longer, and the page may briefly become unresponsive during parsing.
 
+## Remote URL Preview
+
+FileVista supports remote file URL preview when the target server allows browser-side cross-origin access.
+
+Paste a remote file URL in the sidebar input, for example:
+
+```txt
+https://example.com/file.pdf
+https://example.com/file.docx
+https://example.com/file.xlsx
+```
+
+Download-style URLs are also supported when the filename can be resolved from query parameters or response headers:
+
+```txt
+https://example.com/download?showname=demo.docx&filename=xxx.docx
+```
+
+If a remote URL fails to load, possible reasons include:
+
+```txt
+1. The URL is invalid or not http/https
+2. The file is not publicly accessible
+3. The target server does not allow browser CORS access
+4. The file type is unsupported
+```
+
+Remote URL preview is purely browser-side. FileVista cannot bypass CORS restrictions on GitHub Pages.
+
 ## Privacy
 
 FileVista reads and parses files entirely in the browser. Files are never uploaded to any server.

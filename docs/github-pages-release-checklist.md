@@ -75,7 +75,34 @@ PPTX → builtin.pptx
 XLSX → builtin.xlsx
 ```
 
-## 6. Check Unsupported Types
+## 6. Check Remote URL Preview
+
+Paste a remote DOCX URL:
+
+```txt
+https://whonet.org/Docs/WHONET_for_GLASS.Chinese.docx
+```
+
+Also test a download-style URL:
+
+```txt
+https://www.cnipa.gov.cn/module/download/downfile.jsp?classid=0&showname=3%EF%BC%8E%E6%8E%A8%E8%8D%90%E5%87%BD.docx&filename=d79c1d6677e845d0a9d3d6ebe9e5d632.docx
+```
+
+Expected:
+
+```txt
+Remote file loads successfully when CORS is allowed
+DOCX file is detected correctly
+Download-style URL uses showname / filename instead of downfile.jsp
+Plugin Renderer can render it through builtin.docx
+A clear error is shown when CORS is blocked
+```
+
+Test invalid URL `abc` — expected: "Please enter a valid URL"
+Test unsupported protocol `ftp://example.com/file.docx` — expected: "Only http/https URLs are supported"
+
+## 7. Check Unsupported Types
 
 Test:
 
@@ -95,7 +122,7 @@ Expected:
 unknown → Preview Not Available
 ```
 
-## 7. Check Large File Hint
+## 8. Check Large File Hint
 
 Upload a file >= 20MB of type:
 
@@ -110,7 +137,7 @@ Large file hint appears
 User can still proceed with preview
 ```
 
-## 8. Check Browser Console
+## 9. Check Browser Console
 
 Open DevTools:
 
