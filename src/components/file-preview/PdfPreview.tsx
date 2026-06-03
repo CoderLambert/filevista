@@ -120,7 +120,8 @@ export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
         const pdfjsLib = await import("pdfjs-dist");
 
         // Set worker source
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.mjs";
+        const basePath = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_BASE_PATH || "" : "";
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `${basePath}/vendor/pdfjs/pdf.worker.min.mjs`;
 
         const bytes = await readBinaryPreviewAsUint8Array({ source, content });
 

@@ -358,6 +358,12 @@ RATE_LIMIT_MAX=100`,
 };
 
 // ── Binary demo files (fetched from public/demo/ at runtime) ──
+const basePath = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_BASE_PATH || "" : "";
+
+function withBase(url: string) {
+  return basePath ? `${basePath}${url}` : url;
+}
+
 export const DEMO_BINARY_FILES: Record<
   string,
   { name: string; type: string; url: string }
@@ -365,17 +371,17 @@ export const DEMO_BINARY_FILES: Record<
   epub: {
     name: "精通Python爬虫框架Scrapy.epub",
     type: "application/epub+zip",
-    url: "/demo/精通Python爬虫框架Scrapy.epub",
+    url: withBase("/demo/精通Python爬虫框架Scrapy.epub"),
   },
   xlsx: {
     name: "test_features.xlsx",
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    url: "/demo/test_features.xlsx",
+    url: withBase("/demo/test_features.xlsx"),
   },
   docx: {
     name: "demo.docx",
     type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    url: "/demo/demo.docx",
+    url: withBase("/demo/demo.docx"),
   },
 };
 
