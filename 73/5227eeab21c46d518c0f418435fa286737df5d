@@ -1,0 +1,24 @@
+README.md
+  s_7914c8dda40849::t_b1761272e58f51 3
+docs/plugin-development-guide.md
+  s_7914c8dda40849::t_8b9df0f9495ae1 83-96
+src/components/file-preview/demos.ts
+  s_7914c8dda40849::t_10fe08b89f9603 101,106
+  s_7914c8dda40849::t_86cb24b7b4f65a 18-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "735227eeab21c46d518c0f418435fa286737df5d",
+  "prompts": {},
+  "sessions": {
+    "s_7914c8dda40849": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f224d5f1-e4a5-4098-a0cc-61600ddf23d2",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
