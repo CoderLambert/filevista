@@ -7,6 +7,7 @@ import type { PreviewPlugin } from "./core/plugin";
 import type { PreviewPluginRegistry } from "./core/registry";
 import { createBuiltinPreviewRegistry } from "./plugins/builtin-plugins";
 import { UnsupportedPluginPreview } from "./preview-adapters/UnsupportedPluginPreview";
+import { getPreviewSupportMeta } from "./support-status";
 
 function PreviewLoading() {
   return (
@@ -55,11 +56,45 @@ export function PluginPreviewRenderer({
   }, [plugin]);
 
   if (!PreviewComponent || !plugin) {
+    const support = getPreviewSupportMeta(file.fileType);
+
+    if (support.status === "legacy-only") {
+      return (
+        <UnsupportedPluginPreview
+          fileType={file.fileType}
+          fileName={file.name}
+          content={file.content}
+          title="Not Migrated Yet"
+          description={`This file type (${file.fileType}) is currently only available in Legacy Renderer.`}
+        />
+      );
+    }
+
+    if (support.status === "degraded") {
+      return (
+        <UnsupportedPluginPreview
+          fileType={file.fileType}
+          fileName={file.name}
+          content={file.content}
+          title={undefined}
+          description={
+            support.note ??
+            `This file type (${file.fileType}) only has degraded legacy support and is not available in Plugin Renderer.`
+          }
+        />
+      );
+    }
+
     return (
       <UnsupportedPluginPreview
         fileType={file.fileType}
-        title="Not Migrated Yet"
-        description={`This file type (${file.fileType}) has not been migrated to the plugin renderer yet. You can switch back to Legacy Renderer to preview it.`}
+        fileName={file.name}
+        content={file.content}
+        title={undefined}
+        description={
+          support.note ??
+          `This file type (${file.fileType}) cannot be previewed by the plugin renderer.`
+        }
       />
     );
   }
