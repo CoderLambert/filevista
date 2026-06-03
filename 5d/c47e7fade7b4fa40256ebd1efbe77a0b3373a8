@@ -1,0 +1,24 @@
+src/components/file-preview/plugins/builtin-plugins.ts
+  s_5bc3b096467c2e::t_86ba40faf2e10b 30
+  s_5bc3b096467c2e::t_565703c6e7aff6 15
+src/components/file-preview/plugins/epub-plugin.ts
+  s_5bc3b096467c2e::t_b2dbcfb1618b42 1-9
+src/components/file-preview/preview-adapters/EpubPreviewAdapter.tsx
+  s_5bc3b096467c2e::t_93091df758f1ad 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "5dc47e7fade7b4fa40256ebd1efbe77a0b3373a8",
+  "prompts": {},
+  "sessions": {
+    "s_5bc3b096467c2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "52b09b2b-e31f-469a-ae57-9c2379c41492",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
