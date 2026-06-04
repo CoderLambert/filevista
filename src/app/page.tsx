@@ -59,6 +59,9 @@ const FILE_TYPE_ICONS: Record<FileType, string> = {
   unknown: "📎",
 };
 
+const DEFAULT_REMOTE_URL =
+  "https://501351981.github.io/vue-office/examples/dist/static/test-files/test.pptx";
+
 function revokeFileResources(file: FileInfo) {
   if (file.url) {
     URL.revokeObjectURL(file.url);
@@ -71,10 +74,7 @@ export default function Home() {
   const [previewEngine, setPreviewEngine] = useState<"legacy" | "plugin">("legacy");
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const DEFAULT_REMOTE_URL =
-  "https://501351981.github.io/vue-office/examples/dist/static/test-files/test.pptx";
-
-const [remoteUrl, setRemoteUrl] = useState(DEFAULT_REMOTE_URL);
+  const [remoteUrl, setRemoteUrl] = useState(DEFAULT_REMOTE_URL);
   const [loadingRemoteUrl, setLoadingRemoteUrl] = useState(false);
 
   const activeFile = files.find((f) => f.id === activeFileId) || null;
