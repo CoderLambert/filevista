@@ -103,6 +103,16 @@ const GENERIC_MIME_TYPES = new Set([
   "application/download",
 ]);
 
+const WEAK_MAGIC_MIME_TYPES = new Set([
+  "application/zip",
+  "application/x-ole-storage",
+  "video/mp4",
+]);
+
+function isStrongMagicMimeType(mimeType: string | null): boolean {
+  return Boolean(mimeType && !WEAK_MAGIC_MIME_TYPES.has(mimeType));
+}
+
 const BASE64_FILE_TYPES = new Set<FileType>([
   "pdf",
   "docx",
@@ -180,8 +190,8 @@ function getFileNameFromContentDisposition(
   if (filenameStarMatch?.[1]) {
     const rawValue = stripQuotes(filenameStarMatch[1]);
 
-    const utf8PrefixMatch = rawValue.match(/^UTF-8''(.+)$/i);
-    const encodedValue = utf8PrefixMatch?.[1] || rawValue;
+    const rfc5987Match = rawValue.match(/^[^']*'[^']*'(.+)$/);
+    const encodedValue = rfc5987Match?.[1] || rawValue;
 
     return sanitizeRemoteFileName(tryDecodeURIComponent(encodedValue));
   }
@@ -441,6 +451,7 @@ function resolveRemoteMimeType(input: {
   const mimeFromExtension = REMOTE_MIME_BY_EXTENSION[ext];
   const mimeFromHeader = normalizeHeaderMimeType(input.headerMimeType);
 
+  // 1. ZIP internal container (docx/pptx/xlsx/epub)
   if (input.containerMimeType) {
     return {
       mimeType: input.containerMimeType,
@@ -448,13 +459,15 @@ function resolveRemoteMimeType(input: {
     };
   }
 
-  if (input.magicMimeType && input.magicMimeType !== "application/zip") {
+  // 2. Strong magic (PDF/PNG/JPG/GIF/WEBP)
+  if (isStrongMagicMimeType(input.magicMimeType)) {
     return {
-      mimeType: input.magicMimeType,
+      mimeType: input.magicMimeType!,
       source: "magic",
     };
   }
 
+  // 3. Explicit extension wins over weak magic (zip/ole/ftyp)
   if (mimeFromExtension) {
     return {
       mimeType: mimeFromExtension,
@@ -462,6 +475,7 @@ function resolveRemoteMimeType(input: {
     };
   }
 
+  // 4. Content-Type header
   if (mimeFromHeader) {
     return {
       mimeType: mimeFromHeader,
@@ -469,6 +483,7 @@ function resolveRemoteMimeType(input: {
     };
   }
 
+  // 5. Weak magic as last resort before fallback
   if (input.magicMimeType) {
     return {
       mimeType: input.magicMimeType,
