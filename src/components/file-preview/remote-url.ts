@@ -1,5 +1,5 @@
 import { detectFileType, generateId } from "./utils";
-import type { FileInfo, FileType } from "./utils";
+import type { FileInfo } from "./utils";
 
 export type RemoteUrlErrorCode =
   | "INVALID_URL"
@@ -112,24 +112,6 @@ const WEAK_MAGIC_MIME_TYPES = new Set([
 function isStrongMagicMimeType(mimeType: string | null): boolean {
   return Boolean(mimeType && !WEAK_MAGIC_MIME_TYPES.has(mimeType));
 }
-
-const BASE64_FILE_TYPES = new Set<FileType>([
-  "pdf",
-  "docx",
-  "doc",
-  "pptx",
-  "ppt",
-  "xlsx",
-  "xls",
-  "zip",
-  "epub",
-]);
-
-const OBJECT_URL_FILE_TYPES = new Set<FileType>([
-  "image",
-  "video",
-  "audio",
-]);
 
 function sanitizeRemoteFileName(fileName: string): string {
   const cleanName = fileName
@@ -497,34 +479,6 @@ function resolveRemoteMimeType(input: {
   };
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-
-  for (let i = 0; i < bytes.length; i += 8192) {
-    const chunk = bytes.subarray(i, Math.min(i + 8192, bytes.length));
-    binary += String.fromCharCode(...chunk);
-  }
-
-  return btoa(binary);
-}
-
-function shouldDecodeAsText(fileType: FileType, mimeType: string): boolean {
-  if (fileType === "unknown") return false;
-
-  return (
-    fileType === "text" ||
-    fileType === "markdown" ||
-    fileType === "json" ||
-    fileType === "code" ||
-    fileType === "csv" ||
-    fileType === "html" ||
-    fileType === "svg" ||
-    fileType === "rtf" ||
-    mimeType.startsWith("text/")
-  );
-}
-
 export async function processRemoteUrl(rawUrl: string): Promise<FileInfo> {
   const trimmedUrl = rawUrl.trim();
 
@@ -592,26 +546,12 @@ export async function processRemoteUrl(rawUrl: string): Promise<FileInfo> {
 
   const fileType = detectFileType(fileNameResult.fileName, mimeResult.mimeType);
 
-  let content: string | null = null;
-  let objectUrl: string | null = null;
-
-  if (BASE64_FILE_TYPES.has(fileType)) {
-    content = arrayBufferToBase64(buffer);
-  } else if (OBJECT_URL_FILE_TYPES.has(fileType)) {
-    const blob = new Blob([buffer], { type: mimeResult.mimeType });
-    objectUrl = URL.createObjectURL(blob);
-  } else if (shouldDecodeAsText(fileType, mimeResult.mimeType)) {
-    content = new TextDecoder("utf-8").decode(buffer);
-  }
-
   return {
     id: generateId(),
     name: fileNameResult.fileName,
     size: buffer.byteLength,
     type: mimeResult.mimeType,
     fileType,
-    content,
-    url: objectUrl,
     source: {
       kind: "arrayBuffer",
       buffer,

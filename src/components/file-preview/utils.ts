@@ -34,28 +34,28 @@ export interface FileInfo {
   fileType: FileType;
 
   /**
-   * Legacy field.
+   * Primary source abstraction.
    *
-   * 当前仍用于现有预览组件：
-   * - 文本类文件：原始文本
-   * - PDF / Office / ZIP / EPUB：base64
+   * Stage 18.0 makes source mandatory. Preview adapters should read
+   * file data from this field via readSourceAsText/readSourceAsArrayBuffer.
    */
-  content: string | null;
+  source: PreviewSource;
 
   /**
-   * Legacy field.
+   * @deprecated Use source + readSourceAsText/readSourceAsArrayBuffer instead.
    *
-   * 当前主要用于 image / video / audio 的 object URL。
+   * Temporary compatibility field for legacy preview components.
+   * New code should not populate or depend on this field.
    */
-  url: string | null;
+  content?: string | null;
 
   /**
-   * New source abstraction.
+   * @deprecated Use source or adapter-local object URL instead.
    *
-   * 08 阶段先作为兼容字段引入，不立即替换 content / url。
-   * 后续 PDF / DOCX / PPTX / XLSX 可以逐步从 source 读取 ArrayBuffer。
+   * Temporary compatibility field for legacy media preview components.
+   * New code should not populate or depend on this field.
    */
-  source?: PreviewSource;
+  url?: string | null;
 }
 
 const CODE_EXTENSIONS: Record<string, string> = {

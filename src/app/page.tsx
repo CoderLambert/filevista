@@ -62,7 +62,7 @@ const DEFAULT_REMOTE_URL =
   "https://501351981.github.io/vue-office/examples/dist/static/test-files/test.pptx";
 
 function revokeFileResources(file: FileInfo) {
-  if (file.url) {
+  if (file.url?.startsWith("blob:")) {
     URL.revokeObjectURL(file.url);
   }
 }
@@ -79,40 +79,6 @@ export default function Home() {
 
   const processFile = useCallback(async (file: File): Promise<FileInfo> => {
     const fileType = detectFileType(file.name, file.type);
-    const isBinary = ["pdf", "docx", "doc", "pptx", "ppt", "xlsx", "xls", "zip", "epub", "image", "video", "audio"].includes(
-      fileType
-    );
-
-    let content: string | null = null;
-    let url: string | null = null;
-
-    if (isBinary) {
-      // For PDF, DOC, DOCX, PPTX, XLSX, ZIP, EPUB we need base64 content for processing
-      const needsBase64 = ["pdf", "docx", "doc", "pptx", "ppt", "xlsx", "xls", "zip", "epub"].includes(fileType);
-      // For images, video, audio we need object URL for display
-      const needsUrl = ["image", "video", "audio"].includes(fileType);
-
-      if (needsBase64) {
-        content = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = reader.result as string;
-            resolve(result.split(",")[1]); // Remove data:...;base64, prefix
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-
-      if (needsUrl) {
-        url = URL.createObjectURL(file);
-      }
-    } else {
-      content = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsText(file);
-      });
-    }
 
     return {
       id: generateId(),
@@ -120,8 +86,6 @@ export default function Home() {
       size: file.size,
       type: file.type,
       fileType,
-      content,
-      url,
       source: {
         kind: "file",
         file,
@@ -184,8 +148,6 @@ export default function Home() {
           size: blob.size,
           type: demo.type,
           fileType: detectFileType(demo.name, demo.type),
-          content: demo.content,
-          url: null,
           source: {
             kind: "blob",
             blob,
@@ -210,8 +172,6 @@ export default function Home() {
           size: demo.size,
           type: demo.type,
           fileType: detectFileType(demo.name, demo.type),
-          content: demo.content,
-          url: null,
           source: {
             kind: "arrayBuffer",
             buffer,
