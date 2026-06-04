@@ -1,0 +1,27 @@
+docs/developLog/plugin-guide/plugin-guide-dev-log.md
+  s_7914c8dda40849::t_dac517b1816d85 1-53
+docs/developLog/homepage-ui/stage-17-homepage-ui.md
+  s_7914c8dda40849::t_21c11737e0fdda 1-74
+docs/developLog/remote-url/remote-url-dev-log.md
+  s_7914c8dda40849::t_0a62c721b4796e 1-156
+docs/developLog/demo-content/stage-17-demo-content.md
+  s_7914c8dda40849::t_21046ba727a798 1-58
+docs/developLog/release-docs/stage-17-release-docs.md
+  s_7914c8dda40849::t_9c805a6ec04198 1-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "c6a2a411ca1fd8e7386033508c1140fc01c00f0b",
+  "prompts": {},
+  "sessions": {
+    "s_7914c8dda40849": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f224d5f1-e4a5-4098-a0cc-61600ddf23d2",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
