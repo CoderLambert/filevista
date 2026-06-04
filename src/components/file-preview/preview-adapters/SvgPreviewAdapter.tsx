@@ -1,11 +1,27 @@
-import { SvgPreview } from "../SvgPreview";
+"use client";
+
 import type { FileInfo } from "../utils";
+import { useSourceText } from "../hooks/useSourceText";
+import { SvgPreview } from "../SvgPreview";
 import { UnsupportedPluginPreview } from "./UnsupportedPluginPreview";
 
 export default function SvgPreviewAdapter({ file }: { file: FileInfo }) {
-  if (!file.content) {
-    return <UnsupportedPluginPreview fileType={file.fileType} />;
+  const { content, loading, error } = useSourceText(file.source);
+
+  if (loading) {
+    return <div className="p-4 text-sm text-muted-foreground">Loading...</div>;
   }
 
-  return <SvgPreview content={file.content} fileName={file.name} />;
+  if (error || content === null) {
+    return (
+      <UnsupportedPluginPreview
+        fileType={file.fileType}
+        fileName={file.name}
+        title="Failed to read file"
+        description={error?.message ?? "Unable to read file source."}
+      />
+    );
+  }
+
+  return <SvgPreview content={content} fileName={file.name} />;
 }

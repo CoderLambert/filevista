@@ -1,11 +1,27 @@
-import { HtmlPreview } from "../HtmlPreview";
+"use client";
+
 import type { FileInfo } from "../utils";
+import { useSourceText } from "../hooks/useSourceText";
+import { HtmlPreview } from "../HtmlPreview";
 import { UnsupportedPluginPreview } from "./UnsupportedPluginPreview";
 
 export default function HtmlPreviewAdapter({ file }: { file: FileInfo }) {
-  if (!file.content) {
-    return <UnsupportedPluginPreview fileType={file.fileType} />;
+  const { content, loading, error } = useSourceText(file.source);
+
+  if (loading) {
+    return <div className="p-4 text-sm text-muted-foreground">Loading...</div>;
   }
 
-  return <HtmlPreview content={file.content} fileName={file.name} />;
+  if (error || content === null) {
+    return (
+      <UnsupportedPluginPreview
+        fileType={file.fileType}
+        fileName={file.name}
+        title="Failed to read file"
+        description={error?.message ?? "Unable to read file source."}
+      />
+    );
+  }
+
+  return <HtmlPreview content={content} fileName={file.name} />;
 }

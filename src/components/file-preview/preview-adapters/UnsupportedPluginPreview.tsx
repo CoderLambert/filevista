@@ -3,12 +3,15 @@
 import { useState } from "react";
 import { AlertTriangle, CheckCircle, Download, FileQuestion } from "lucide-react";
 import type { FileType } from "../utils";
+import type { PreviewSource } from "../core/types";
 import { base64ToUint8Array } from "../utils";
+import { downloadSource } from "../core/download";
 
 interface UnsupportedPluginPreviewProps {
   fileType: FileType;
   fileName?: string;
   content?: string | null;
+  source?: PreviewSource;
   title?: string;
   description?: string;
 }
@@ -44,6 +47,7 @@ export function UnsupportedPluginPreview({
   fileType,
   fileName,
   content,
+  source,
   title,
   description,
 }: UnsupportedPluginPreviewProps) {
@@ -56,8 +60,20 @@ export function UnsupportedPluginPreview({
     UNSUPPORTED_DESCRIPTIONS[fileType] ??
     `该文件类型 (${fileType}) 暂不支持浏览器端预览。`;
 
-  const handleDownload = () => {
-    if (!content || !fileName || downloading) return;
+  const handleDownload = async () => {
+    if (!fileName || downloading) return;
+
+    if (source) {
+      setDownloading(true);
+      try {
+        await downloadSource(source, fileName);
+      } finally {
+        setTimeout(() => setDownloading(false), 1500);
+      }
+      return;
+    }
+
+    if (!content) return;
 
     setDownloading(true);
 
@@ -88,7 +104,7 @@ export function UnsupportedPluginPreview({
         <p className="text-sm max-w-md">{displayDescription}</p>
       </div>
 
-      {content && fileName && (
+      {(source || content) && fileName && (
         <button
           onClick={handleDownload}
           disabled={downloading}
