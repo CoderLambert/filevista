@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   Upload,
   FileText,
@@ -71,7 +71,10 @@ export default function Home() {
   const [previewEngine, setPreviewEngine] = useState<"legacy" | "plugin">("legacy");
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [remoteUrl, setRemoteUrl] = useState("");
+  const DEFAULT_REMOTE_URL =
+  "https://501351981.github.io/vue-office/examples/dist/static/test-files/test.pptx";
+
+const [remoteUrl, setRemoteUrl] = useState(DEFAULT_REMOTE_URL);
   const [loadingRemoteUrl, setLoadingRemoteUrl] = useState(false);
 
   const activeFile = files.find((f) => f.id === activeFileId) || null;
@@ -280,15 +283,6 @@ export default function Home() {
       setLoadingRemoteUrl(false);
     }
   }, [remoteUrl]);
-
-  const DEFAULT_REMOTE_URL = "https://501351981.github.io/vue-office/examples/dist/static/test-files/test.pptx";
-
-  useEffect(() => {
-    if (files.length === 0) {
-      setRemoteUrl(DEFAULT_REMOTE_URL);
-      loadRemoteUrl();
-    }
-  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
