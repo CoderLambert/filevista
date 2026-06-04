@@ -1,0 +1,61 @@
+src/components/file-preview/preview-adapters/ZipPreviewAdapter.tsx
+  s_a6376f89917fdf::t_373027c10513c7 1-2,4-5,9-23,26
+src/components/file-preview/preview-adapters/ImagePreviewAdapter.tsx
+  s_a6376f89917fdf::t_d5e2f63223aca2 1-2,4-5,9-26,29
+src/components/file-preview/preview-adapters/TextPreviewAdapter.tsx
+  s_a6376f89917fdf::t_007069d08288f5 1-2,4-5,9-23,26
+src/components/file-preview/preview-adapters/MarkdownPreviewAdapter.tsx
+  s_a6376f89917fdf::t_6193df547bcb9e 1-2,4-5,9-23,26-27
+src/components/file-preview/hooks/useObjectUrlFromSource.ts
+  s_a6376f89917fdf::t_f565a97bf913be 1-22,24-65
+  s_a6376f89917fdf::t_5cf28d0a4405dc 23
+src/components/file-preview/hooks/useSourceBase64.ts
+  s_a6376f89917fdf::t_7f2e4714a69e49 1-20,22-46
+  s_a6376f89917fdf::t_d44aadbdd9856a 21
+src/components/file-preview/preview-adapters/UnsupportedPluginPreview.tsx
+  s_a6376f89917fdf::t_85eed0f83cc7f7 14
+  s_a6376f89917fdf::t_9802bc93057b26 107
+  s_a6376f89917fdf::t_3c511c6e3f2cf3 6,8
+  s_a6376f89917fdf::t_5b0d902dbe772c 50,63-76
+src/components/file-preview/preview-adapters/HtmlPreviewAdapter.tsx
+  s_a6376f89917fdf::t_29fd4b158c15b9 1-2,4-5,9-23,26-27
+src/components/file-preview/preview-adapters/SvgPreviewAdapter.tsx
+  s_a6376f89917fdf::t_1ca5a6df9ee549 1-2,4-5,9-23,26-27
+src/components/file-preview/preview-adapters/CsvPreviewAdapter.tsx
+  s_a6376f89917fdf::t_dd440e93304e5a 1-2,4-5,9-23,26-27
+src/components/file-preview/preview-adapters/RtfPreviewAdapter.tsx
+  s_a6376f89917fdf::t_cedd8f9851f1ba 1-2,4-5,9-23,26
+src/components/file-preview/core/download.ts
+  s_a6376f89917fdf::t_fe5c3929b087f0 1-24
+src/components/file-preview/preview-adapters/SourceCodePreviewAdapter.tsx
+  s_a6376f89917fdf::t_11d383d77644f4 1-2,4-5,9-23,28
+src/components/file-preview/preview-adapters/VideoPreviewAdapter.tsx
+  s_a6376f89917fdf::t_484bf0309f61a4 1-2,4-5,9-26,29-30
+src/components/file-preview/preview-adapters/EpubPreviewAdapter.tsx
+  s_a6376f89917fdf::t_1e76bb65db8dde 1-2,4-5,9-23,26
+src/components/file-preview/hooks/useSourceText.ts
+  s_a6376f89917fdf::t_327900a8586d04 1-20,22-46
+  s_a6376f89917fdf::t_2e9ccde2123259 21
+src/components/file-preview/PluginPreviewRenderer.tsx
+  s_a6376f89917fdf::t_8dc02d6dc24e43 81
+  s_a6376f89917fdf::t_30d1962bc1b97f 68
+  s_a6376f89917fdf::t_1c8aa8d3454edf 96
+src/components/file-preview/preview-adapters/AudioPreviewAdapter.tsx
+  s_a6376f89917fdf::t_ee96a567c41d1d 1-2,4-5,9-26,29-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "21e5e9c4097a39d89d8e1a5747a12dd8657bbc98",
+  "prompts": {},
+  "sessions": {
+    "s_a6376f89917fdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "09cc0e47-f27b-4d7a-b9e7-85288cbad87c",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
