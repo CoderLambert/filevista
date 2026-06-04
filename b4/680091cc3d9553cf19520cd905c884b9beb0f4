@@ -1,0 +1,19 @@
+src/app/page.tsx
+  s_a6376f89917fdf::t_32b14791358dbc 568-571
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b4680091cc3d9553cf19520cd905c884b9beb0f4",
+  "prompts": {},
+  "sessions": {
+    "s_a6376f89917fdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "09cc0e47-f27b-4d7a-b9e7-85288cbad87c",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
