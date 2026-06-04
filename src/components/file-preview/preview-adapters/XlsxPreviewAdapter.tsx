@@ -4,7 +4,7 @@ import type { FileInfo } from "../utils";
 export default function XlsxPreviewAdapter({ file }: { file: FileInfo }) {
   return (
     <XlsxPreview
-      content={file.content}
+      content={undefined}
       source={file.source}
       fileName={file.name}
       fileSize={file.size}

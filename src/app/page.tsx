@@ -61,12 +61,6 @@ const FILE_TYPE_ICONS: Record<FileType, string> = {
 const DEFAULT_REMOTE_URL =
   "https://501351981.github.io/vue-office/examples/dist/static/test-files/test.pptx";
 
-function revokeFileResources(file: FileInfo) {
-  if (file.url?.startsWith("blob:")) {
-    URL.revokeObjectURL(file.url);
-  }
-}
-
 export default function Home() {
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
@@ -116,11 +110,6 @@ export default function Home() {
   const removeFile = useCallback(
     (id: string) => {
       setFiles((prev) => {
-        const fileToRemove = prev.find((f) => f.id === id);
-        if (fileToRemove) {
-          revokeFileResources(fileToRemove);
-        }
-
         const remaining = prev.filter((f) => f.id !== id);
 
         if (activeFileId === id) {
@@ -194,11 +183,10 @@ export default function Home() {
   }, []);
 
   const clearAllFiles = useCallback(() => {
-    files.forEach(revokeFileResources);
     setFiles([]);
     setActiveFileId(null);
     toast.success("All files cleared");
-  }, [files]);
+  }, []);
 
   const loadRemoteUrl = useCallback(async () => {
     if (!remoteUrl.trim()) {

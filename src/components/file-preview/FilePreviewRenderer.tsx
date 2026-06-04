@@ -1,3 +1,9 @@
+/**
+ * @deprecated Legacy renderer.
+ *
+ * Stage 18.0 keeps this file only as a temporary compatibility reference.
+ * Public preview entry should use PluginPreviewRenderer.
+ */
 "use client";
 
 import { lazy, Suspense, useMemo } from "react";

@@ -66,7 +66,6 @@ export function PluginPreviewRenderer({
           fileType={file.fileType}
           fileName={file.name}
           source={file.source}
-          content={file.content}
           title="Not Migrated Yet"
           description={`This file type (${file.fileType}) is currently only available in Legacy Renderer.`}
         />
@@ -78,8 +77,7 @@ export function PluginPreviewRenderer({
         <UnsupportedPluginPreview
           fileType={file.fileType}
           fileName={canDownloadOriginal ? file.name : undefined}
-          source={file.source}
-          content={canDownloadOriginal ? file.content : null}
+          source={canDownloadOriginal ? file.source : undefined}
           title={undefined}
           description={
             support.note ??
@@ -93,8 +91,7 @@ export function PluginPreviewRenderer({
       <UnsupportedPluginPreview
         fileType={file.fileType}
         fileName={canDownloadOriginal ? file.name : undefined}
-        source={file.source}
-        content={canDownloadOriginal ? file.content : null}
+        source={canDownloadOriginal ? file.source : undefined}
         title={undefined}
         description={
           support.note ??
