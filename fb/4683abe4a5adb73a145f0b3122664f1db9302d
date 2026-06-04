@@ -1,0 +1,31 @@
+src/components/file-preview/FilePreviewRenderer.tsx
+  s_a6376f89917fdf::t_dc59559b669072 1-6
+src/app/page.tsx
+  s_a6376f89917fdf::t_6883a03fc17162 189
+src/components/file-preview/PluginPreviewRenderer.tsx
+  s_a6376f89917fdf::t_8ee97d276e0cc9 80,94
+src/components/file-preview/preview-adapters/DocxPreviewAdapter.tsx
+  s_a6376f89917fdf::t_690e568b5510bf 7
+src/components/file-preview/preview-adapters/PdfPreviewAdapter.tsx
+  s_a6376f89917fdf::t_39c6104c240bd2 7
+src/components/file-preview/preview-adapters/PptxPreviewAdapter.tsx
+  s_a6376f89917fdf::t_29127b272637ff 7
+src/components/file-preview/preview-adapters/XlsxPreviewAdapter.tsx
+  s_a6376f89917fdf::t_f4fd8643dd6f1b 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "fb4683abe4a5adb73a145f0b3122664f1db9302d",
+  "prompts": {},
+  "sessions": {
+    "s_a6376f89917fdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "09cc0e47-f27b-4d7a-b9e7-85288cbad87c",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
