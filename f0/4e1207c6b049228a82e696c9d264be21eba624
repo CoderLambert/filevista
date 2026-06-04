@@ -1,0 +1,23 @@
+src/components/file-preview/utils.ts
+  s_a6376f89917fdf::t_8ebeea47beaaaf 37,39-40,42,45,47-48,50,53,55-56,58
+src/components/file-preview/remote-url.ts
+  s_a6376f89917fdf::t_f6ddd3f4552a46 2
+src/app/page.tsx
+  s_a6376f89917fdf::t_f086fe42c0d457 65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "f04e1207c6b049228a82e696c9d264be21eba624",
+  "prompts": {},
+  "sessions": {
+    "s_a6376f89917fdf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "09cc0e47-f27b-4d7a-b9e7-85288cbad87c",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
