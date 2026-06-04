@@ -1,0 +1,21 @@
+src/components/file-preview/remote-url.ts
+  s_7914c8dda40849::t_35c7cc476855f4 454,462-463,465,470,478,486
+  s_7914c8dda40849::t_84cd9036e282a2 106-115
+  s_7914c8dda40849::t_35417bfe1f84d7 193-194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d7eb34ba9fb44dc374198d929d679cd167573df1",
+  "prompts": {},
+  "sessions": {
+    "s_7914c8dda40849": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f224d5f1-e4a5-4098-a0cc-61600ddf23d2",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
