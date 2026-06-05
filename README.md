@@ -33,7 +33,7 @@ https://coderlambert.github.io/filevista/
 | Video | .mp4/.webm/.mov 等 | ✅ | 浏览器原生播放器 |
 | ZIP | .zip | ✅ | 压缩包预览 |
 | EPUB | .epub | ✅ | EPUB 预览 |
-| RTF | .rtf | ✅ | 文本提取预览 |
+| RTF | .rtf | ✅ | rtf.js 富文本渲染，复杂内容自动降级为文本预览 |
 | DOCX | .docx | ✅ | 现代 Word 格式 |
 | PPTX | .pptx | ✅ | 现代 PowerPoint 格式 |
 | XLSX | .xlsx | ✅ | 现代 Excel 格式 |

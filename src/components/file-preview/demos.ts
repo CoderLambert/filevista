@@ -358,6 +358,63 @@ CORS_METHODS=GET,POST,PUT,DELETE
 RATE_LIMIT_WINDOW=60000
 RATE_LIMIT_MAX=100`,
   },
+  "example.rtf": {
+    name: "example.rtf",
+    type: "application/rtf",
+    content: `{\rtf1\ansi\deff0
+{\fonttbl{\f0\fswiss\fcharset0 Arial;}{\f1\froman\fcharset0 Times New Roman;}{\f2\fmodern\fcharset0 Courier New;}}
+{\colortbl;\red0\green0\blue0;\red0\green0\blue255;\red255\green0\blue0;\red0\green128\blue0;}
+{\info{\title FileVista RTF Demo}{author FileVista}}
+
+{\pard\qc\b\fs36 FileVista RTF 富文本预览演示\b0\par}
+{\pard\qc\i\fs20 基于 rtf.js + DOMPurify + iframe sandbox 的纯前端渲染方案\i0\par}
+
+{\pard\brdrb\brdrs\brdrw10\brsp100 \par}
+
+{\pard\b\fs28 一、功能特性\b0\par}
+
+{\pard\b\fs22 1. 富文本渲染\fs20\b0\par}
+{\pard 支持 \\b 加粗\\b0 、\\i 斜体\\i0 、\\u 下划线\\u0 等基础格式，以及多级标题、列表和表格。\par}
+
+{\pard\b\fs22 2. 安全隔离\fs20\b0\par}
+{\pard 使用 DOMPurify 清洗 HTML 内容，通过 iframe sandbox 隔离渲染，防止 XSS 攻击。\par}
+
+{\pard\b\fs22 3. 自动降级\fs20\b0\par}
+{\pard 当 RTF 格式过于复杂或包含不支持的元素时，自动降级为纯文本预览。\par}
+
+{\pard\brdrb\brdrs\brdrw10\brsp100 \par}
+
+{\pard\b\fs28 二、技术架构\b0\par}
+
+{\pard 采用三层架构设计：\par}
+
+{\pard {\b 第一层：\b0 rtf.js 负责将 RTF 解析并渲染为 HTML 元素。\par}
+{\pard {\b 第二层：\b0 DOMPurify 负责清洗 HTML，移除脚本和危险属性。\par}
+{\pard {\b 第三层：\b0 iframe sandbox 负责隔离渲染上下文，阻止脚本执行。\par}
+
+{\pard\brdrb\brdrs\brdrw10\brsp100 \par}
+
+{\pard\b\fs28 三、示例内容\b0\par}
+
+{\pard\b\fs22 代码片段\b0\par}
+
+{\pard\f2\fs20 const config = {\{\par}
+  maxFileSize: 50 * 1024 * 1024,\par}
+  supportedTypes: ["pdf", "md", "rtf"],\par}
+  theme: "system",\par}
+\{\};\par}
+\f0\par}
+
+{\pard\b\fs22 多语言支持\b0\par}
+{\pard FileVista 支持 20+ 种文件格式的预览，包括但不限于：\par}
+{\pard PDF、Markdown、JSON、代码、DOCX、PPTX、XLSX、EPUB、RTF、ZIP、CSV 等。\par}
+
+{\pard\brdrb\brdrs\brdrw10\brsp100 \par}
+
+{\pard\qc\i\fs18 所有处理均在客户端完成，文件不会离开您的设备。\i0\par}
+{\pard\qc\b\fs24 🚀 零上传 · 纯浏览器端 · 隐私优先\b0\par}
+}`,
+  },
 };
 
 // ── Binary demo files (fetched from public/demo/ at runtime) ──

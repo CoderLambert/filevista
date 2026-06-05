@@ -113,6 +113,7 @@ export const PREVIEW_SUPPORT_MATRIX: Record<FileType, PreviewSupportMeta> = {
     legacyRenderer: "supported",
     pluginRenderer: "supported",
     pluginId: "builtin.rtf",
+    note: "使用 rtf.js 富文本渲染 + DOMPurify 安全清洗 + iframe sandbox 隔离，复杂/损坏内容自动降级为文本预览。",
   },
 
   zip: {
