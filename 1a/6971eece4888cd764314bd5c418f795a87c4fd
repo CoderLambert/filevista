@@ -1,0 +1,36 @@
+src/components/file-preview/PluginPreviewRenderer.tsx
+  s_ce60bb6dfaf33e::t_0b5daae2930018 3,11-25,43-44,54-61,68-73,76,83-84,86-92,112-122,126
+src/components/file-preview/PreviewFallback.tsx
+  s_ce60bb6dfaf33e::t_9e580de0878558 1-192
+src/components/file-preview/preview-adapters/__tests__/UnsupportedPluginPreview.test.tsx
+  s_ce60bb6dfaf33e::t_890705299ef7bc 146
+  s_ce60bb6dfaf33e::t_74bb2a28f6aa52 6,14-21,35-64,68-77,91-93,96-97,102,107-108,111-112,115-123,127-129,133-135,138-139,141,143
+  s_ce60bb6dfaf33e::t_014648c6edbc89 137,145,147-149
+  s_ce60bb6dfaf33e::t_28c1abe12f4462 3
+  s_ce60bb6dfaf33e::t_43ebd05893d2cc 67,84,86-87
+  s_ce60bb6dfaf33e::t_f0d4b25e58d02b 8-10,23,26
+docs/stage-18/filevista-stage-18-2-error-boundary-fallback-implementation.md
+  s_ce60bb6dfaf33e::t_df2c854867d31c 1-396
+src/components/file-preview/PreviewLoading.tsx
+  s_ce60bb6dfaf33e::t_fa417cd58fc697 1-18
+src/components/file-preview/preview-adapters/UnsupportedPluginPreview.tsx
+  s_ce60bb6dfaf33e::t_acb7b3a8f2f88b 3-4,6-16,22,31,40,44-45,48-60
+src/components/file-preview/PreviewErrorBoundary.tsx
+  s_ce60bb6dfaf33e::t_4221e932dc57fb 1-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "1a6971eece4888cd764314bd5c418f795a87c4fd",
+  "prompts": {},
+  "sessions": {
+    "s_ce60bb6dfaf33e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e9e0476-d44a-403b-88f3-a0ca39ca6f45",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
