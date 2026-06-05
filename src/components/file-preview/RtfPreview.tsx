@@ -4,9 +4,13 @@ import { useState, useEffect } from "react";
 import { Eye, Code2 } from "lucide-react";
 import DOMPurify from "dompurify";
 import { ShikiSourceView } from "./ShikiSourceView";
+import { loadRtfJsGlobals } from "./rtf/load-rtfjs";
 
 interface RtfPreviewProps {
-  content: string;
+  /** Original RTF bytes (ArrayBuffer) — must not be re-encoded. */
+  buffer: ArrayBuffer;
+  /** Raw RTF text string (for source view and text-extraction fallback). */
+  rawText: string;
   fileName: string;
 }
 
@@ -72,24 +76,22 @@ function extractRtfText(rtf: string): string[] {
   return paragraphs;
 }
 
-// ── RTF → HTML via rtf.js + DOMPurify ──
+// ── RTF → HTML via rtf.js (bundle) + DOMPurify ──
 
 /**
- * Convert RTF raw text string to sanitized HTML string.
- * Uses rtf.js to parse and render RTF as HTML, then DOMPurify to sanitize.
- * Returns null if parsing or rendering fails.
+ * Convert RTF ArrayBuffer to sanitized HTML string.
+ * Uses the official rtf.js bundle (loaded via dynamic script tags)
+ * to parse and render RTF as DOM elements, then DOMPurify to sanitize.
+ *
+ * @returns `{ html: string }` on success, or `{ error: string }` on failure.
  */
 async function buildRtfHtml(
-  rtfText: string,
+  buffer: ArrayBuffer,
 ): Promise<{ html: string | null; error: string | null }> {
   try {
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(rtfText);
-    const arrayBuffer = bytes.buffer as ArrayBuffer;
+    const { RTFJS } = await loadRtfJsGlobals();
 
-    const RTFJS = await import("rtf.js");
-    const doc = new RTFJS.Document(arrayBuffer, {});
-
+    const doc = new RTFJS.Document(buffer, {});
     const elements = await doc.render();
 
     // Serialize elements to HTML string
@@ -101,24 +103,49 @@ async function buildRtfHtml(
 
     // Sanitize with DOMPurify — strip scripts, event handlers, and dangerous URLs
     const sanitized = DOMPurify.sanitize(rawHtml, {
-      USE_PROFILES: { html: true },
-      ADD_ATTR: ["style", "class", "colspan", "rowspan"],
-      ALLOWED_TAGS: [
-        "p", "br", "div", "span", "b", "strong", "i", "em", "u", "s",
-        "sub", "sup", "ul", "ol", "li", "table", "thead", "tbody", "tr",
-        "th", "td", "h1", "h2", "h3", "h4", "h5", "h6", "a", "img",
-        "blockquote", "pre", "code", "hr", "font", "center", "strike",
+      USE_PROFILES: {
+        html: true,
+        svg: true,
+        svgFilters: true,
+      },
+      FORBID_TAGS: [
+        "script",
+        "iframe",
+        "object",
+        "embed",
+        "form",
+        "input",
+        "button",
       ],
       ALLOWED_ATTR: [
-        "href", "src", "alt", "title", "width", "height", "colspan",
-        "rowspan", "align", "valign", "border", "cellpadding", "cellspacing",
-        "class", "style",
+        "href",
+        "src",
+        "alt",
+        "title",
+        "width",
+        "height",
+        "colspan",
+        "rowspan",
+        "align",
+        "valign",
+        "border",
+        "cellpadding",
+        "cellspacing",
+        "class",
+        "style",
       ],
     });
 
     return { html: sanitized, error: null };
   } catch (err) {
+    console.error("[FileVista][RTF] rich render failed:", err);
+
     const message = err instanceof Error ? err.message : String(err);
+
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[FileVista][RTF] fallback reason:", message);
+    }
+
     return { html: null, error: message };
   }
 }
@@ -172,7 +199,7 @@ ${html}
 
 // ── RtfPreview component ──
 
-export function RtfPreview({ content, fileName }: RtfPreviewProps) {
+export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
   const [iframeHtml, setIframeHtml] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
@@ -180,7 +207,7 @@ export function RtfPreview({ content, fileName }: RtfPreviewProps) {
   useEffect(() => {
     let cancelled = false;
 
-    buildRtfHtml(content).then((result) => {
+    buildRtfHtml(buffer).then((result) => {
       if (!cancelled) {
         if (result.html !== null) {
           setIframeHtml(buildIframeDoc(result.html));
@@ -195,9 +222,9 @@ export function RtfPreview({ content, fileName }: RtfPreviewProps) {
     return () => {
       cancelled = true;
     };
-  }, [content]);
+  }, [buffer]);
 
-  const paragraphs = extractRtfText(content);
+  const paragraphs = extractRtfText(rawText);
 
   return (
     <div className="flex flex-col h-full">
@@ -246,7 +273,7 @@ export function RtfPreview({ content, fileName }: RtfPreviewProps) {
                 {iframeHtml ? (
                   <iframe
                     srcDoc={iframeHtml}
-                    sandbox="allow-same-origin"
+                    sandbox=""
                     className="w-full border-0"
                     style={{ minHeight: "400px" }}
                     title={`Preview of ${fileName}`}
@@ -284,7 +311,7 @@ export function RtfPreview({ content, fileName }: RtfPreviewProps) {
             </div>
           </div>
         ) : (
-          <ShikiSourceView content={content} fileName={fileName} language="ini" />
+          <ShikiSourceView content={rawText} fileName={fileName} language="ini" />
         )}
       </div>
     </div>
