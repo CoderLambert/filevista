@@ -1,0 +1,32 @@
+README.md
+  s_38b32f803b2340::t_75bf13ed3b77df 36
+src/components/file-preview/demos.ts
+  s_38b32f803b2340::t_bb3d7304eebc1b 361-376,378-417
+  s_38b32f803b2340::t_d2a4867c291125 377
+src/types/rtf-js.d.ts
+  s_38b32f803b2340::t_32fa377a7351d4 1-24
+package.json
+  s_38b32f803b2340::t_ae14af4102303a 69,92,108
+bun.lock
+  ai_agent 53,76,92,814-815,836-837,1064-1065,1192-1193,2022
+src/components/file-preview/RtfPreview.tsx
+  s_38b32f803b2340::t_b3b0763b26d970 3,5,15-16,75-174,177-199,236-238,243-281
+src/components/file-preview/support-status.ts
+  s_38b32f803b2340::t_98f8b5006e6f96 116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "e28d90d793f9883f3de209f8ef7c3e20e93e6a3b",
+  "prompts": {},
+  "sessions": {
+    "s_38b32f803b2340": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "736c3ce0-1008-45fa-992b-e505e74f60db",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
