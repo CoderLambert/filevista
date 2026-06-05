@@ -3,15 +3,6 @@
 import type { FileInfo } from "../utils";
 import { PreviewFallback } from "../PreviewFallback";
 
-/**
- * MIME types for legacy office formats.
- */
-const LEGACY_OFFICE_MIME_TYPES: Record<string, string> = {
-  doc: "application/msword",
-  ppt: "application/vnd.ms-powerpoint",
-  xls: "application/vnd.ms-excel",
-};
-
 export interface UnsupportedPluginPreviewProps {
   file: FileInfo;
   title?: string;
@@ -41,12 +32,9 @@ export function UnsupportedPluginPreview({
   title,
   description,
 }: UnsupportedPluginPreviewProps) {
-  const legacyMime = LEGACY_OFFICE_MIME_TYPES[file.fileType];
-  const isLegacy = Boolean(legacyMime);
-
   return (
     <PreviewFallback
-      kind={isLegacy ? "unsupported" : "unsupported"}
+      kind="unsupported"
       file={file}
       title={
         title ?? UNSUPPORTED_TITLES[file.fileType] ?? "Preview Not Available"
