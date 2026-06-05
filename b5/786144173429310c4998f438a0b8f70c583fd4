@@ -1,0 +1,19 @@
+src/components/file-preview/rtf/load-rtfjs.ts
+  s_38b32f803b2340::t_2b3f9867611664 4,6-7,9-11,14-16,58-69,71-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "b5786144173429310c4998f438a0b8f70c583fd4",
+  "prompts": {},
+  "sessions": {
+    "s_38b32f803b2340": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "736c3ce0-1008-45fa-992b-e505e74f60db",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
