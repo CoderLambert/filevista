@@ -228,9 +228,16 @@ export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* View mode toggle bar */}
-      <div className="flex items-center border-b bg-muted/20">
-        <div className="flex items-center px-2 py-1 gap-0.5">
+      {/* Top bar: file info + view mode toggle */}
+      <div className="flex items-center justify-between border-b bg-muted/20 px-3 py-1.5 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm">📃</span>
+          <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+            {fileName}
+          </span>
+          <span className="text-[10px] text-muted-foreground/60">RTF</span>
+        </div>
+        <div className="flex items-center gap-0.5">
           <button
             onClick={() => setViewMode("preview")}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
@@ -256,60 +263,50 @@ export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content area — fills remaining height */}
       <div className="flex-1 min-h-0">
         {viewMode === "preview" ? (
-          <div className="overflow-auto h-full p-6">
-            <div className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-sm border">
-              {/* File info header */}
-              <div className="flex items-center gap-2 px-6 py-3 border-b">
-                <span className="text-sm">📃</span>
-                <span className="text-xs text-muted-foreground">{fileName}</span>
-                <span className="text-[10px] text-muted-foreground ml-auto">RTF Format</span>
-              </div>
-
-              {/* Rendered content */}
-              <div className="p-6 sm:p-8">
-                {iframeHtml ? (
-                  <iframe
-                    srcDoc={iframeHtml}
-                    sandbox=""
-                    className="w-full border-0"
-                    style={{ minHeight: "400px" }}
-                    title={`Preview of ${fileName}`}
-                  />
-                ) : renderError ? (
-                  /* Fallback: text extraction when rtf.js fails */
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 mb-3 text-amber-600 dark:text-amber-400">
-                      <span className="text-xs">⚠️</span>
-                      <span className="text-xs">
-                        富文本渲染不可用，已降级为纯文本预览
-                      </span>
-                    </div>
-                    {paragraphs.map((para, i) => (
-                      <p
-                        key={i}
-                        className="text-sm leading-relaxed text-gray-700 dark:text-gray-300"
-                      >
-                        {para}
-                      </p>
-                    ))}
-                    {paragraphs.length === 0 && (
-                      <p className="text-muted-foreground text-sm">
-                        无法从文件中提取文本内容。
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  /* Still loading / processing */
-                  <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                    正在解析 RTF...
-                  </div>
-                )}
+          iframeHtml ? (
+            <iframe
+              srcDoc={iframeHtml}
+              sandbox=""
+              className="w-full h-full border-0"
+              style={{ minHeight: "500px" }}
+              title={`Preview of ${fileName}`}
+            />
+          ) : renderError ? (
+            /* Fallback: text extraction when rtf.js fails */
+            <div className="overflow-auto h-full p-6">
+              <div className="max-w-3xl mx-auto">
+                <div className="flex items-center gap-2 mb-4 text-amber-600 dark:text-amber-400">
+                  <span className="text-sm">⚠️</span>
+                  <span className="text-xs">
+                    富文本渲染不可用，已降级为纯文本预览
+                  </span>
+                </div>
+                <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border p-6 space-y-3">
+                  {paragraphs.map((para, i) => (
+                    <p
+                      key={i}
+                      className="text-sm leading-relaxed text-gray-700 dark:text-gray-300"
+                    >
+                      {para}
+                    </p>
+                  ))}
+                  {paragraphs.length === 0 && (
+                    <p className="text-muted-foreground text-sm">
+                      无法从文件中提取文本内容。
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* Still loading / processing */
+            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+              正在解析 RTF...
+            </div>
+          )
         ) : (
           <ShikiSourceView content={rawText} fileName={fileName} language="ini" />
         )}
