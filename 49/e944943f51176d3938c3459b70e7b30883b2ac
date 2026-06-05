@@ -1,0 +1,28 @@
+src/components/file-preview/RtfPreview.tsx
+  s_38b32f803b2340::t_8efaa4a156475a 7,10-13,79,82-86,89,92,94,106-118,121-135,141-142,144-148,202,210,225,227,276,314
+src/components/file-preview/preview-adapters/RtfPreviewAdapter.tsx
+  s_38b32f803b2340::t_9f80f12dfa0a97 19
+  s_38b32f803b2340::t_6fb9c465dd49cc 3,5,11-18,20-48,54,66-83
+src/components/file-preview/rtf/load-rtfjs.ts
+  s_38b32f803b2340::t_0808e668282535 16-21,32-33
+  s_38b32f803b2340::t_2eafd1d70a0584 1-15,30,34-117
+  s_38b32f803b2340::t_22983452cf1805 22-29,31
+src/types/assets.d.ts
+  s_38b32f803b2340::t_8c0323ad281fb7 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "49e944943f51176d3938c3459b70e7b30883b2ac",
+  "prompts": {},
+  "sessions": {
+    "s_38b32f803b2340": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "736c3ce0-1008-45fa-992b-e505e74f60db",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
