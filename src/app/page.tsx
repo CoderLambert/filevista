@@ -31,8 +31,13 @@ import {
   base64ToUint8Array,
 } from "@/components/file-preview/utils";
 import { PluginPreviewRenderer } from "@/components/file-preview/PluginPreviewRenderer";
+import { LargeFileGate } from "@/components/file-preview/LargeFileGate";
 import { DEMO_FILES, fetchBinaryDemoFiles } from "@/components/file-preview/demos";
-import { processRemoteUrl } from "@/components/file-preview/remote-url";
+import {
+  processRemoteUrl,
+  RemoteUrlError,
+  type RemoteLoadProgress,
+} from "@/components/file-preview/remote-url";
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
   pdf: "📄",
@@ -68,6 +73,11 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [remoteUrl, setRemoteUrl] = useState(DEFAULT_REMOTE_URL);
   const [loadingRemoteUrl, setLoadingRemoteUrl] = useState(false);
+  const [remoteProgress, setRemoteProgress] = useState<RemoteLoadProgress | null>(null);
+  const remoteAbortRef = useRef<AbortController | null>(null);
+  const [previewConfirmedFileIds, setPreviewConfirmedFileIds] = useState<Set<string>>(
+    () => new Set()
+  );
 
   const activeFile = files.find((f) => f.id === activeFileId) || null;
 
@@ -195,15 +205,22 @@ export default function Home() {
     }
 
     const currentUrl = remoteUrl.trim();
+    const controller = new AbortController();
 
+    remoteAbortRef.current = controller;
+    setRemoteProgress(null);
     setLoadingRemoteUrl(true);
 
     try {
-      const info = await processRemoteUrl(currentUrl);
+      const info = await processRemoteUrl(currentUrl, {
+        signal: controller.signal,
+        onProgress: setRemoteProgress,
+      });
 
       setFiles((prev) => [...prev, info]);
       setActiveFileId(info.id);
       setRemoteUrl("");
+      setRemoteProgress(null);
 
       toast.success(`Loaded remote file: ${info.name}`);
 
@@ -213,6 +230,11 @@ export default function Home() {
         );
       }
     } catch (err) {
+      if (err instanceof RemoteUrlError && err.code === "ABORTED") {
+        toast.info(err.message);
+        return;
+      }
+
       const message =
         err instanceof Error ? err.message : "Failed to load remote URL";
 
@@ -226,9 +248,18 @@ export default function Home() {
         },
       });
     } finally {
+      if (remoteAbortRef.current === controller) {
+        remoteAbortRef.current = null;
+      }
+
       setLoadingRemoteUrl(false);
+      setRemoteProgress(null);
     }
   }, [remoteUrl]);
+
+  const cancelRemoteLoad = useCallback(() => {
+    remoteAbortRef.current?.abort();
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -376,16 +407,16 @@ export default function Home() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={loadRemoteUrl}
-                disabled={loadingRemoteUrl || !remoteUrl.trim()}
+                onClick={loadingRemoteUrl ? cancelRemoteLoad : loadRemoteUrl}
+                disabled={!loadingRemoteUrl && !remoteUrl.trim()}
                 className="h-9 shrink-0 gap-1.5 text-xs"
               >
                 {loadingRemoteUrl ? (
-                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
+                  "Cancel"
                 ) : (
                   <Link2 className="h-3.5 w-3.5" />
                 )}
-                URL
+                {loadingRemoteUrl ? "Cancel" : "URL"}
               </Button>
               <Button
                 variant="ghost"
@@ -399,6 +430,30 @@ export default function Home() {
                 Open
               </Button>
             </div>
+
+            {loadingRemoteUrl && remoteProgress && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span>Loading remote file...</span>
+                  <span>
+                    {remoteProgress.total
+                      ? `${formatFileSize(remoteProgress.received)} / ${formatFileSize(remoteProgress.total)} (${Math.round((remoteProgress.percent ?? 0) * 100)}%)`
+                      : `${formatFileSize(remoteProgress.received)} downloaded`}
+                  </span>
+                </div>
+                {remoteProgress.percent !== null && (
+                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{
+                        width: `${Math.min(100, Math.round(remoteProgress.percent * 100))}%`,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             <p className="text-[10px] text-muted-foreground leading-relaxed">
               Supports remote URLs when the target server allows browser CORS.
             </p>
@@ -511,12 +566,24 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Preview content — Legacy mode keeps TabCache behavior intact. */}
+              {/* Preview content — wrapped with LargeFileGate */}
               <div className="flex-1 min-h-0">
-                <PluginPreviewRenderer
+                <LargeFileGate
                   file={activeFile}
-                  showPluginDebug={process.env.NODE_ENV === "development"}
-                />
+                  confirmed={previewConfirmedFileIds.has(activeFile.id)}
+                  onConfirm={() => {
+                    setPreviewConfirmedFileIds((prev) => {
+                      const next = new Set(prev);
+                      next.add(activeFile.id);
+                      return next;
+                    });
+                  }}
+                >
+                  <PluginPreviewRenderer
+                    file={activeFile}
+                    showPluginDebug={process.env.NODE_ENV === "development"}
+                  />
+                </LargeFileGate>
               </div>
             </>
           ) : (

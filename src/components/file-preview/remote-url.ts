@@ -5,7 +5,9 @@ export type RemoteUrlErrorCode =
   | "INVALID_URL"
   | "UNSUPPORTED_PROTOCOL"
   | "NETWORK_OR_CORS"
-  | "HTTP_ERROR";
+  | "HTTP_ERROR"
+  | "ABORTED"
+  | "FILE_TOO_LARGE";
 
 export class RemoteUrlError extends Error {
   constructor(
@@ -16,6 +18,17 @@ export class RemoteUrlError extends Error {
     super(message);
     this.name = "RemoteUrlError";
   }
+}
+
+export interface RemoteLoadProgress {
+  received: number;
+  total: number | null;
+  percent: number | null;
+}
+
+export interface ProcessRemoteUrlOptions {
+  signal?: AbortSignal;
+  onProgress?: (progress: RemoteLoadProgress) => void;
 }
 
 type FileNameSource =
@@ -479,7 +492,83 @@ function resolveRemoteMimeType(input: {
   };
 }
 
-export async function processRemoteUrl(rawUrl: string): Promise<FileInfo> {
+function getContentLength(response: Response): number | null {
+  const value = response.headers.get("content-length");
+  if (!value) return null;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+async function readResponseAsArrayBufferWithProgress(
+  response: Response,
+  options: ProcessRemoteUrlOptions
+): Promise<ArrayBuffer> {
+  const total = getContentLength(response);
+
+  if (!response.body) {
+    const buffer = await response.arrayBuffer();
+    options.onProgress?.({
+      received: buffer.byteLength,
+      total,
+      percent: total ? buffer.byteLength / total : null,
+    });
+    return buffer;
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+
+  try {
+    while (true) {
+      if (options.signal?.aborted) {
+        try {
+          await reader.cancel();
+        } catch {
+          // ignore
+        }
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
+
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      if (value) {
+        chunks.push(value);
+        received += value.byteLength;
+
+        options.onProgress?.({
+          received,
+          total,
+          percent: total ? received / total : null,
+        });
+      }
+    }
+  } finally {
+    try {
+      reader.releaseLock();
+    } catch {
+      // ignore
+    }
+  }
+
+  const merged = new Uint8Array(received);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return merged.buffer;
+}
+
+export async function processRemoteUrl(
+  rawUrl: string,
+  options: ProcessRemoteUrlOptions = {}
+): Promise<FileInfo> {
   const trimmedUrl = rawUrl.trim();
 
   if (!trimmedUrl) {
@@ -505,8 +594,18 @@ export async function processRemoteUrl(rawUrl: string): Promise<FileInfo> {
   let response: Response;
 
   try {
-    response = await fetch(parsedUrl.toString());
-  } catch {
+    response = await fetch(parsedUrl.toString(), {
+      signal: options.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new RemoteUrlError(
+        "ABORTED",
+        "Remote file loading cancelled",
+        parsedUrl.toString()
+      );
+    }
+
     throw new RemoteUrlError(
       "NETWORK_OR_CORS",
       "无法加载远程文件。可能是 URL 不可访问，或目标服务器未允许浏览器跨域访问。",
@@ -530,7 +629,7 @@ export async function processRemoteUrl(rawUrl: string): Promise<FileInfo> {
     contentDisposition
   );
 
-  const buffer = await response.arrayBuffer();
+  const buffer = await readResponseAsArrayBufferWithProgress(response, options);
 
   const magicResult = sniffMagic(buffer);
 

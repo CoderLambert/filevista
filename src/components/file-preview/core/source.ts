@@ -1,21 +1,36 @@
 import type { PreviewSource } from "./types";
 
+export interface ReadSourceOptions {
+  signal?: AbortSignal;
+}
+
 export async function readSourceAsArrayBuffer(
-  source: PreviewSource
+  source: PreviewSource,
+  options: ReadSourceOptions = {}
 ): Promise<ArrayBuffer> {
   switch (source.kind) {
     case "file":
+      if (options.signal?.aborted) {
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
       return source.file.arrayBuffer();
 
     case "blob":
+      if (options.signal?.aborted) {
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
       return source.blob.arrayBuffer();
 
     case "arrayBuffer":
+      if (options.signal?.aborted) {
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
       return source.buffer;
 
     case "url": {
       const response = await fetch(source.url, {
         headers: source.headers,
+        signal: options.signal,
       });
 
       if (!response.ok) {
@@ -31,21 +46,32 @@ export async function readSourceAsArrayBuffer(
 }
 
 export async function readSourceAsText(
-  source: PreviewSource
+  source: PreviewSource,
+  options: ReadSourceOptions = {}
 ): Promise<string> {
   switch (source.kind) {
     case "file":
+      if (options.signal?.aborted) {
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
       return source.file.text();
 
     case "blob":
+      if (options.signal?.aborted) {
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
       return source.blob.text();
 
     case "arrayBuffer":
+      if (options.signal?.aborted) {
+        throw new DOMException("The operation was aborted.", "AbortError");
+      }
       return new TextDecoder("utf-8").decode(source.buffer);
 
     case "url": {
       const response = await fetch(source.url, {
         headers: source.headers,
+        signal: options.signal,
       });
 
       if (!response.ok) {
@@ -61,9 +87,10 @@ export async function readSourceAsText(
 }
 
 export async function readSourceAsBase64(
-  source: PreviewSource
+  source: PreviewSource,
+  options: ReadSourceOptions = {}
 ): Promise<string> {
-  const buffer = await readSourceAsArrayBuffer(source);
+  const buffer = await readSourceAsArrayBuffer(source, options);
   const bytes = new Uint8Array(buffer);
 
   let binary = "";
