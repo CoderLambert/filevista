@@ -1,0 +1,19 @@
+docs/records/feat-preview-error-boundary-fallback.md
+  s_ce60bb6dfaf33e::t_d5da39a45fb021 1-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "4b5ccf1c1d34a365689d5d09e22f3b772aedd137",
+  "prompts": {},
+  "sessions": {
+    "s_ce60bb6dfaf33e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e9e0476-d44a-403b-88f3-a0ca39ca6f45",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
