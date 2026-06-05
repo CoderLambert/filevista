@@ -199,6 +199,10 @@ export default function Home() {
   }, []);
 
   const loadRemoteUrl = useCallback(async () => {
+    if (loadingRemoteUrl) {
+      return;
+    }
+
     if (!remoteUrl.trim()) {
       toast.error("Remote URL is empty");
       return;
@@ -255,7 +259,7 @@ export default function Home() {
       setLoadingRemoteUrl(false);
       setRemoteProgress(null);
     }
-  }, [remoteUrl]);
+  }, [remoteUrl, loadingRemoteUrl]);
 
   const cancelRemoteLoad = useCallback(() => {
     remoteAbortRef.current?.abort();
@@ -398,7 +402,11 @@ export default function Home() {
                 onChange={(e) => setRemoteUrl(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    loadRemoteUrl();
+                    if (loadingRemoteUrl) {
+                      cancelRemoteLoad();
+                    } else {
+                      loadRemoteUrl();
+                    }
                   }
                 }}
                 placeholder="Paste remote file URL"
@@ -414,9 +422,11 @@ export default function Home() {
                 {loadingRemoteUrl ? (
                   "Cancel"
                 ) : (
-                  <Link2 className="h-3.5 w-3.5" />
+                  <>
+                    <Link2 className="h-3.5 w-3.5" />
+                    URL
+                  </>
                 )}
-                {loadingRemoteUrl ? "Cancel" : "URL"}
               </Button>
               <Button
                 variant="ghost"

@@ -592,12 +592,63 @@ export async function processRemoteUrl(
   }
 
   let response: Response;
+  let buffer: ArrayBuffer;
 
   try {
     response = await fetch(parsedUrl.toString(), {
       signal: options.signal,
     });
+
+    if (!response.ok) {
+      throw new RemoteUrlError(
+        "HTTP_ERROR",
+        `远程文件请求失败：HTTP ${response.status}`,
+        parsedUrl.toString()
+      );
+    }
+
+    const headerMimeType = getHeaderMimeType(response);
+    const contentDisposition = response.headers.get("content-disposition");
+
+    const fileNameResult = getRemoteFileName(
+      parsedUrl.toString(),
+      contentDisposition
+    );
+
+    buffer = await readResponseAsArrayBufferWithProgress(response, options);
+
+    const magicResult = sniffMagic(buffer);
+
+    const containerResult =
+      magicResult.ext === "zip" ? await sniffZipContainer(buffer) : null;
+
+    const mimeResult = resolveRemoteMimeType({
+      fileName: fileNameResult.fileName,
+      headerMimeType,
+      magicMimeType: magicResult.mimeType,
+      containerMimeType: containerResult?.mimeType ?? null,
+    });
+
+    const fileType = detectFileType(fileNameResult.fileName, mimeResult.mimeType);
+
+    return {
+      id: generateId(),
+      name: fileNameResult.fileName,
+      size: buffer.byteLength,
+      type: mimeResult.mimeType,
+      fileType,
+      source: {
+        kind: "arrayBuffer",
+        buffer,
+        name: fileNameResult.fileName,
+        mimeType: mimeResult.mimeType,
+      },
+    };
   } catch (error) {
+    if (error instanceof RemoteUrlError) {
+      throw error;
+    }
+
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new RemoteUrlError(
         "ABORTED",
@@ -612,50 +663,4 @@ export async function processRemoteUrl(
       parsedUrl.toString()
     );
   }
-
-  if (!response.ok) {
-    throw new RemoteUrlError(
-      "HTTP_ERROR",
-      `远程文件请求失败：HTTP ${response.status}`,
-      parsedUrl.toString()
-    );
-  }
-
-  const headerMimeType = getHeaderMimeType(response);
-  const contentDisposition = response.headers.get("content-disposition");
-
-  const fileNameResult = getRemoteFileName(
-    parsedUrl.toString(),
-    contentDisposition
-  );
-
-  const buffer = await readResponseAsArrayBufferWithProgress(response, options);
-
-  const magicResult = sniffMagic(buffer);
-
-  const containerResult =
-    magicResult.ext === "zip" ? await sniffZipContainer(buffer) : null;
-
-  const mimeResult = resolveRemoteMimeType({
-    fileName: fileNameResult.fileName,
-    headerMimeType,
-    magicMimeType: magicResult.mimeType,
-    containerMimeType: containerResult?.mimeType ?? null,
-  });
-
-  const fileType = detectFileType(fileNameResult.fileName, mimeResult.mimeType);
-
-  return {
-    id: generateId(),
-    name: fileNameResult.fileName,
-    size: buffer.byteLength,
-    type: mimeResult.mimeType,
-    fileType,
-    source: {
-      kind: "arrayBuffer",
-      buffer,
-      name: fileNameResult.fileName,
-      mimeType: mimeResult.mimeType,
-    },
-  };
 }
