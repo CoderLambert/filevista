@@ -1,0 +1,45 @@
+src/components/file-preview/preview-adapters/ZipPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_92d082011f8f29 6-7,13,18-21
+src/components/file-preview/preview-adapters/SvgPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_c90dc416f6d10e 6-7,13,18-21
+src/components/file-preview/preview-adapters/RtfPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_061438457bd0cf 6-7,13,18-21
+src/components/file-preview/preview-adapters/EpubPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_edd425f10374bd 6-7,13,18-21
+src/components/file-preview/preview-adapters/VideoPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_70e5fd160916f9 6-7,16,21-24
+src/components/file-preview/preview-adapters/HtmlPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_b671325a442b47 6-7,13,18-21
+src/components/file-preview/preview-adapters/SourceCodePreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_cc8bcf31a66ddc 6-7,13,18-21
+src/components/file-preview/PreviewErrorBoundary.tsx
+  s_ce60bb6dfaf33e::t_d9438324239d35 5,61-65,68
+src/components/file-preview/preview-adapters/CsvPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_1bafb91e6c2bcb 6-7,13,18-21
+src/components/file-preview/preview-adapters/TextPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_1ddc68e933d535 6-7,13,18-21
+src/components/file-preview/PreviewFallback.tsx
+  s_ce60bb6dfaf33e::t_a122c5956fd10b 104
+src/components/file-preview/preview-adapters/MarkdownPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_015a6f57968dfc 6-7,13,18-21
+src/components/file-preview/preview-adapters/ImagePreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_c1862778b876bc 6-7,16,21-24
+src/components/file-preview/preview-adapters/AudioPreviewAdapter.tsx
+  s_ce60bb6dfaf33e::t_05b31f23a7c9e6 6-7,16,21-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "5ebe33334e7e2908d207ac68d06289f4affdab55",
+  "prompts": {},
+  "sessions": {
+    "s_ce60bb6dfaf33e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e9e0476-d44a-403b-88f3-a0ca39ca6f45",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
