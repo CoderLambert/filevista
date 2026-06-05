@@ -3,20 +3,22 @@
 import type { FileInfo } from "../utils";
 import { useSourceText } from "../hooks/useSourceText";
 import { CsvPreview } from "../CsvPreview";
-import { UnsupportedPluginPreview } from "./UnsupportedPluginPreview";
+import { PreviewFallback } from "../PreviewFallback";
+import { PreviewLoading } from "../PreviewLoading";
 
 export default function CsvPreviewAdapter({ file }: { file: FileInfo }) {
   const { content, loading, error } = useSourceText(file.source);
 
   if (loading) {
-    return <div className="p-4 text-sm text-muted-foreground">Loading...</div>;
+    return <PreviewLoading label="Loading CSV..." />;
   }
 
   if (error || content === null) {
     return (
-      <UnsupportedPluginPreview
-        fileType={file.fileType}
-        fileName={file.name}
+      <PreviewFallback
+        kind="source-read-failed"
+        file={file}
+        error={error}
         title="Failed to read file"
         description={error?.message ?? "Unable to read file source."}
       />

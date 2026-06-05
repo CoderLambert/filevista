@@ -2,7 +2,7 @@
 
 import React from "react";
 import type { FileInfo } from "./utils";
-import { PreviewFallback } from "./PreviewFallback";
+import { PreviewFallback, type PreviewFallbackKind } from "./PreviewFallback";
 
 interface PreviewErrorBoundaryProps {
   file: FileInfo;
@@ -58,9 +58,14 @@ export class PreviewErrorBoundary extends React.Component<
 
   render() {
     if (this.state.error) {
+      const kind: PreviewFallbackKind =
+        this.state.error.name === "PreviewPluginLoadError"
+          ? "plugin-load-failed"
+          : "render-failed";
+
       return (
         <PreviewFallback
-          kind="render-failed"
+          kind={kind}
           file={this.props.file}
           error={this.state.error}
           pluginId={this.props.pluginId}

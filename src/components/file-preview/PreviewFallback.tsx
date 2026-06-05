@@ -101,7 +101,7 @@ function PreviewErrorDetails({
         </button>
       )}
 
-      {(expanded || isDev) && (
+      {expanded && (
         <div className="relative">
           <pre className="rounded-md bg-muted p-2 text-[10px] text-left overflow-auto max-h-32 whitespace-pre-wrap break-all">
             {pluginName && `Plugin: ${pluginName}\n`}

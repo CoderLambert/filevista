@@ -3,20 +3,22 @@
 import type { FileInfo } from "../utils";
 import { useSourceBase64 } from "../hooks/useSourceBase64";
 import { EpubPreview } from "../EpubPreview";
-import { UnsupportedPluginPreview } from "./UnsupportedPluginPreview";
+import { PreviewFallback } from "../PreviewFallback";
+import { PreviewLoading } from "../PreviewLoading";
 
 export default function EpubPreviewAdapter({ file }: { file: FileInfo }) {
   const { content, loading, error } = useSourceBase64(file.source);
 
   if (loading) {
-    return <div className="p-4 text-sm text-muted-foreground">Loading EPUB...</div>;
+    return <PreviewLoading label="Loading EPUB..." />;
   }
 
   if (error || !content) {
     return (
-      <UnsupportedPluginPreview
-        fileType={file.fileType}
-        fileName={file.name}
+      <PreviewFallback
+        kind="source-read-failed"
+        file={file}
+        error={error}
         title="Failed to read EPUB"
         description={error?.message ?? "Unable to read EPUB source."}
       />
