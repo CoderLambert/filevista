@@ -1,0 +1,19 @@
+docs/records/feat-large-file-policy-and-remote-loading-controls.md
+  s_ce60bb6dfaf33e::t_3d2668205f9828 1-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "13b4e4d04535d231063933c8a5a40edba385140a",
+  "prompts": {},
+  "sessions": {
+    "s_ce60bb6dfaf33e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9e9e0476-d44a-403b-88f3-a0ca39ca6f45",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
