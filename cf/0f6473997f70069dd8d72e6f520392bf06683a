@@ -1,0 +1,19 @@
+docs/records/feat-upgrade-rtf-preview-to-rich-rendering.md
+  s_38b32f803b2340::t_a47e38e67816db 11-15,17,20,22-23,26-29,33,37,40,42-43,45-46,49-50,54-57,62-72,77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "cf0f6473997f70069dd8d72e6f520392bf06683a",
+  "prompts": {},
+  "sessions": {
+    "s_38b32f803b2340": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "736c3ce0-1008-45fa-992b-e505e74f60db",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
