@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useMemo, useRef } from "react";
+import { lazy, Suspense, useMemo, useRef, useState, useCallback } from "react";
 import type { ComponentType, LazyExoticComponent } from "react";
 import type { FileInfo } from "./utils";
 import type { PreviewPlugin } from "./core/plugin";
@@ -8,17 +8,21 @@ import type { PreviewPluginRegistry } from "./core/registry";
 import { createBuiltinPreviewRegistry } from "./plugins/builtin-plugins";
 import { UnsupportedPluginPreview } from "./preview-adapters/UnsupportedPluginPreview";
 import { getPreviewSupportMeta } from "./support-status";
-import { LargeFileHint } from "./LargeFileHint";
+import { PreviewErrorBoundary } from "./PreviewErrorBoundary";
+import { PreviewLoading } from "./PreviewLoading";
 
-function PreviewLoading() {
-  return (
-    <div className="flex items-center justify-center h-full min-h-[300px]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-        <p className="text-xs text-muted-foreground">Loading preview...</p>
-      </div>
-    </div>
-  );
+/**
+ * Error thrown when a preview plugin chunk fails to load.
+ */
+class PreviewPluginLoadError extends Error {
+  constructor(
+    public pluginId: string,
+    public pluginName: string,
+    public cause: unknown,
+  ) {
+    super(`Failed to load preview plugin: ${pluginName}`);
+    this.name = "PreviewPluginLoadError";
+  }
 }
 
 export interface PluginPreviewRendererProps {
@@ -36,6 +40,8 @@ export function PluginPreviewRenderer({
     new WeakMap<PreviewPlugin, LazyExoticComponent<ComponentType<{ file: FileInfo }>>>()
   );
 
+  const [retryKey, setRetryKey] = useState(0);
+
   const finalRegistry = useMemo(() => {
     return registry ?? createBuiltinPreviewRegistry();
   }, [registry]);
@@ -45,57 +51,45 @@ export function PluginPreviewRenderer({
     [finalRegistry, file]
   );
 
+  const handleRetry = useCallback(() => {
+    if (plugin) {
+      componentCache.current.delete(plugin);
+    }
+
+    setRetryKey((value) => value + 1);
+  }, [plugin]);
+
   const PreviewComponent = useMemo(() => {
     if (!plugin) return null;
 
     const cached = componentCache.current.get(plugin);
     if (cached) return cached;
 
-    const component = lazy(plugin.load);
+    const component = lazy(() =>
+      plugin.load().catch((error) => {
+        throw new PreviewPluginLoadError(plugin.id, plugin.name, error);
+      }),
+    );
+
     componentCache.current.set(plugin, component);
     return component;
-  }, [plugin]);
+  }, [plugin, retryKey]);
 
   if (!PreviewComponent || !plugin) {
     const support = getPreviewSupportMeta(file.fileType);
-    const canDownloadOriginal = ["doc", "ppt", "xls"].includes(file.fileType);
-
-    if (support.status === "legacy-only") {
-      return (
-        <UnsupportedPluginPreview
-          fileType={file.fileType}
-          fileName={file.name}
-          source={file.source}
-          title="Not Migrated Yet"
-          description={`This file type (${file.fileType}) is currently only available in Legacy Renderer.`}
-        />
-      );
-    }
-
-    if (support.status === "degraded") {
-      return (
-        <UnsupportedPluginPreview
-          fileType={file.fileType}
-          fileName={canDownloadOriginal ? file.name : undefined}
-          source={canDownloadOriginal ? file.source : undefined}
-          title={undefined}
-          description={
-            support.note ??
-            `This file type (${file.fileType}) only has degraded legacy support and is not available in Plugin Renderer.`
-          }
-        />
-      );
-    }
 
     return (
       <UnsupportedPluginPreview
-        fileType={file.fileType}
-        fileName={canDownloadOriginal ? file.name : undefined}
-        source={canDownloadOriginal ? file.source : undefined}
-        title={undefined}
+        file={file}
+        title={support.status === "legacy-only" ? "Not Migrated Yet" : undefined}
         description={
-          support.note ??
-          `This file type (${file.fileType}) cannot be previewed by the plugin renderer.`
+          support.status === "legacy-only"
+            ? `This file type (${file.fileType}) is currently only available in Legacy Renderer.`
+            : support.status === "degraded"
+              ? support.note ??
+                `This file type (${file.fileType}) only has degraded legacy support and is not available in Plugin Renderer.`
+              : support.note ??
+                `This file type (${file.fileType}) cannot be previewed by the plugin renderer.`
         }
       />
     );
@@ -114,12 +108,18 @@ export function PluginPreviewRenderer({
         </div>
       )}
 
-      <LargeFileHint file={file} />
-
       <div className="flex-1 min-h-0">
-        <Suspense fallback={<PreviewLoading />}>
-          <PreviewComponent file={file} />
-        </Suspense>
+        <PreviewErrorBoundary
+          file={file}
+          pluginId={plugin.id}
+          pluginName={plugin.name}
+          resetKey={`${file.id}:${plugin.id}:${retryKey}`}
+          onRetry={handleRetry}
+        >
+          <Suspense fallback={<PreviewLoading />}>
+            <PreviewComponent file={file} />
+          </Suspense>
+        </PreviewErrorBoundary>
       </div>
     </div>
   );
