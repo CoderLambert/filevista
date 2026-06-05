@@ -1,0 +1,19 @@
+src/components/file-preview/RtfPreview.tsx
+  s_38b32f803b2340::t_f41524dac09064 231-240,266,269-301,304-309
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "e533741cf3de2c8e882e72454bfeacd6c13f3631",
+  "prompts": {},
+  "sessions": {
+    "s_38b32f803b2340": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "736c3ce0-1008-45fa-992b-e505e74f60db",
+        "model": "qwen3.6-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
