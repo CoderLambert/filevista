@@ -12,7 +12,7 @@ function createMockFile(fileType: FileType): FileInfo {
     fileType,
     content: "mock",
     url: "blob:mock",
-    source: undefined,
+    source: { kind: "blob", blob: new Blob(["mock"]) },
   };
 }
 

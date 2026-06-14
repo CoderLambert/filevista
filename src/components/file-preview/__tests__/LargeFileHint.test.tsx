@@ -14,7 +14,7 @@ function createFile(fileType: FileType, size: number): FileInfo {
     fileType,
     content: null,
     url: null,
-    source: undefined,
+    source: { kind: "blob", blob: new Blob([]) },
   };
 }
 

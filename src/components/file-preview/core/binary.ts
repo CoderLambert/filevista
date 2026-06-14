@@ -29,7 +29,7 @@ export async function readBinaryPreviewAsArrayBuffer({
 
 export async function readBinaryPreviewAsUint8Array(
   input: BinaryPreviewInput
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
   const buffer = await readBinaryPreviewAsArrayBuffer(input);
   return new Uint8Array(buffer);
 }

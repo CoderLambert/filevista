@@ -22,8 +22,9 @@ function getTextContent(node: ReactNode): string {
   if (typeof node === "number") return String(node);
   if (!node) return "";
   if (Array.isArray(node)) return node.map(getTextContent).join("");
-  if (React.isValidElement(node) && node.props.children) {
-    return getTextContent(node.props.children);
+  if (React.isValidElement(node)) {
+    const props = node.props as { children?: ReactNode };
+    if (props.children) return getTextContent(props.children);
   }
   return "";
 }
@@ -41,7 +42,7 @@ function ShikiPreBlock({ children, ...rest }: React.HTMLAttributes<HTMLPreElemen
   const language = langMatch ? langMatch[1] : "";
 
   const codeText = codeElement && React.isValidElement(codeElement)
-    ? getTextContent(codeElement.props.children).replace(/\n$/, "")
+    ? getTextContent((codeElement.props as { children?: ReactNode }).children).replace(/\n$/, "")
     : getTextContent(children).replace(/\n$/, "");
 
   if (!language) {

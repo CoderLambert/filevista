@@ -368,7 +368,10 @@ async function parseXlsx(
   const bytes = await readBinaryPreviewAsUint8Array(input);
 
   const workbook = new EJS.Workbook();
-  await workbook.xlsx.load(bytes);
+  // exceljs's typings ask for Node's Buffer, but its browser bundle
+  // accepts any ArrayBufferView at runtime. Pass the underlying ArrayBuffer
+  // to satisfy both layers without a structured cast.
+  await workbook.xlsx.load(bytes.buffer);
 
   const sheets: SheetData[] = [];
   const isFast = mode === "fast";

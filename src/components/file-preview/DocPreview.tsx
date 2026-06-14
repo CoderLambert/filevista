@@ -19,8 +19,7 @@ interface DocTextExtraction {
  * .doc files contain text in various encodings within the binary structure.
  * This is a best-effort extraction - complex formatting and embedded objects won't be preserved.
  */
-function extractTextFromDoc(arrayBuffer: ArrayBuffer): DocTextExtraction {
-  const bytes = new Uint8Array(arrayBuffer);
+function extractTextFromDoc(bytes: Uint8Array): DocTextExtraction {
   const paragraphs: string[] = [];
   let warning: string | undefined;
 
@@ -165,7 +164,7 @@ export function DocPreview({ content, fileName }: DocPreviewProps) {
       try {
         setLoading(true);
         const bytes = base64ToUint8Array(content);
-        const result = extractTextFromDoc(bytes.buffer);
+        const result = extractTextFromDoc(bytes);
         setExtraction(result);
       } catch (err) {
         console.error("Error extracting .doc text:", err);

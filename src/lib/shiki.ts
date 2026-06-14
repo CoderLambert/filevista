@@ -12,7 +12,7 @@
  */
 
 import { codeToHtml as shikiCodeToHtml } from "shiki";
-import type { ShikiTransformer, CodeToHtmlOptions } from "shiki";
+import type { ShikiTransformer } from "shiki";
 
 // Re-export for convenience
 export { shikiCodeToHtml };

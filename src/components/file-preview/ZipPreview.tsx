@@ -22,7 +22,7 @@ interface ZipEntry {
 async function parseZipFile(base64Content: string): Promise<ZipEntry[]> {
   const bytes = base64ToUint8Array(base64Content);
 
-  const zip = await JSZip.loadAsync(bytes.buffer);
+  const zip = await JSZip.loadAsync(bytes);
   const entries: ZipEntry[] = [];
 
   zip.forEach((relativePath, file) => {
@@ -31,10 +31,17 @@ async function parseZipFile(base64Content: string): Promise<ZipEntry[]> {
     const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
     const depth = parts.length - 1;
 
+    // jszip 3.x exposes the parsed ZIP central-directory entry on a `_data`
+    // internal field. There is no public API for uncompressed size without
+    // decompressing the entry, so we tap the internal shape and gracefully
+    // fall back to 0 if jszip's internals change in a future major version.
+    const internal = (file as unknown as { _data?: { uncompressedSize?: number } })._data;
+    const size = internal?.uncompressedSize ?? 0;
+
     entries.push({
       path: relativePath,
       name,
-      size: file._data ? (file._data as { uncompressedSize?: number }).uncompressedSize ?? 0 : 0,
+      size,
       isDir: file.dir,
       depth,
       ext,
