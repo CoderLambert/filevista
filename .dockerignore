@@ -1,0 +1,50 @@
+# Dependencies / build artifacts
+node_modules
+.next
+.next-pages
+out
+dist
+build
+
+# Logs
+*.log
+dev.log
+server.log
+npm-debug.log*
+
+# Local env / state
+.env
+.env.local
+.env.*.local
+prisma/dev.db
+prisma/dev.db-journal
+
+# VCS
+.git
+.gitignore
+.github
+
+# Editor / OS
+.idea
+.vscode
+.DS_Store
+
+# Docker / CI
+Dockerfile
+.dockerignore
+docker-compose*.yml
+Caddyfile
+
+# Other lockfiles (we use pnpm)
+bun.lock
+bun.lockb
+yarn.lock
+package-lock.json
+
+# Tests
+coverage
+.vitest
+
+# Misc
+README*.md
+*.tsbuildinfo

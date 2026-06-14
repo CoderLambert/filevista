@@ -11,14 +11,14 @@ Stack: **Next.js 16** (App Router) + **React 19** + **TypeScript** + **Tailwind 
 ## Development Commands
 
 ```bash
-bun install              # Install dependencies
-bun run dev              # Start dev server on port 3000
-bun run build            # Production build (creates standalone output)
-bun run start            # Start production server
-bun run lint             # Run ESLint
-bun run db:push          # Push Prisma schema to database
-bun run db:generate      # Generate Prisma client
-bun run db:migrate       # Run Prisma migrations
+pnpm install             # Install dependencies
+pnpm run dev             # Start dev server on port 3000
+pnpm run build           # Production build (creates standalone output)
+pnpm run start           # Start production server (Node runtime)
+pnpm run lint            # Run ESLint
+pnpm run db:push         # Push Prisma schema to database
+pnpm run db:generate     # Generate Prisma client
+pnpm run db:migrate      # Run Prisma migrations
 ```
 
 ## Architecture

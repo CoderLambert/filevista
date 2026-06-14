@@ -6,7 +6,7 @@
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
     "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
     "build:pages": "NEXT_PUBLIC_DEPLOY_TARGET=github-pages next build",
-    "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
+    "start": "NODE_ENV=production node .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "copy:pdf-worker": "node scripts/copy-pdf-worker.mjs",
@@ -19,7 +19,12 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:watch": "vitest --watch",
-    "check": "bun run lint && bun run test:run && bun run build"
+    "check": "pnpm run lint && pnpm run test:run && pnpm run build"
+  },
+  "packageManager": "pnpm@11.6.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.0.0"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
