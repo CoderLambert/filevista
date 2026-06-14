@@ -4,14 +4,13 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 
-# Required by sharp/canvas/prisma at install time
-RUN apk add --no-cache libc6-compat openssl
+# Required by sharp at install time
+RUN apk add --no-cache libc6-compat
 
 # Enable pnpm via corepack (pinned to package.json's packageManager field)
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY prisma ./prisma
 COPY scripts ./scripts
 # postinstall (copy-pdf-worker, copy-rtfjs-bundles) writes into ./public
 COPY public ./public
@@ -24,7 +23,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat
 RUN corepack enable
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -43,8 +42,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-RUN apk add --no-cache openssl && \
-    addgroup -g 1001 -S nodejs && \
+RUN addgroup -g 1001 -S nodejs && \
     adduser  -u 1001 -S nextjs -G nodejs
 
 # `pnpm run build` already copies static + public into .next/standalone
