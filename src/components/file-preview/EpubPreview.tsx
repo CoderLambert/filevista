@@ -435,22 +435,36 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const parseFile = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await parseEpub(content);
-      setBookData(result);
-    } catch (err) {
-      console.error("Error parsing EPUB:", err);
-      setError(err instanceof Error ? err.message : "Failed to parse e-book");
-    } finally {
-      setLoading(false);
-    }
-  }, [content]);
+  // Reset state when content changes — derived state during render
+  const [prevContent, setPrevContent] = useState(content);
+  if (prevContent !== content) {
+    setPrevContent(content);
+    setLoading(true);
+    setError(null);
+    setBookData(null);
+    setCurrentChapter(0);
+    setSearchResults([]);
+  }
 
   useEffect(() => {
-    parseFile();
-  }, [parseFile]);
+    let cancelled = false;
+    parseEpub(content).then(
+      (result) => {
+        if (cancelled) return;
+        setBookData(result);
+        setLoading(false);
+      },
+      (err) => {
+        if (cancelled) return;
+        console.error("Error parsing EPUB:", err);
+        setError(err instanceof Error ? err.message : "Failed to parse e-book");
+        setLoading(false);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [content]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

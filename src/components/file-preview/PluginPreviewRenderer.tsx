@@ -1,7 +1,7 @@
 "use client";
 
-import { lazy, Suspense, useMemo, useRef, useState, useCallback } from "react";
-import type { ComponentType, LazyExoticComponent } from "react";
+import { Suspense, use, useMemo, useState, useCallback } from "react";
+import type { ComponentType } from "react";
 import type { FileInfo } from "./utils";
 import type { PreviewPlugin } from "./core/plugin";
 import type { PreviewPluginRegistry } from "./core/registry";
@@ -25,6 +25,39 @@ class PreviewPluginLoadError extends Error {
   }
 }
 
+// Module-level cache of plugin module promises — `use()` consumes these in render
+// without creating any components, satisfying react-hooks/static-components.
+type PluginModule = { default: ComponentType<{ file: FileInfo }> };
+const promiseCache = new WeakMap<PreviewPlugin, Promise<PluginModule>>();
+
+function getPluginPromise(plugin: PreviewPlugin): Promise<PluginModule> {
+  const cached = promiseCache.get(plugin);
+  if (cached) return cached;
+
+  const promise = plugin.load().catch((error) => {
+    throw new PreviewPluginLoadError(plugin.id, plugin.name, error);
+  });
+  promiseCache.set(plugin, promise);
+  return promise;
+}
+
+function invalidatePluginPromise(plugin: PreviewPlugin) {
+  promiseCache.delete(plugin);
+}
+
+interface PluginContentProps {
+  plugin: PreviewPlugin;
+  file: FileInfo;
+}
+
+// Static component declared at module scope — `use()` reads the cached promise
+// and renders the resolved default export without creating a new component.
+function PluginContent({ plugin, file }: PluginContentProps) {
+  const mod = use(getPluginPromise(plugin));
+  const Component = mod.default;
+  return <Component file={file} />;
+}
+
 export interface PluginPreviewRendererProps {
   file: FileInfo;
   registry?: PreviewPluginRegistry;
@@ -36,10 +69,6 @@ export function PluginPreviewRenderer({
   registry,
   showPluginDebug = false,
 }: PluginPreviewRendererProps) {
-  const componentCache = useRef(
-    new WeakMap<PreviewPlugin, LazyExoticComponent<ComponentType<{ file: FileInfo }>>>()
-  );
-
   const [retryKey, setRetryKey] = useState(0);
 
   const finalRegistry = useMemo(() => {
@@ -53,29 +82,12 @@ export function PluginPreviewRenderer({
 
   const handleRetry = useCallback(() => {
     if (plugin) {
-      componentCache.current.delete(plugin);
+      invalidatePluginPromise(plugin);
     }
-
     setRetryKey((value) => value + 1);
   }, [plugin]);
 
-  const PreviewComponent = useMemo(() => {
-    if (!plugin) return null;
-
-    const cached = componentCache.current.get(plugin);
-    if (cached) return cached;
-
-    const component = lazy(() =>
-      plugin.load().catch((error) => {
-        throw new PreviewPluginLoadError(plugin.id, plugin.name, error);
-      }),
-    );
-
-    componentCache.current.set(plugin, component);
-    return component;
-  }, [plugin, retryKey]);
-
-  if (!PreviewComponent || !plugin) {
+  if (!plugin) {
     const support = getPreviewSupportMeta(file.fileType);
 
     return (
@@ -117,7 +129,7 @@ export function PluginPreviewRenderer({
           onRetry={handleRetry}
         >
           <Suspense fallback={<PreviewLoading />}>
-            <PreviewComponent file={file} />
+            <PluginContent plugin={plugin} file={file} />
           </Suspense>
         </PreviewErrorBoundary>
       </div>

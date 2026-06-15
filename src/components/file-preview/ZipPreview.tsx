@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import JSZip from "jszip";
 import { File, Folder, FolderOpen } from "lucide-react";
 import { formatFileSize, base64ToUint8Array } from "./utils";
@@ -76,20 +76,34 @@ export function ZipPreview({ content, fileName }: ZipPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const parseFile = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await parseZipFile(content);
-      setEntries(result);
-    } catch (err) {
-      console.error("Error parsing ZIP:", err);
-      setError(err instanceof Error ? err.message : "Failed to parse archive");
-    } finally {
-      setLoading(false);
-    }
-  }, [content]);
+  // Reset state when content changes — derived state during render
+  const [prevContent, setPrevContent] = useState(content);
+  if (prevContent !== content) {
+    setPrevContent(content);
+    setLoading(true);
+    setError(null);
+    setEntries([]);
+  }
 
-  useEffect(() => { parseFile(); }, [parseFile]);
+  useEffect(() => {
+    let cancelled = false;
+    parseZipFile(content).then(
+      (result) => {
+        if (cancelled) return;
+        setEntries(result);
+        setLoading(false);
+      },
+      (err) => {
+        if (cancelled) return;
+        console.error("Error parsing ZIP:", err);
+        setError(err instanceof Error ? err.message : "Failed to parse archive");
+        setLoading(false);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [content]);
 
   const fileCount = entries.filter(e => !e.isDir).length;
   const dirCount = entries.filter(e => e.isDir).length;

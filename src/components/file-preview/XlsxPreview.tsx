@@ -602,25 +602,43 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const parseFile = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await parseXlsx({ source, content }, fileName, mode);
-      setSheets(result);
-    } catch (err) {
-      console.error("XLSX parse error:", err);
-      const ext = fileName.toLowerCase().split(".").pop() || "";
-      if (ext === "xls") {
-        setError("该文件为旧版 Excel 二进制格式（.xls），当前仅支持 Open XML 格式（.xlsx/.xlsm）。建议使用 Excel 或 WPS 将文件另存为 .xlsx 格式后重试。");
-      } else {
-        setError(err instanceof Error ? err.message : "Failed to parse spreadsheet");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [content, source, fileName, mode]);
+  // Reset loading state during render when inputs change — derived state, not effect
+  const [prevDeps, setPrevDeps] = useState({ content, source, fileName, mode });
+  if (
+    prevDeps.content !== content ||
+    prevDeps.source !== source ||
+    prevDeps.fileName !== fileName ||
+    prevDeps.mode !== mode
+  ) {
+    setPrevDeps({ content, source, fileName, mode });
+    setLoading(true);
+    setError(null);
+  }
 
-  useEffect(() => { parseFile(); }, [parseFile]);
+  useEffect(() => {
+    let cancelled = false;
+    parseXlsx({ source, content }, fileName, mode).then(
+      (result) => {
+        if (cancelled) return;
+        setSheets(result);
+        setLoading(false);
+      },
+      (err) => {
+        if (cancelled) return;
+        console.error("XLSX parse error:", err);
+        const ext = fileName.toLowerCase().split(".").pop() || "";
+        if (ext === "xls") {
+          setError("该文件为旧版 Excel 二进制格式（.xls），当前仅支持 Open XML 格式（.xlsx/.xlsm）。建议使用 Excel 或 WPS 将文件另存为 .xlsx 格式后重试。");
+        } else {
+          setError(err instanceof Error ? err.message : "Failed to parse spreadsheet");
+        }
+        setLoading(false);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [content, source, fileName, mode]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;

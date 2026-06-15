@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Copy, Check, WrapText } from "lucide-react";
 import { highlightCode as shikiHighlight, getShikiLanguage } from "@/lib/shiki";
 import { shouldHighlight } from "./limits";
@@ -18,7 +18,6 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(true);
-  const mountedRef = useRef(true);
 
   const language = useMemo(
     () => (isJson ? "json" : getShikiLanguage(fileName)),
@@ -43,40 +42,42 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
     [displayContent]
   );
 
-  const doHighlight = useCallback(async () => {
-    if (!shouldHighlight(displayContent)) {
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      setError(null);
+  const canHighlight = shouldHighlight(displayContent);
 
-      const result = await shikiHighlight(displayContent, language);
-
-      if (mountedRef.current) {
-        setHtml(result);
-      }
-    } catch (err) {
-      console.error("[CodePreview] Shiki highlight error:", err);
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : "Highlight failed");
-        setHtml("");
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [displayContent, language]);
+  // Reset loading/html when inputs change — derived state during render (not in effect).
+  // This is the React 19 recommended pattern: see rerender-derived-state-no-effect.
+  const [prevDeps, setPrevDeps] = useState({ displayContent, language });
+  if (prevDeps.displayContent !== displayContent || prevDeps.language !== language) {
+    setPrevDeps({ displayContent, language });
+    setHtml("");
+    setError(null);
+    setLoading(canHighlight);
+  }
 
   useEffect(() => {
-    mountedRef.current = true;
-    doHighlight();
+    if (!canHighlight) return;
+
+    let cancelled = false;
+    shikiHighlight(displayContent, language).then(
+      (result) => {
+        if (cancelled) return;
+        setHtml(result);
+        setError(null);
+        setLoading(false);
+      },
+      (err) => {
+        if (cancelled) return;
+        console.error("[CodePreview] Shiki highlight error:", err);
+        setError(err instanceof Error ? err.message : "Highlight failed");
+        setHtml("");
+        setLoading(false);
+      }
+    );
+
     return () => {
-      mountedRef.current = false;
+      cancelled = true;
     };
-  }, [doHighlight]);
+  }, [displayContent, language, canHighlight]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(displayContent);
@@ -85,7 +86,7 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
   };
 
   // Early return for large files — avoids duplicate toolbar
-  if (!shouldHighlight(displayContent)) {
+  if (!canHighlight) {
     return <PlainTextLargePreview content={displayContent} language={language} />;
   }
 

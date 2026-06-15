@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
 import type { PreviewSource } from "./core/types";
 
@@ -15,72 +15,71 @@ export function DocxPreview({ content, source, fileName }: DocxPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(0);
-  const mountedRef = useRef(true);
 
-  const renderDocument = useCallback(async () => {
-    if (!containerRef.current) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Dynamic import to avoid SSR issues — docx-preview uses browser-only APIs
-      const { renderAsync } = await import("docx-preview");
-
-      if (!mountedRef.current || !containerRef.current) return;
-
-      const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
-
-      // Clear previous content
-      containerRef.current.innerHTML = "";
-
-      await renderAsync(buffer, containerRef.current, undefined, {
-        className: "docx",
-        inWrapper: true,
-        ignoreWidth: false,
-        ignoreHeight: false,
-        ignoreFonts: false,
-        breakPages: true,
-        ignoreLastRenderedPageBreak: true,
-        experimental: true,
-        trimXmlDeclaration: true,
-        useBase64URL: true,
-        renderHeaders: true,
-        renderFooters: true,
-        renderFootnotes: true,
-        renderEndnotes: true,
-      });
-
-      if (!mountedRef.current || !containerRef.current) return;
-
-      // Count pages
-      const pages = containerRef.current.querySelectorAll(
-        ".docx-wrapper > section"
-      );
-      setPageCount(pages.length);
-    } catch (err) {
-      console.error("Error rendering DOCX:", err);
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : "Failed to render document");
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [content, source]);
+  // Reset state when inputs change — derived during render
+  const [prevDeps, setPrevDeps] = useState({ content, source });
+  if (prevDeps.content !== content || prevDeps.source !== source) {
+    setPrevDeps({ content, source });
+    setLoading(true);
+    setError(null);
+    setPageCount(0);
+  }
 
   useEffect(() => {
-    mountedRef.current = true;
-    renderDocument();
-    return () => {
-      mountedRef.current = false;
+    let cancelled = false;
+    const container = containerRef.current;
+    if (!container) return;
 
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
+    (async () => {
+      try {
+        // Dynamic import to avoid SSR issues — docx-preview uses browser-only APIs
+        const { renderAsync } = await import("docx-preview");
+        if (cancelled) return;
+
+        const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
+        if (cancelled) return;
+
+        // Clear previous content
+        container.innerHTML = "";
+
+        await renderAsync(buffer, container, undefined, {
+          className: "docx",
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+          ignoreFonts: false,
+          breakPages: true,
+          ignoreLastRenderedPageBreak: true,
+          experimental: true,
+          trimXmlDeclaration: true,
+          useBase64URL: true,
+          renderHeaders: true,
+          renderFooters: true,
+          renderFootnotes: true,
+          renderEndnotes: true,
+        });
+
+        if (cancelled) return;
+
+        // Count pages
+        const pages = container.querySelectorAll(".docx-wrapper > section");
+        setPageCount(pages.length);
+        setLoading(false);
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Error rendering DOCX:", err);
+        setError(err instanceof Error ? err.message : "Failed to render document");
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (container) {
+        container.innerHTML = "";
       }
     };
-  }, [renderDocument]);
+  }, [content, source]);
 
   return (
     <div className="flex flex-col h-full">

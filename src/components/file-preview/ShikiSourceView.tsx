@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Copy, Check, WrapText } from "lucide-react";
 import { highlightCode, getShikiLanguage } from "@/lib/shiki";
 import { shouldHighlight } from "./limits";
@@ -25,7 +25,6 @@ export function ShikiSourceView({
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(true);
-  const mountedRef = useRef(true);
 
   const language = useMemo(
     () => languageOverride || getShikiLanguage(fileName),
@@ -39,36 +38,36 @@ export function ShikiSourceView({
 
   const canHighlight = useMemo(() => shouldHighlight(content), [content]);
 
-  const doHighlight = useCallback(async () => {
-    if (!canHighlight) {
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      const result = await highlightCode(content, language);
-      if (mountedRef.current) {
-        setHtml(result);
-      }
-    } catch (err) {
-      console.warn("[ShikiSourceView] highlight error:", err);
-      if (mountedRef.current) {
-        setHtml("");
-      }
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [content, language, canHighlight]);
+  // Reset html/loading on input change — derived state during render
+  const [prevDeps, setPrevDeps] = useState({ content, language });
+  if (prevDeps.content !== content || prevDeps.language !== language) {
+    setPrevDeps({ content, language });
+    setHtml("");
+    setLoading(canHighlight);
+  }
 
   useEffect(() => {
-    mountedRef.current = true;
-    doHighlight();
+    if (!canHighlight) return;
+
+    let cancelled = false;
+    highlightCode(content, language).then(
+      (result) => {
+        if (cancelled) return;
+        setHtml(result);
+        setLoading(false);
+      },
+      (err) => {
+        if (cancelled) return;
+        console.warn("[ShikiSourceView] highlight error:", err);
+        setHtml("");
+        setLoading(false);
+      }
+    );
+
     return () => {
-      mountedRef.current = false;
+      cancelled = true;
     };
-  }, [doHighlight]);
+  }, [content, language, canHighlight]);
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(content);
