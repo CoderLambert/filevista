@@ -113,7 +113,7 @@ export const PREVIEW_SUPPORT_MATRIX: Record<FileType, PreviewSupportMeta> = {
     legacyRenderer: "supported",
     pluginRenderer: "supported",
     pluginId: "builtin.rtf",
-    note: "使用 @jonahschulte/rtf-toolkit 富文本渲染 + DOMPurify 安全清洗 + iframe sandbox 隔离，无法解析的内容自动降级为文本预览。",
+    note: "使用 rtf.js 富文本渲染（含 WMF/EMF 矢量图） + DOMPurify 安全清洗 + iframe sandbox 隔离，无法解析的内容自动降级为文本预览。",
   },
 
   zip: {
