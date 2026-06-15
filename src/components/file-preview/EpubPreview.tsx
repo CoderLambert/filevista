@@ -11,6 +11,7 @@ import {
   ChevronDownIcon,
 } from "./icons";
 import { base64ToUint8Array } from "./utils";
+import "./styles/EpubPreview.css";
 
 interface EpubPreviewProps {
   content: string; // base64 encoded
@@ -555,28 +556,28 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        <p className="text-muted-foreground text-sm">Loading e-book...</p>
+      <div className="fv-epub__state fv-epub__state--loading">
+        <div className="fv-spinner fv-spinner--lg" />
+        <p className="fv-epub__state-msg">Loading e-book...</p>
       </div>
     );
   }
 
   if (error || !bookData) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3">
-        <BookOpenIcon size={48} className="opacity-50" />
-        <p className="text-lg font-medium">Failed to Load E-book</p>
-        <p className="text-sm text-muted-foreground">{error || "Unknown error"}</p>
+      <div className="fv-epub__state fv-epub__state--error">
+        <BookOpenIcon size={48} className="fv-epub__state-icon" />
+        <p className="fv-epub__state-title">Failed to Load E-book</p>
+        <p className="fv-epub__state-msg">{error || "Unknown error"}</p>
       </div>
     );
   }
 
   if (bookData.chapters.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-3">
+      <div className="fv-epub__state fv-epub__state--empty">
         <BookOpenIcon size={48} />
-        <p className="text-lg font-medium">No Chapters Found</p>
+        <p className="fv-epub__state-title">No Chapters Found</p>
       </div>
     );
   }
@@ -587,20 +588,20 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
   // Override any absolute positioning or overflow issues in book CSS
   const combinedCss = bookData.stylesheets.join("\n") + `
     /* Override book styles that may cause horizontal overflow */
-    .epub-content * {
+    .fv-epub__article * {
       max-width: 100% !important;
       overflow-wrap: break-word !important;
       word-wrap: break-word !important;
     }
-    .epub-content pre, .epub-content code {
+    .fv-epub__article pre, .fv-epub__article code {
       overflow-x: auto !important;
       max-width: 100% !important;
     }
-    .epub-content img {
+    .fv-epub__article img {
       max-width: 100% !important;
       height: auto !important;
     }
-    .epub-content table {
+    .fv-epub__article table {
       display: block;
       overflow-x: auto;
       max-width: 100%;
@@ -608,31 +609,31 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
   `;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="fv-epub">
       {/* Book info bar */}
-      <div className="px-4 py-2 border-b bg-muted/30">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <BookOpenIcon size={14} className="text-muted-foreground shrink-0" />
-            <span className="text-sm font-medium truncate">
+      <div className="fv-epub__info-bar">
+        <div className="fv-epub__info-row">
+          <div className="fv-epub__info-left">
+            <BookOpenIcon size={14} className="fv-epub__info-icon" />
+            <span className="fv-epub__info-title">
               {bookData.title || fileName}
             </span>
             {bookData.author && (
-              <span className="text-xs text-muted-foreground shrink-0">
+              <span className="fv-epub__info-author">
                 — {bookData.author}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="fv-epub__info-right">
             {/* Search */}
-            <div className="relative">
-              <SearchIcon size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <div className="fv-epub__search-wrap">
+              <SearchIcon size={14} className="fv-epub__search-icon" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Search..."
-                className="h-7 w-28 sm:w-48 rounded-md border bg-background pl-7 pr-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="fv-epub__search-input"
               />
               {searchQuery && (
                 <button
@@ -640,20 +641,16 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                     setSearchQuery("");
                     setSearchResults([]);
                   }}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2"
+                  className="fv-epub__search-clear"
                 >
-                  <XIcon size={12} className="text-muted-foreground hover:text-foreground" />
+                  <XIcon size={12} />
                 </button>
               )}
             </div>
             {/* TOC toggle */}
             <button
               onClick={() => setShowToc(!showToc)}
-              className={`p-1.5 rounded-md transition-colors ${
-                showToc
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
+              className={`fv-epub__toc-btn ${showToc ? "fv-epub__toc-btn--active" : ""}`}
               title="Table of Contents"
             >
               <ListIcon size={16} />
@@ -664,11 +661,11 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
 
       {/* Search results */}
       {searchQuery && searchResults.length > 0 && (
-        <div className="px-4 py-2 border-b bg-muted/20 max-h-40 overflow-y-auto">
-          <p className="text-xs text-muted-foreground mb-1">
+        <div className="fv-epub__search-results">
+          <p className="fv-epub__search-results-label">
             Found in {searchResults.length} chapter(s)
           </p>
-          <div className="space-y-1">
+          <div className="fv-epub__search-results-list">
             {searchResults.map((r, i) => (
               <button
                 key={i}
@@ -677,12 +674,12 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                   setSearchQuery("");
                   setSearchResults([]);
                 }}
-                className="block w-full text-left px-2 py-1 text-xs rounded hover:bg-muted transition-colors"
+                className="fv-epub__search-result-item"
               >
-                <span className="font-medium text-primary">
+                <span className="fv-epub__search-result-title">
                   {bookData.chapters[r.chapterIndex].title}
                 </span>
-                <span className="text-muted-foreground ml-2">{r.snippet}</span>
+                <span className="fv-epub__search-result-snippet">{r.snippet}</span>
               </button>
             ))}
           </div>
@@ -690,17 +687,17 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
       )}
 
       {searchQuery && searchResults.length === 0 && (
-        <div className="px-4 py-2 border-b bg-muted/20">
-          <p className="text-xs text-muted-foreground">No results found</p>
+        <div className="fv-epub__search-empty">
+          <p className="fv-epub__search-empty-text">No results found</p>
         </div>
       )}
 
-      <div className="flex flex-1 min-h-0">
+      <div className="fv-epub__body">
         {/* TOC sidebar */}
         {showToc && (
-          <div className="w-56 sm:w-64 shrink-0 border-r overflow-y-auto bg-background">
-            <div className="p-3">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          <div className="fv-epub__toc-sidebar">
+            <div className="fv-epub__toc-inner">
+              <h3 className="fv-epub__toc-heading">
                 Table of Contents
               </h3>
               <TocTree
@@ -714,16 +711,12 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               />
               {/* Fallback: if no TOC items, show chapter list */}
               {bookData.toc.length === 0 && (
-                <div className="space-y-0.5">
+                <div className="fv-epub__toc-list">
                   {bookData.chapters.map((ch, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrentChapter(i)}
-                      className={`block w-full text-left px-2 py-1.5 text-xs rounded-md transition-colors ${
-                        i === currentChapter
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
+                      className={`fv-epub__toc-item ${i === currentChapter ? "fv-epub__toc-item--active" : ""}`}
                     >
                       {ch.title}
                     </button>
@@ -735,40 +728,38 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
         )}
 
         {/* Main content area */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="fv-epub__main">
           {/* Compact chapter selector bar */}
-          <div className="flex items-center gap-2 px-4 py-1.5 border-b shrink-0">
+          <div className="fv-epub__chapter-bar">
             <button
               onClick={() => setCurrentChapter(Math.max(0, currentChapter - 1))}
               disabled={currentChapter === 0}
-              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="fv-epub__chapter-nav-btn"
             >
               <ChevronLeftIcon size={16} />
             </button>
 
             {/* Chapter dropdown */}
-            <div className="relative flex-1 min-w-0" ref={dropdownRef}>
+            <div className="fv-epub__dropdown-wrap" ref={dropdownRef}>
               <button
                 onClick={() => setShowChapterDropdown(!showChapterDropdown)}
-                className="flex items-center gap-1.5 w-full px-2 py-1 text-xs rounded-md hover:bg-muted transition-colors text-left"
+                className="fv-epub__dropdown-trigger"
               >
-                <span className="text-muted-foreground shrink-0">
+                <span className="fv-epub__dropdown-index">
                   {currentChapter + 1}/{bookData.chapters.length}
                 </span>
-                <span className="truncate font-medium text-foreground">
+                <span className="fv-epub__dropdown-title">
                   {chapter.title}
                 </span>
                 <ChevronDownIcon
                   size={14}
-                  className={`shrink-0 text-muted-foreground transition-transform ${
-                    showChapterDropdown ? "rotate-180" : ""
-                  }`}
+                  className={`fv-epub__dropdown-chevron ${showChapterDropdown ? "fv-epub__dropdown-chevron--open" : ""}`}
                 />
               </button>
 
               {/* Dropdown list */}
               {showChapterDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
+                <div className="fv-epub__dropdown-list">
                   {bookData.chapters.map((ch, i) => (
                     <button
                       key={i}
@@ -776,13 +767,9 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                         setCurrentChapter(i);
                         setShowChapterDropdown(false);
                       }}
-                      className={`block w-full text-left px-3 py-1.5 text-xs transition-colors ${
-                        i === currentChapter
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
+                      className={`fv-epub__dropdown-item ${i === currentChapter ? "fv-epub__dropdown-item--active" : ""}`}
                     >
-                      <span className="text-muted-foreground/60 mr-1.5">{i + 1}.</span>
+                      <span className="fv-epub__dropdown-item-index">{i + 1}.</span>
                       {ch.title}
                     </button>
                   ))}
@@ -795,49 +782,38 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                 setCurrentChapter(Math.min(bookData.chapters.length - 1, currentChapter + 1))
               }
               disabled={currentChapter === bookData.chapters.length - 1}
-              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="fv-epub__chapter-nav-btn"
             >
               <ChevronRightIcon size={16} />
             </button>
           </div>
 
           {/* Chapter content */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden" ref={contentRef} onClick={handleContentClick}>
-            <div className="max-w-3xl mx-auto p-4 sm:p-8">
-              <h2 className="text-xl font-bold mb-6 text-foreground">{chapter.title}</h2>
+          <div className="fv-epub__content" ref={contentRef} onClick={handleContentClick}>
+            <div className="fv-epub__content-inner">
+              <h2 className="fv-epub__chapter-title">{chapter.title}</h2>
               {/* Inject book CSS */}
               {combinedCss && (
                 <style dangerouslySetInnerHTML={{ __html: combinedCss }} />
               )}
               <div
-                className="epub-content prose prose-sm dark:prose-invert max-w-none
-                  [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded [&_img]:my-2
-                  [&_table]:w-full [&_table]:border-collapse
-                  [&_td]:border [&_td]:border-border [&_td]:p-1.5 [&_td]:text-xs
-                  [&_th]:border [&_th]:border-border [&_th]:p-1.5 [&_th]:bg-muted [&_th]:text-xs [&_th]:font-medium
-                  [&_a]:text-primary [&_a]:underline [&_a]:decoration-primary/30 [&_a:hover]:decoration-primary
-                  [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-4 [&_blockquote]:italic
-                  [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
-                  [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:overflow-x-auto
-                  [&_.mbp_pagebreak]:hidden
-                  [&_p]:break-words [&_span]:break-words
-                  [&_div]:break-words"
+                className="fv-epub__article"
                 dangerouslySetInnerHTML={{ __html: chapter.htmlContent }}
               />
             </div>
           </div>
 
           {/* Navigation footer */}
-          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 shrink-0">
+          <div className="fv-epub__footer">
             <button
               onClick={() => setCurrentChapter(Math.max(0, currentChapter - 1))}
               disabled={currentChapter === 0}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="fv-epub__footer-btn"
             >
               <ChevronLeftIcon size={16} />
-              <span className="hidden sm:inline">Previous</span>
+              <span className="fv-epub__footer-btn-text">Previous</span>
             </button>
-            <span className="text-xs text-muted-foreground">
+            <span className="fv-epub__footer-label">
               {currentChapter + 1} / {bookData.chapters.length}
             </span>
             <button
@@ -845,9 +821,9 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                 setCurrentChapter(Math.min(bookData.chapters.length - 1, currentChapter + 1))
               }
               disabled={currentChapter === bookData.chapters.length - 1}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="fv-epub__footer-btn"
             >
-              <span className="hidden sm:inline">Next</span>
+              <span className="fv-epub__footer-btn-text">Next</span>
               <ChevronRightIcon size={16} />
             </button>
           </div>
@@ -872,7 +848,7 @@ function TocTree({
   depth?: number;
 }) {
   return (
-    <div className={depth > 0 ? "ml-3 border-l border-border pl-2" : "space-y-0.5"}>
+    <div className={depth > 0 ? "fv-epub__toc-indent" : "fv-epub__toc-list"}>
       {items.map((item, i) => {
         // Find matching chapter index
         const chapterIdx = chapters.findIndex(
@@ -891,13 +867,7 @@ function TocTree({
                 if (chapterIdx !== -1) onSelect(chapterIdx);
               }}
               disabled={chapterIdx === -1}
-              className={`block w-full text-left px-2 py-1.5 text-xs rounded-md transition-colors ${
-                isCurrent
-                  ? "bg-primary/10 text-primary font-medium"
-                  : chapterIdx === -1
-                  ? "text-muted-foreground/50 cursor-default"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
+              className={`fv-epub__toc-item ${isCurrent ? "fv-epub__toc-item--active" : ""}`}
               style={{ paddingLeft: `${8 + depth * 4}px` }}
             >
               {item.title}

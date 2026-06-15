@@ -20,6 +20,7 @@ import {
 } from "./icons";
 import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
 import type { PreviewSource } from "./core/types";
+import "./styles/PptxPreview.css";
 
 interface PptxPreviewProps {
   content?: string | null;
@@ -221,7 +222,7 @@ const PptxRenderContainer = forwardRef<
     >
       <div
         ref={containerRef}
-        className="pptx-render-container shadow-lg rounded-lg overflow-hidden bg-white"
+        className="fv-pptx__render-container"
         style={{
           minWidth: mode === "slide" ? 960 : undefined,
           minHeight: mode === "slide" ? 540 : undefined,
@@ -325,10 +326,10 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
   const ext = fileName.toLowerCase().split(".").pop() || "";
   if (ext === "ppt") {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
-        <AlertTriangleIcon size={36} />
-        <p className="text-lg font-medium">格式不支持</p>
-        <p className="text-sm text-muted-foreground text-center max-w-md">
+      <div className="fv-pptx__error">
+        <AlertTriangleIcon size={36} className="fv-pptx__error-icon" />
+        <p className="fv-pptx__error-title">格式不支持</p>
+        <p className="fv-pptx__error-msg">
           该文件为旧版 PowerPoint 二进制格式（.ppt），当前仅支持 Open XML
           格式（.pptx）。建议使用 PowerPoint 或 WPS 将文件另存为 .pptx 格式后重试。
         </p>
@@ -338,10 +339,10 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
-        <AlertTriangleIcon size={36} />
-        <p className="text-lg font-medium">预览失败</p>
-        <p className="text-sm text-muted-foreground text-center max-w-md">
+      <div className="fv-pptx__error">
+        <AlertTriangleIcon size={36} className="fv-pptx__error-icon" />
+        <p className="fv-pptx__error-title">预览失败</p>
+        <p className="fv-pptx__error-msg">
           {error}
         </p>
       </div>
@@ -349,78 +350,68 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
   }
 
   return (
-    <div className="flex flex-col h-full" data-preview-container>
+    <div className="fv-pptx" data-preview-container>
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30 gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
+      <div className="fv-pptx__toolbar">
+        <div className="fv-pptx__toolbar-left">
           {viewMode === "slide" ? (
             <>
-              <span className="text-sm font-medium tabular-nums">
+              <span className="fv-pptx__slide-count">
                 {currentSlide + 1} / {slideCount}
               </span>
-              <span className="text-xs text-muted-foreground">页</span>
+              <span className="fv-pptx__slide-label">页</span>
             </>
           ) : (
             <>
-              <span className="text-sm font-medium tabular-nums">
+              <span className="fv-pptx__slide-count">
                 {slideCount}
               </span>
-              <span className="text-xs text-muted-foreground">页</span>
+              <span className="fv-pptx__slide-label">页</span>
             </>
           )}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="fv-pptx__toolbar-right">
           {/* View mode toggle */}
           <button
             onClick={() => switchViewMode("slide")}
-            className={`p-1.5 rounded-md transition-colors ${
-              viewMode === "slide"
-                ? "bg-primary/10 text-primary"
-                : "hover:bg-muted text-muted-foreground"
-            }`}
+            className={`fv-pptx__mode-btn ${viewMode === "slide" ? "fv-pptx__mode-btn--active" : ""}`}
             title="幻灯片视图"
           >
             <MonitorIcon size={16} />
           </button>
           <button
             onClick={() => switchViewMode("grid")}
-            className={`p-1.5 rounded-md transition-colors ${
-              viewMode === "grid"
-                ? "bg-primary/10 text-primary"
-                : "hover:bg-muted text-muted-foreground"
-            }`}
+            className={`fv-pptx__mode-btn ${viewMode === "grid" ? "fv-pptx__mode-btn--active" : ""}`}
             title="缩略图视图"
           >
             <Grid3X3Icon size={16} />
           </button>
 
-          <div className="w-px h-4 bg-border mx-1" />
+          <div className="fv-toolbar__separator" />
 
           {/* Zoom controls */}
-          <div className="flex items-center gap-0.5 border rounded-md px-1">
+          <div className="fv-pptx__zoom-group">
             <button
               onClick={() => setZoom(Math.max(50, zoom - 10))}
-              className="p-1 hover:bg-muted rounded transition-colors"
+              className="fv-pptx__zoom-btn"
               title="缩小"
             >
-              <ZoomOutIcon size={14} className="text-muted-foreground" />
+              <ZoomOutIcon size={14} />
             </button>
-            <span className="text-xs text-muted-foreground w-10 text-center select-none">
-              {zoom}%
-            </span>
+            <span className="fv-pptx__zoom-label">{zoom}%</span>
             <button
               onClick={() => setZoom(Math.min(200, zoom + 10))}
-              className="p-1 hover:bg-muted rounded transition-colors"
+              className="fv-pptx__zoom-btn"
               title="放大"
             >
-              <ZoomInIcon size={14} className="text-muted-foreground" />
+              <ZoomInIcon size={14} />
             </button>
           </div>
 
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground"
+            className="fv-pptx__fullscreen-btn"
             title="全屏"
           >
             {isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
@@ -428,11 +419,11 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
         </div>
 
         {viewMode === "slide" && (
-          <div className="flex items-center gap-1">
+          <div className="fv-pptx__nav">
             <button
               onClick={prevSlide}
               disabled={currentSlide === 0 || loading}
-              className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="fv-pptx__nav-btn"
               title="上一页 (←)"
             >
               <ChevronLeftIcon size={16} />
@@ -440,7 +431,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
             <button
               onClick={nextSlide}
               disabled={currentSlide >= slideCount - 1 || loading}
-              className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="fv-pptx__nav-btn"
               title="下一页 (→)"
             >
               <ChevronRightIcon size={16} />
@@ -450,23 +441,17 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
       </div>
 
       {/* Content area */}
-      <div className="flex-1 overflow-auto bg-gray-100 relative">
+      <div className="fv-pptx__content">
         {loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100/80 z-10 gap-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            <p className="text-muted-foreground text-sm">
+          <div className="fv-pptx__loading-overlay">
+            <div className="fv-spinner fv-spinner--lg" />
+            <p className="fv-pptx__loading-label">
               正在解析演示文稿...
             </p>
           </div>
         )}
 
-        <div
-          className={
-            viewMode === "slide"
-              ? "flex items-center justify-center p-4 md:p-8 min-h-full"
-              : "p-4 md:p-6"
-          }
-        >
+        <div className={viewMode === "slide" ? "fv-pptx__slide-wrap" : "fv-pptx__grid-wrap"}>
           <PptxRenderContainer
             key={renderKey}
             ref={renderHandleRef}

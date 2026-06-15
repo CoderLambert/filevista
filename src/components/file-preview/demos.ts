@@ -412,10 +412,10 @@ RATE_LIMIT_MAX=100`,
 };
 
 // ── Binary demo files (fetched from public/demo/ at runtime) ──
-const basePath = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_BASE_PATH || "" : "";
+import { resolveAssetPath } from "./core/config";
 
 function withBase(url: string) {
-  return basePath ? `${basePath}${url}` : url;
+  return resolveAssetPath(url);
 }
 
 export const DEMO_BINARY_FILES: Record<

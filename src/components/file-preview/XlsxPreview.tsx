@@ -660,25 +660,25 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        <p className="text-muted-foreground text-sm">正在解析表格...</p>
+      <div className="fv-xlsx__state">
+        <div className="fv-spinner fv-spinner--lg" />
+        <p className="fv-xlsx__state-msg">正在解析表格...</p>
       </div>
     );
   }
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
+      <div className="fv-xlsx__state fv-xlsx__state--error">
         <AlertTriangleIcon size={36} />
-        <p className="text-lg font-medium">解析失败</p>
-        <p className="text-sm text-muted-foreground text-center max-w-md">{error}</p>
+        <p className="fv-xlsx__state-title">解析失败</p>
+        <p className="fv-xlsx__state-msg">{error}</p>
       </div>
     );
   }
   if (sheets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-3">
-        <p className="text-lg font-medium">未找到工作表</p>
+      <div className="fv-xlsx__state fv-xlsx__state--empty">
+        <p className="fv-xlsx__state-title">未找到工作表</p>
       </div>
     );
   }
@@ -696,67 +696,59 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
   const allColWidths = currentSheet?.colWidths || [];
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="fv-xlsx">
       {showLegacyWarning && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs">
+        <div className="fv-xlsx__legacy-banner">
           <AlertTriangleIcon size={14} />
           <span>当前文件为旧版 .xls 格式，部分内容可能无法完整显示。建议另存为 .xlsx 格式以获得最佳预览效果。</span>
         </div>
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30 gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
+      <div className="fv-xlsx__toolbar">
+        <div className="fv-xlsx__toolbar-left">
           <Table2Icon size={14} />
           {sheets.length > 1 && (
-            <div className="flex gap-1 flex-wrap">
+            <div className="fv-xlsx__sheet-tabs">
               {sheets.map((sheet, i) => (
                 <button key={i} onClick={() => { setActiveSheet(i); setSearchTerm(""); }}
-                  className={`px-2.5 py-1 text-xs rounded-md transition-colors ${i === activeSheet ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted"}`}>
+                  className={`fv-xlsx__sheet-tab ${i === activeSheet ? "fv-xlsx__sheet-tab--active" : ""}`}>
                   {sheet.name}
                 </button>
               ))}
             </div>
           )}
           {/* Mode switch */}
-          <div className="flex items-center gap-0.5 border rounded-md p-0.5 bg-background ml-2">
+          <div className="fv-xlsx__mode-switch">
             <button
               onClick={() => switchMode("fast")}
-              className={`px-2 py-1 text-xs rounded transition-colors ${
-                mode === "fast"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
+              className={`fv-xlsx__mode-btn ${mode === "fast" ? "fv-xlsx__mode-btn--active" : ""}`}
               title="快速模式：限制行数，跳过图片和复杂样式"
             >
               快速
             </button>
             <button
               onClick={() => switchMode("fidelity")}
-              className={`px-2 py-1 text-xs rounded transition-colors ${
-                mode === "fidelity"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
+              className={`fv-xlsx__mode-btn ${mode === "fidelity" ? "fv-xlsx__mode-btn--active" : ""}`}
               title="高保真模式：保留样式、图片、批注"
             >
               高保真
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative max-w-xs">
-            <SearchIcon size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" />
+        <div className="fv-xlsx__toolbar-right">
+          <div className="fv-xlsx__search-wrap">
+            <SearchIcon size={14} className="fv-xlsx__search-icon" />
             <input type="text" placeholder="搜索..." value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-36 pl-8 pr-3 py-1 text-xs bg-background border rounded-md focus:outline-none focus:ring-1 focus:ring-ring" />
+              className="fv-xlsx__search-input" />
           </div>
-          <div className="flex items-center gap-0.5 border rounded-md px-1">
-            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="p-1 hover:bg-muted rounded transition-colors" title="缩小"><ZoomOutIcon size={14} /></button>
-            <span className="text-xs text-muted-foreground w-10 text-center select-none">{zoom}%</span>
-            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="p-1 hover:bg-muted rounded transition-colors" title="放大"><ZoomInIcon size={14} /></button>
+          <div className="fv-xlsx__zoom-group">
+            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="fv-xlsx__zoom-btn" title="缩小"><ZoomOutIcon size={14} /></button>
+            <span className="fv-xlsx__zoom-label">{zoom}%</span>
+            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="fv-xlsx__zoom-btn" title="放大"><ZoomInIcon size={14} /></button>
           </div>
-          <span className="text-xs text-muted-foreground select-none">
+          <span className="fv-xlsx__info">
             {mode === "fast" && currentSheet?.totalRows > XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT ? (
               <>
                 显示前 {XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT.toLocaleString()} 行 / 共 {currentSheet.totalRows.toLocaleString()} 行 × {currentSheet.totalCols} 列
@@ -771,31 +763,31 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
         </div>
       </div>
 
-      {/* Large file banner */}
+      {/* Large file banners */}
       {isLargeFile && mode === "fast" && (
-        <div className="px-4 py-2 text-xs bg-amber-50 text-amber-700 border-b dark:bg-amber-950/20 dark:text-amber-300">
+        <div className="fv-xlsx__large-banner fv-xlsx__large-banner--warning">
           当前 Excel 文件较大（{formatFileSize(fileSize)}），已默认使用快速模式：仅渲染前 {XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT.toLocaleString()} 行，并跳过图片解析。
         </div>
       )}
       {isLargeFile && mode === "fidelity" && (
-        <div className="px-4 py-2 text-xs bg-red-50 text-red-700 border-b dark:bg-red-950/20 dark:text-red-300">
+        <div className="fv-xlsx__large-banner fv-xlsx__large-banner--danger">
           当前正在使用高保真模式预览大文件，可能导致浏览器卡顿。
         </div>
       )}
 
       {/* Table */}
-      <div ref={scrollRef} className="flex-1 overflow-auto bg-gray-100">
+      <div ref={scrollRef} className="fv-xlsx__content">
         <div style={{ zoom: zoom / 100 }}>
-          <table className="border-collapse bg-white" style={{ tableLayout: "fixed" }}>
+          <table className="fv-xlsx__table" style={{ tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: ROW_NUM_COL_WIDTH }} />
               {allColWidths.map((w, i) => (<col key={i} style={{ width: w }} />))}
             </colgroup>
             <thead>
               <tr>
-                <th className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-normal select-none sticky top-0 z-20" />
+                <th className="fv-xlsx__col-header" />
                 {allColWidths.map((w, i) => (
-                  <th key={i} className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-normal select-none sticky top-0 z-20">
+                  <th key={i} className="fv-xlsx__col-header">
                     {colNumToLetter(i)}
                   </th>
                 ))}
@@ -820,7 +812,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
 
                 return (
                   <tr key={originalIdx} style={effectiveHeight ? { height: effectiveHeight } : undefined}>
-                    <td className="bg-gray-50 border-b border-r border-gray-300 text-center text-[11px] text-gray-400 font-mono select-none sticky left-0 z-10">
+                    <td className="fv-xlsx__row-num">
                       {originalIdx + 1}
                     </td>
                     {row.map((cell, colIdx) => {
@@ -841,11 +833,11 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
                       return (
                         <td key={colIdx} style={fs} rowSpan={cell.rowspan || undefined} colSpan={cell.colspan || undefined}>
                           {hasImages ? (
-                            <div className="flex flex-wrap gap-1 items-center py-0.5" style={{ minHeight: 30 }}>
+                            <div className="fv-xlsx__cell-images" style={{ minHeight: 30 }}>
                               {cell.images!.map((img, imgIdx) => (
                                 img.unsupported ? (
                                   <div key={imgIdx}
-                                    className="flex flex-col items-center justify-center bg-gray-50 border border-dashed border-gray-300 rounded"
+                                    className="fv-xlsx__cell-image-placeholder"
                                     style={{ width: 60, height: 40 }}
                                     title={`不支持的图片格式: ${img.formatName || "未知"}`}
                                   >
@@ -866,12 +858,12 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
                                 )
                               ))}
                               {cell.value?.trim() && (
-                                <span className="text-xs text-muted-foreground ml-1">{cell.value}</span>
+                                <span className="fv-xlsx__cell-image-label">{cell.value}</span>
                               )}
                             </div>
                           ) : hasHyperlink ? (
                             <a href={cell.style.hyperlink} target="_blank" rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-0.5"
+                              className="fv-xlsx__cell-link"
                               style={{ fontSize: "inherit", fontFamily: "inherit" }}>
                               {cell.value}
                               <ExternalLinkIcon size={10} />
@@ -880,8 +872,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
                             cell.value
                           )}
                           {hasComment && (
-                            <span className="inline-block w-2 h-2 bg-amber-400 rounded-full ml-0.5 cursor-pointer shrink-0"
-                              style={{ verticalAlign: "super" }}
+                            <span className="fv-xlsx__comment-dot"
                               onMouseEnter={(e) => {
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 const container = scrollRef.current?.getBoundingClientRect();
@@ -902,14 +893,14 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
               })}
               {isTruncated && (
                 <tr>
-                  <td colSpan={totalCols + 1} className="px-3 py-3 text-center text-amber-600 bg-amber-50 border border-amber-200 text-xs">
+                  <td colSpan={totalCols + 1} className="fv-xlsx__truncation-row fv-xlsx__truncation-row--warning">
                     数据量较大，仅显示前 {MAX_RENDER_ROWS} 行（共 {allDisplayRows.length} 行）
                   </td>
                 </tr>
               )}
               {displayRows.length === 0 && (
                 <tr>
-                  <td colSpan={totalCols + 1} className="px-3 py-8 text-center text-muted-foreground bg-white border border-gray-300">
+                  <td colSpan={totalCols + 1} className="fv-xlsx__truncation-row fv-xlsx__truncation-row--empty">
                     {searchTerm ? "未找到匹配数据" : "无数据"}
                   </td>
                 </tr>
@@ -921,12 +912,12 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
 
       {/* Comment tooltip */}
       {hoveredComment && (
-        <div className="fixed z-50 max-w-xs bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg shadow-lg p-3 text-xs text-amber-900 dark:text-amber-200"
+        <div className="fv-xlsx__comment-tooltip"
           style={{ left: hoveredComment.x, top: hoveredComment.y - 8, transform: "translate(-50%, -100%)" }}>
-          <div className="flex items-center gap-1 mb-1 font-medium text-amber-700 dark:text-amber-300">
+          <div className="fv-xlsx__comment-tooltip-header">
             <MessageSquareIcon size={10} /> 批注
           </div>
-          <p className="whitespace-pre-wrap break-words">{hoveredComment.text}</p>
+          <p className="fv-xlsx__comment-tooltip-text">{hoveredComment.text}</p>
         </div>
       )}
     </div>

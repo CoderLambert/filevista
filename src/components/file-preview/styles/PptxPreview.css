@@ -1,0 +1,207 @@
+.fv-pptx {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Error / unsupported states ── */
+.fv-pptx__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  gap: 0.75rem;
+  padding: 0 1.5rem;
+  color: var(--fv-danger);
+}
+.fv-pptx__error-icon {
+  color: var(--fv-danger);
+}
+.fv-pptx__error-title {
+  font-size: var(--fv-font-size-lg);
+  font-weight: 500;
+}
+.fv-pptx__error-msg {
+  font-size: var(--fv-font-size-sm);
+  color: var(--fv-muted-foreground);
+  text-align: center;
+  max-width: 28rem;
+}
+
+/* ── Toolbar ── */
+.fv-pptx__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--fv-border);
+  background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.fv-pptx__toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.fv-pptx__slide-count {
+  font-size: var(--fv-font-size-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.fv-pptx__slide-label {
+  font-size: var(--fv-font-size-xs);
+  color: var(--fv-muted-foreground);
+}
+.fv-pptx__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* View mode toggle buttons */
+.fv-pptx__mode-btn {
+  padding: 0.375rem;
+  border-radius: var(--fv-radius);
+  border: none;
+  background: none;
+  color: var(--fv-muted-foreground);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fv-pptx__mode-btn:hover {
+  background: var(--fv-muted);
+  color: var(--fv-primary);
+}
+.fv-pptx__mode-btn--active {
+  background: color-mix(in srgb, var(--fv-primary) 10%, transparent);
+  color: var(--fv-primary);
+}
+
+/* Zoom controls */
+.fv-pptx__zoom-group {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  border: 1px solid var(--fv-border);
+  border-radius: var(--fv-radius);
+  padding: 0 0.25rem;
+}
+.fv-pptx__zoom-btn {
+  padding: 0.25rem;
+  border: none;
+  background: none;
+  color: var(--fv-muted-foreground);
+  border-radius: var(--fv-radius);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fv-pptx__zoom-btn:hover {
+  background: var(--fv-muted);
+  color: var(--fv-primary);
+}
+.fv-pptx__zoom-label {
+  font-size: var(--fv-font-size-xs);
+  color: var(--fv-muted-foreground);
+  width: 2.5rem;
+  text-align: center;
+  user-select: none;
+}
+
+/* Fullscreen button */
+.fv-pptx__fullscreen-btn {
+  padding: 0.375rem;
+  border-radius: var(--fv-radius);
+  border: none;
+  background: none;
+  color: var(--fv-muted-foreground);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fv-pptx__fullscreen-btn:hover {
+  background: var(--fv-muted);
+  color: var(--fv-primary);
+}
+
+/* Nav buttons */
+.fv-pptx__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.fv-pptx__nav-btn {
+  padding: 0.375rem;
+  border-radius: var(--fv-radius);
+  border: none;
+  background: none;
+  color: var(--fv-muted-foreground);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fv-pptx__nav-btn:hover:not(:disabled) {
+  background: var(--fv-muted);
+  color: var(--fv-primary);
+}
+.fv-pptx__nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Content area ── */
+.fv-pptx__content {
+  flex: 1;
+  overflow: auto;
+  background: var(--fv-canvas-bg);
+  position: relative;
+}
+
+/* Loading overlay */
+.fv-pptx__loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--fv-canvas-bg) 80%, transparent);
+  z-index: 10;
+  gap: 0.75rem;
+}
+.fv-pptx__loading-label {
+  font-size: var(--fv-font-size-sm);
+  color: var(--fv-muted-foreground);
+}
+
+/* Slide view centering */
+.fv-pptx__slide-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  min-height: 100%;
+}
+@media (min-width: 768px) {
+  .fv-pptx__slide-wrap {
+    padding: 2rem;
+  }
+}
+
+/* Grid view */
+.fv-pptx__grid-wrap {
+  padding: 1rem;
+}
+@media (min-width: 768px) {
+  .fv-pptx__grid-wrap {
+    padding: 1.5rem;
+  }
+}
+
+/* Render container */
+.fv-pptx__render-container {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fff;
+}

@@ -38,3 +38,5 @@
 @import "./CsvPreview.css";
 @import "./ZipPreview.css";
 @import "./XlsxPreview.css";
+@import "./PptxPreview.css";
+@import "./EpubPreview.css";

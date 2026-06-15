@@ -34,13 +34,14 @@ src/
 ├── components/
 │   ├── ui/                 # shadcn/ui components (button, badge, tabs, etc.)
 │   └── file-preview/       # File type preview modules (framework-agnostic)
-│       ├── core/            # Pure logic — types, plugin registry, source abstraction
+│       ├── core/            # Pure logic — types, plugin registry, source abstraction, config
 │       │   ├── types.ts     # PreviewSource, NormalizedFile
 │       │   ├── plugin.ts    # PreviewPlugin interface
 │       │   ├── registry.ts  # PreviewPluginRegistry class
 │       │   ├── source.ts    # readSourceAs* utilities
 │       │   ├── binary.ts    # readBinaryPreviewAs* helpers
-│       │   └── download.ts  # downloadSource helper
+│       │   ├── download.ts  # downloadSource helper
+│       │   └── config.ts    # Asset base path configuration (setAssetBasePath/resolveAssetPath)
 │       ├── hooks/           # React hooks for source reading
 │       ├── plugins/         # 16 built-in preview plugins + builtin-plugins.ts
 │       ├── preview-adapters/# Adapter components bridging plugins → preview components
@@ -83,9 +84,11 @@ The `file-preview/` module is **framework-agnostic and has zero external UI depe
 - **No Tailwind** in preview components — uses `fv-` prefixed BEM-style CSS classes
 - **No lucide-react** — uses inline SVG icons from `icons.tsx`
 - **No shadcn/ui** — uses `.fv-btn`, `.fv-spinner`, `.fv-badge` etc. defined in `styles/base.css`
+- **No @tailwindcss/typography** — uses `.fv-prose` class with self-contained typography styles (headings, paragraphs, lists, tables, blockquotes, code, links, images, etc.)
 - **Dark mode**: `[data-fv-theme="dark"]` selector on root element
 - **Theming**: Override CSS variables (`--fv-primary`, `--fv-muted`, `--fv-border`, etc.) to customize appearance
 - **Import**: `import './styles/index.css'` or individual `import './styles/PdfPreview.css'`
+- **Asset base path**: `core/config.ts` provides `setAssetBasePath()` / `resolveAssetPath()` for static assets (PDF.js worker, RTF.js bundles, demo files). Replaces `process.env.NEXT_PUBLIC_BASE_PATH`.
 
 The app layer (`page.tsx`, layout) still uses Tailwind + shadcn/ui — only the file-preview module is decoupled.
 

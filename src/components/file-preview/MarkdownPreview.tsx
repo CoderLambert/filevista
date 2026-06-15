@@ -124,7 +124,7 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
   }
 
   return (
-    <div className="md-code-block not-prose">
+    <div className="md-code-block">
       <div className="md-pre-header">
         <span className="md-lang-badge">{language}</span>
         <button onClick={handleCopy} className="md-copy-btn" title="Copy code">
@@ -168,20 +168,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       <div className="fv-markdown__content">
         {viewMode === "preview" ? (
           <div className="fv-markdown__preview">
-            <article className="prose prose-sm dark:prose-invert max-w-none px-6 py-5 sm:px-8 sm:py-6
-              prose-headings:scroll-mt-20
-              prose-h1:text-2xl prose-h1:font-extrabold prose-h1:tracking-tight
-              prose-h2:text-xl prose-h2:font-bold prose-h2:tracking-tight
-              prose-h3:text-lg prose-h3:font-semibold
-              prose-h4:text-base prose-h4:font-semibold
-              prose-a:font-medium prose-a:underline-offset-2
-              prose-code:before:content-none prose-code:after:content-none
-              prose-code:font-semibold prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:bg-muted prose-code:text-primary
-              prose-pre:bg-transparent prose-pre:p-0 prose-pre:border-0
-              prose-th:text-left
-              prose-img:rounded-lg
-              prose-blockquote:border-l-4 prose-blockquote:italic
-            ">
+            <article className="fv-prose">
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
                 {content}
               </ReactMarkdown>

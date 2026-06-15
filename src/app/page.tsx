@@ -33,11 +33,15 @@ import {
 import { PluginPreviewRenderer } from "@/components/file-preview/PluginPreviewRenderer";
 import { LargeFileGate } from "@/components/file-preview/LargeFileGate";
 import { DEMO_FILES, fetchBinaryDemoFiles } from "@/components/file-preview/demos";
+import { setAssetBasePath } from "@/components/file-preview/core/config";
 import {
   processRemoteUrl,
   RemoteUrlError,
   type RemoteLoadProgress,
 } from "@/components/file-preview/remote-url";
+
+// Initialize asset base path from Next.js env (used by PDF.js worker, RTF.js bundles, demo files)
+setAssetBasePath(process.env.NEXT_PUBLIC_BASE_PATH || "");
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
   pdf: "📄",

@@ -60,12 +60,11 @@ export function loadRtfJsGlobals(): Promise<RtfJsGlobals> {
 }
 
 /**
- * Resolve a public path, respecting NEXT_PUBLIC_BASE_PATH if configured.
+ * Resolve a public path against the configured asset base path.
  */
+import { resolveAssetPath } from "../core/config";
 function resolvePath(path: string): string {
-  const basePath =
-    typeof process !== "undefined" ? process.env.NEXT_PUBLIC_BASE_PATH || "" : "";
-  return `${basePath}/${path}`;
+  return resolveAssetPath(path);
 }
 
 async function load(): Promise<RtfJsGlobals> {
