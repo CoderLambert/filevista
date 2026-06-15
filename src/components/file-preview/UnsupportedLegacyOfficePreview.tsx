@@ -1,5 +1,6 @@
 import { AlertTriangleIcon, DownloadIcon } from "./icons";
 import { base64ToUint8Array } from "./utils";
+import { useLocale } from "./core/i18n";
 import "./styles/UnsupportedLegacyOfficePreview.css";
 
 interface UnsupportedLegacyOfficePreviewProps {
@@ -17,6 +18,8 @@ export function UnsupportedLegacyOfficePreview({
   title,
   description,
 }: UnsupportedLegacyOfficePreviewProps) {
+  const t = useLocale();
+
   const handleDownload = () => {
     if (!content) return;
 
@@ -51,7 +54,7 @@ export function UnsupportedLegacyOfficePreview({
           className="fv-btn fv-btn--primary"
         >
           <DownloadIcon size={14} />
-          下载原文件
+          {t.downloadOriginal}
         </button>
       )}
     </div>

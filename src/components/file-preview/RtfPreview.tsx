@@ -4,6 +4,7 @@ import DOMPurify from "dompurify";
 import { ShikiSourceView } from "./ShikiSourceView";
 import { loadRtfJsGlobals } from "./rtf/load-rtfjs";
 import { normalizeRtfCodepage } from "./rtf/normalize-codepage";
+import { useLocale } from "./core/i18n";
 import "./styles/RtfPreview.css";
 import "./styles/ViewModeBar.css";
 
@@ -164,6 +165,7 @@ export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
   const [iframeHtml, setIframeHtml] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [renderState, setRenderState] = useState<"loading" | "done">("loading");
+  const t = useLocale();
 
   useEffect(() => {
     let cancelled = false;
@@ -198,14 +200,14 @@ export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
             className={`fv-view-mode-btn ${viewMode === "preview" ? "fv-view-mode-btn--active" : ""}`}
           >
             <EyeIcon size={13} />
-            预览
+            {t.preview}
           </button>
           <button
             onClick={() => setViewMode("source")}
             className={`fv-view-mode-btn ${viewMode === "source" ? "fv-view-mode-btn--active" : ""}`}
           >
             <Code2Icon size={13} />
-            源码
+            {t.source}
           </button>
         </div>
       </div>
@@ -213,7 +215,7 @@ export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
       <div className="fv-rtf__content">
         {viewMode === "preview" ? (
           renderState === "loading" ? (
-            <div className="fv-rtf__loading">正在解析 RTF...</div>
+            <div className="fv-rtf__loading">{t.loadingRtf}</div>
           ) : iframeHtml ? (
             <iframe
               srcDoc={iframeHtml}
@@ -222,7 +224,7 @@ export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
               title={`Preview of ${fileName}`}
             />
           ) : (
-            <RtfTextFallback rawText={rawText} renderError={renderError} />
+            <RtfTextFallback rawText={rawText} renderError={renderError} t={t} />
           )
         ) : (
           <ShikiSourceView content={rawText} fileName={fileName} language="text" />
@@ -235,9 +237,11 @@ export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
 function RtfTextFallback({
   rawText,
   renderError,
+  t,
 }: {
   rawText: string;
   renderError: string | null;
+  t: ReturnType<typeof useLocale>;
 }) {
   const paragraphs = extractRtfText(rawText);
 
@@ -248,13 +252,13 @@ function RtfTextFallback({
           <div className="fv-rtf-text-fallback__warn-header">
             <span style={{ fontSize: 'var(--fv-font-size-sm)' }}>⚠️</span>
             <span className="fv-rtf-text-fallback__warn-text">
-              富文本渲染不可用，已降级为纯文本预览
+              {t.rtfFallback}
             </span>
           </div>
           {renderError && (
             <details style={{ marginTop: '0.5rem' }}>
               <summary style={{ cursor: 'pointer', fontSize: '11px', color: 'var(--fv-warning)', opacity: 0.7 }}>
-                查看错误详情
+                {t.showErrorDetails}
               </summary>
               <pre style={{ marginTop: '0.375rem', fontSize: '10px', color: 'var(--fv-warning)', opacity: 0.7, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                 {renderError}
@@ -268,7 +272,7 @@ function RtfTextFallback({
           ))}
           {paragraphs.length === 0 && (
             <p style={{ color: 'var(--fv-muted-foreground)', fontSize: 'var(--fv-font-size-sm)' }}>
-              无法从文件中提取文本内容。
+              {t.rtfNoText}
             </p>
           )}
         </div>

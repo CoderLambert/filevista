@@ -3,6 +3,7 @@ import { AlertTriangleIcon, DownloadIcon, CopyIcon } from "./icons";
 import type { FileInfo } from "./utils";
 import { formatFileSize } from "./utils";
 import { downloadSource } from "./core/download";
+import { useLocale } from "./core/i18n";
 import "./styles/PreviewFallback.css";
 
 export type PreviewFallbackKind =
@@ -26,31 +27,32 @@ export interface PreviewFallbackProps {
   canDownload?: boolean;
 }
 
-function getFallbackTitle(kind: PreviewFallbackKind): string {
+function getFallbackTitle(kind: PreviewFallbackKind, t: ReturnType<typeof useLocale>): string {
   switch (kind) {
     case "unsupported":
-      return "Preview Not Available";
+      return t.previewNotAvailable;
     case "plugin-load-failed":
-      return "Failed to Load Preview";
+      return t.failedToLoadPreview;
     case "render-failed":
-      return "Preview Crashed";
+      return t.previewFailed;
     case "source-read-failed":
-      return "Failed to Read File";
+      return t.failedToReadFile;
     case "file-too-large":
-      return "File Too Large";
+      return t.largeFile;
     case "aborted":
-      return "Loading Cancelled";
+      return t.loadingCancelled;
     default:
-      return "Something Went Wrong";
+      return t.previewFailed;
   }
 }
 
 function getFallbackDescription(
   kind: PreviewFallbackKind,
+  t: ReturnType<typeof useLocale>,
 ): string | undefined {
   switch (kind) {
     case "unsupported":
-      return "This file type is currently not available for browser-side preview.";
+      return t.unsupportedFileType.replace("{fileType}", "");
     case "plugin-load-failed":
       return "The preview plugin could not be loaded. This may be a network issue or the plugin is not installed.";
     case "render-failed":
@@ -58,7 +60,7 @@ function getFallbackDescription(
     case "source-read-failed":
       return "Could not read file content. The file may be corrupted or inaccessible.";
     case "file-too-large":
-      return "This file exceeds the preview size limit and cannot be rendered in the browser.";
+      return t.largeFileHint;
     case "aborted":
       return "File loading was cancelled.";
     default:
@@ -70,10 +72,12 @@ function PreviewErrorDetails({
   error,
   pluginId,
   pluginName,
+  t,
 }: {
   error?: unknown;
   pluginId?: string;
   pluginName?: string;
+  t: ReturnType<typeof useLocale>;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -90,7 +94,7 @@ function PreviewErrorDetails({
         onClick={() => setExpanded((v) => !v)}
         className="fv-fallback__details-toggle"
       >
-        {expanded ? "Hide" : "Show"} error details
+        {expanded ? "Hide" : "Show"} {t.showErrorDetails.toLowerCase()}
       </button>
 
       {expanded && (
@@ -110,7 +114,7 @@ function PreviewErrorDetails({
               navigator.clipboard.writeText(text);
             }}
             className="fv-fallback__details-copy"
-            title="Copy error details"
+            title={t.copyCode}
           >
             <CopyIcon size={12} />
           </button>
@@ -131,6 +135,8 @@ export function PreviewFallback({
   onRetry,
   canDownload = true,
 }: PreviewFallbackProps) {
+  const t = useLocale();
+
   return (
     <div className="fv-fallback">
       <div className="fv-fallback__inner">
@@ -140,10 +146,10 @@ export function PreviewFallback({
 
         <div>
           <h3 className="fv-fallback__title">
-            {title ?? getFallbackTitle(kind)}
+            {title ?? getFallbackTitle(kind, t)}
           </h3>
           <p className="fv-fallback__desc">
-            {description ?? getFallbackDescription(kind)}
+            {description ?? getFallbackDescription(kind, t)}
           </p>
           <p className="fv-fallback__meta">
             {file.name} · {formatFileSize(file.size)}
@@ -162,7 +168,7 @@ export function PreviewFallback({
               className="fv-btn fv-btn--outline fv-btn--sm"
               onClick={() => downloadSource(file.source, file.name, file.type)}
             >
-              <DownloadIcon size={16} /> Download original
+              <DownloadIcon size={16} /> {t.downloadOriginal}
             </button>
           )}
         </div>
@@ -171,6 +177,7 @@ export function PreviewFallback({
           error={error}
           pluginId={pluginId}
           pluginName={pluginName}
+          t={t}
         />
       </div>
     </div>

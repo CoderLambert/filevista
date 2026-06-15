@@ -5,6 +5,7 @@ import { highlightCode } from "./shiki";
 import { EyeIcon, Code2Icon } from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";
 import { FILE_PREVIEW_LIMITS } from "./limits";
+import { useLocale } from "./core/i18n";
 import "./styles/MarkdownPreview.css";
 import "./styles/ViewModeBar.css";
 
@@ -54,6 +55,7 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const mountedRef = useRef(true);
+  const t = useLocale();
 
   useEffect(() => {
     mountedRef.current = true;
@@ -116,7 +118,7 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
       <pre className="md-pre-loading">
         <div className="md-pre-header">
           <span className="md-lang-badge">{language}</span>
-          <span className="md-lang-badge" style={{ fontSize: "0.6em", opacity: 0.7 }}>大代码块</span>
+          <span className="md-lang-badge" style={{ fontSize: "0.6em", opacity: 0.7 }}>{t.oversizedCodeBlock}</span>
         </div>
         <code className={`language-${language}`}>{code}</code>
       </pre>
@@ -143,6 +145,7 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
 export function MarkdownPreview({ content }: MarkdownPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
   const components = useMemo(() => ({ pre: ShikiPreBlock }), []);
+  const t = useLocale();
 
   return (
     <div className="fv-markdown">
@@ -153,14 +156,14 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
             className={`fv-view-mode-btn ${viewMode === "preview" ? "fv-view-mode-btn--active" : ""}`}
           >
             <EyeIcon size={13} />
-            预览
+            {t.preview}
           </button>
           <button
             onClick={() => setViewMode("source")}
             className={`fv-view-mode-btn ${viewMode === "source" ? "fv-view-mode-btn--active" : ""}`}
           >
             <Code2Icon size={13} />
-            源码
+            {t.source}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { EyeIcon, Code2Icon, Columns2Icon, ZoomInIcon, ZoomOutIcon, RotateCwIcon } from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";
+import { useLocale } from "./core/i18n";
 import "./styles/SvgPreview.css";
 
 interface SvgPreviewProps {
@@ -14,6 +15,7 @@ export function SvgPreview({ content, fileName }: SvgPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("rendered");
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
+  const t = useLocale();
 
   const svgUrl = useMemo(() => {
     const blob = new Blob([content], { type: "image/svg+xml" });
@@ -60,21 +62,21 @@ export function SvgPreview({ content, fileName }: SvgPreviewProps) {
             className={`fv-svg__mode-btn ${viewMode === "rendered" ? "fv-svg__mode-btn--active" : ""}`}
           >
             <EyeIcon size={13} />
-            预览
+            {t.preview}
           </button>
           <button
             onClick={() => setViewMode("source")}
             className={`fv-svg__mode-btn ${viewMode === "source" ? "fv-svg__mode-btn--active" : ""}`}
           >
             <Code2Icon size={13} />
-            源码
+            {t.source}
           </button>
           <button
             onClick={() => setViewMode("split")}
             className={`fv-svg__mode-btn ${viewMode === "split" ? "fv-svg__mode-btn--active" : ""}`}
           >
             <Columns2Icon size={13} />
-            分栏
+            {t.split}
           </button>
         </div>
       </div>

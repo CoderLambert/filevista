@@ -11,6 +11,7 @@ import {
   ChevronDownIcon,
 } from "./icons";
 import { base64ToUint8Array } from "./utils";
+import { useLocale } from "./core/i18n";
 import "./styles/EpubPreview.css";
 
 interface EpubPreviewProps {
@@ -434,6 +435,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
   const [searchResults, setSearchResults] = useState<{ chapterIndex: number; snippet: string }[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const t = useLocale();
 
   // Reset state when content changes — derived state during render
   const [prevContent, setPrevContent] = useState(content);
@@ -558,7 +560,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
     return (
       <div className="fv-epub__state fv-epub__state--loading">
         <div className="fv-spinner fv-spinner--lg" />
-        <p className="fv-epub__state-msg">Loading e-book...</p>
+        <p className="fv-epub__state-msg">{t.loadingEbook}</p>
       </div>
     );
   }
@@ -567,8 +569,8 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
     return (
       <div className="fv-epub__state fv-epub__state--error">
         <BookOpenIcon size={48} className="fv-epub__state-icon" />
-        <p className="fv-epub__state-title">Failed to Load E-book</p>
-        <p className="fv-epub__state-msg">{error || "Unknown error"}</p>
+        <p className="fv-epub__state-title">{t.ebookLoadFailed}</p>
+        <p className="fv-epub__state-msg">{error || t.unknownError}</p>
       </div>
     );
   }
@@ -577,7 +579,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
     return (
       <div className="fv-epub__state fv-epub__state--empty">
         <BookOpenIcon size={48} />
-        <p className="fv-epub__state-title">No Chapters Found</p>
+        <p className="fv-epub__state-title">{t.noChaptersFound}</p>
       </div>
     );
   }
@@ -632,7 +634,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search..."
+                placeholder={t.searchPlaceholder}
                 className="fv-epub__search-input"
               />
               {searchQuery && (
@@ -651,7 +653,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
             <button
               onClick={() => setShowToc(!showToc)}
               className={`fv-epub__toc-btn ${showToc ? "fv-epub__toc-btn--active" : ""}`}
-              title="Table of Contents"
+              title={t.tableOfContents}
             >
               <ListIcon size={16} />
             </button>
@@ -663,7 +665,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
       {searchQuery && searchResults.length > 0 && (
         <div className="fv-epub__search-results">
           <p className="fv-epub__search-results-label">
-            Found in {searchResults.length} chapter(s)
+            {t.foundInChapters.replace("{count}", searchResults.length.toLocaleString())}
           </p>
           <div className="fv-epub__search-results-list">
             {searchResults.map((r, i) => (
@@ -688,7 +690,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
 
       {searchQuery && searchResults.length === 0 && (
         <div className="fv-epub__search-empty">
-          <p className="fv-epub__search-empty-text">No results found</p>
+          <p className="fv-epub__search-empty-text">{t.noResultsFound}</p>
         </div>
       )}
 
@@ -698,7 +700,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
           <div className="fv-epub__toc-sidebar">
             <div className="fv-epub__toc-inner">
               <h3 className="fv-epub__toc-heading">
-                Table of Contents
+                {t.tableOfContents}
               </h3>
               <TocTree
                 items={bookData.toc}
@@ -811,7 +813,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               className="fv-epub__footer-btn"
             >
               <ChevronLeftIcon size={16} />
-              <span className="fv-epub__footer-btn-text">Previous</span>
+              <span className="fv-epub__footer-btn-text">{t.previous}</span>
             </button>
             <span className="fv-epub__footer-label">
               {currentChapter + 1} / {bookData.chapters.length}
@@ -823,7 +825,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               disabled={currentChapter === bookData.chapters.length - 1}
               className="fv-epub__footer-btn"
             >
-              <span className="fv-epub__footer-btn-text">Next</span>
+              <span className="fv-epub__footer-btn-text">{t.next}</span>
               <ChevronRightIcon size={16} />
             </button>
           </div>

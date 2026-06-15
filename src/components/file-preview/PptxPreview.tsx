@@ -20,6 +20,7 @@ import {
 } from "./icons";
 import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
 import type { PreviewSource } from "./core/types";
+import { useLocale } from "./core/i18n";
 import "./styles/PptxPreview.css";
 
 interface PptxPreviewProps {
@@ -185,7 +186,7 @@ const PptxRenderContainer = forwardRef<
           onError(
             err instanceof Error
               ? err.message
-              : "PPTX 预览失败，文件可能已损坏或格式不受支持"
+              : "PPTX preview failed — file may be corrupted or unsupported"
           );
         }
       }
@@ -242,6 +243,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
   const renderHandleRef = useRef<PptxRenderHandle>(null);
+  const t = useLocale();
 
   // Stable callbacks for PptxRenderContainer
   const handleReady = useCallback(
@@ -328,10 +330,9 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
     return (
       <div className="fv-pptx__error">
         <AlertTriangleIcon size={36} className="fv-pptx__error-icon" />
-        <p className="fv-pptx__error-title">格式不支持</p>
+        <p className="fv-pptx__error-title">{t.formatNotSupported}</p>
         <p className="fv-pptx__error-msg">
-          该文件为旧版 PowerPoint 二进制格式（.ppt），当前仅支持 Open XML
-          格式（.pptx）。建议使用 PowerPoint 或 WPS 将文件另存为 .pptx 格式后重试。
+          {t.legacyPptDesc}
         </p>
       </div>
     );
@@ -341,7 +342,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
     return (
       <div className="fv-pptx__error">
         <AlertTriangleIcon size={36} className="fv-pptx__error-icon" />
-        <p className="fv-pptx__error-title">预览失败</p>
+        <p className="fv-pptx__error-title">{t.previewFailed}</p>
         <p className="fv-pptx__error-msg">
           {error}
         </p>
@@ -359,14 +360,14 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
               <span className="fv-pptx__slide-count">
                 {currentSlide + 1} / {slideCount}
               </span>
-              <span className="fv-pptx__slide-label">页</span>
+              <span className="fv-pptx__slide-label">{t.page}</span>
             </>
           ) : (
             <>
               <span className="fv-pptx__slide-count">
                 {slideCount}
               </span>
-              <span className="fv-pptx__slide-label">页</span>
+              <span className="fv-pptx__slide-label">{t.page}</span>
             </>
           )}
         </div>
@@ -376,14 +377,14 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
           <button
             onClick={() => switchViewMode("slide")}
             className={`fv-pptx__mode-btn ${viewMode === "slide" ? "fv-pptx__mode-btn--active" : ""}`}
-            title="幻灯片视图"
+            title={t.slideView}
           >
             <MonitorIcon size={16} />
           </button>
           <button
             onClick={() => switchViewMode("grid")}
             className={`fv-pptx__mode-btn ${viewMode === "grid" ? "fv-pptx__mode-btn--active" : ""}`}
-            title="缩略图视图"
+            title={t.gridView}
           >
             <Grid3X3Icon size={16} />
           </button>
@@ -395,7 +396,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
             <button
               onClick={() => setZoom(Math.max(50, zoom - 10))}
               className="fv-pptx__zoom-btn"
-              title="缩小"
+              title={t.zoomOut}
             >
               <ZoomOutIcon size={14} />
             </button>
@@ -403,7 +404,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
             <button
               onClick={() => setZoom(Math.min(200, zoom + 10))}
               className="fv-pptx__zoom-btn"
-              title="放大"
+              title={t.zoomIn}
             >
               <ZoomInIcon size={14} />
             </button>
@@ -412,7 +413,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
           <button
             onClick={toggleFullscreen}
             className="fv-pptx__fullscreen-btn"
-            title="全屏"
+            title={t.fullscreen}
           >
             {isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
           </button>
@@ -424,7 +425,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
               onClick={prevSlide}
               disabled={currentSlide === 0 || loading}
               className="fv-pptx__nav-btn"
-              title="上一页 (←)"
+              title={t.previousPage}
             >
               <ChevronLeftIcon size={16} />
             </button>
@@ -432,7 +433,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
               onClick={nextSlide}
               disabled={currentSlide >= slideCount - 1 || loading}
               className="fv-pptx__nav-btn"
-              title="下一页 (→)"
+              title={t.nextPage}
             >
               <ChevronRightIcon size={16} />
             </button>
@@ -446,7 +447,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
           <div className="fv-pptx__loading-overlay">
             <div className="fv-spinner fv-spinner--lg" />
             <p className="fv-pptx__loading-label">
-              正在解析演示文稿...
+              {t.loadingPresentation}
             </p>
           </div>
         )}

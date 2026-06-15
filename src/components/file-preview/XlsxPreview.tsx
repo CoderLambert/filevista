@@ -14,6 +14,7 @@ import { XLSX_PREVIEW_LIMITS } from "./limits";
 import { readBinaryPreviewAsUint8Array } from "./core/binary";
 import type { PreviewSource } from "./core/types";
 import { formatFileSize } from "./utils";
+import { useLocale } from "./core/i18n";
 
 // Lazy-load ExcelJS
 let ExcelJS: typeof import("exceljs") | null = null;
@@ -577,6 +578,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
   const [zoom, setZoom] = useState(100);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [hoveredComment, setHoveredComment] = useState<{ row: number; col: number; text: string; x: number; y: number } | null>(null);
+  const t = useLocale();
 
   const [mode, setMode] = useState<XlsxPreviewMode>(() => {
     return fileSize > XLSX_PREVIEW_LIMITS.LARGE_FILE_SIZE ? "fast" : "fidelity";
@@ -590,7 +592,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
       if (nextMode === mode) return;
       if (nextMode === "fidelity" && isTooLargeForFidelity) {
         const confirmed = window.confirm(
-          `当前 Excel 文件大小为 ${formatFileSize(fileSize)}，高保真模式可能导致浏览器卡顿甚至无响应。是否继续？`
+          t.largeFileFidelityConfirm.replace("{fileSize}", formatFileSize(fileSize))
         );
         if (!confirmed) return;
       }
@@ -627,7 +629,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
         console.error("XLSX parse error:", err);
         const ext = fileName.toLowerCase().split(".").pop() || "";
         if (ext === "xls") {
-          setError("该文件为旧版 Excel 二进制格式（.xls），当前仅支持 Open XML 格式（.xlsx/.xlsm）。建议使用 Excel 或 WPS 将文件另存为 .xlsx 格式后重试。");
+          setError(t.legacyXlsError);
         } else {
           setError(err instanceof Error ? err.message : "Failed to parse spreadsheet");
         }
@@ -662,7 +664,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
     return (
       <div className="fv-xlsx__state">
         <div className="fv-spinner fv-spinner--lg" />
-        <p className="fv-xlsx__state-msg">正在解析表格...</p>
+        <p className="fv-xlsx__state-msg">{t.loadingSpreadsheet}</p>
       </div>
     );
   }
@@ -670,7 +672,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
     return (
       <div className="fv-xlsx__state fv-xlsx__state--error">
         <AlertTriangleIcon size={36} />
-        <p className="fv-xlsx__state-title">解析失败</p>
+        <p className="fv-xlsx__state-title">{t.parseFailed}</p>
         <p className="fv-xlsx__state-msg">{error}</p>
       </div>
     );
@@ -678,7 +680,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
   if (sheets.length === 0) {
     return (
       <div className="fv-xlsx__state fv-xlsx__state--empty">
-        <p className="fv-xlsx__state-title">未找到工作表</p>
+        <p className="fv-xlsx__state-title">{t.sheetNotFound}</p>
       </div>
     );
   }
@@ -700,7 +702,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
       {showLegacyWarning && (
         <div className="fv-xlsx__legacy-banner">
           <AlertTriangleIcon size={14} />
-          <span>当前文件为旧版 .xls 格式，部分内容可能无法完整显示。建议另存为 .xlsx 格式以获得最佳预览效果。</span>
+          <span>{t.legacyXlsFallbackDesc}</span>
         </div>
       )}
 
@@ -723,40 +725,40 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
             <button
               onClick={() => switchMode("fast")}
               className={`fv-xlsx__mode-btn ${mode === "fast" ? "fv-xlsx__mode-btn--active" : ""}`}
-              title="快速模式：限制行数，跳过图片和复杂样式"
+              title={t.fastModeTitle}
             >
-              快速
+              {t.fastMode}
             </button>
             <button
               onClick={() => switchMode("fidelity")}
               className={`fv-xlsx__mode-btn ${mode === "fidelity" ? "fv-xlsx__mode-btn--active" : ""}`}
-              title="高保真模式：保留样式、图片、批注"
+              title={t.fidelityModeTitle}
             >
-              高保真
+              {t.fidelityMode}
             </button>
           </div>
         </div>
         <div className="fv-xlsx__toolbar-right">
           <div className="fv-xlsx__search-wrap">
             <SearchIcon size={14} className="fv-xlsx__search-icon" />
-            <input type="text" placeholder="搜索..." value={searchTerm}
+            <input type="text" placeholder={t.search} value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="fv-xlsx__search-input" />
           </div>
           <div className="fv-xlsx__zoom-group">
-            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="fv-xlsx__zoom-btn" title="缩小"><ZoomOutIcon size={14} /></button>
+            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="fv-xlsx__zoom-btn" title={t.zoomOut}><ZoomOutIcon size={14} /></button>
             <span className="fv-xlsx__zoom-label">{zoom}%</span>
-            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="fv-xlsx__zoom-btn" title="放大"><ZoomInIcon size={14} /></button>
+            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="fv-xlsx__zoom-btn" title={t.zoomIn}><ZoomInIcon size={14} /></button>
           </div>
           <span className="fv-xlsx__info">
             {mode === "fast" && currentSheet?.totalRows > XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT ? (
               <>
-                显示前 {XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT.toLocaleString()} 行 / 共 {currentSheet.totalRows.toLocaleString()} 行 × {currentSheet.totalCols} 列
+                {XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT.toLocaleString()} / {currentSheet.totalRows.toLocaleString()} {t.largeFileRows} × {currentSheet.totalCols} {t.largeFileCols}
               </>
             ) : (
               <>
-                {currentSheet?.totalRows?.toLocaleString() || 0} 行 × {currentSheet?.totalCols || 0} 列
-                {currentSheet?.imageCount ? ` · ${currentSheet.imageCount} 张图片` : ""}
+                {currentSheet?.totalRows?.toLocaleString() || 0} {t.largeFileRows} × {currentSheet?.totalCols || 0} {t.largeFileCols}
+                {currentSheet?.imageCount ? ` · ${currentSheet.imageCount} ${t.largeFileImages}` : ""}
               </>
             )}
           </span>
@@ -766,12 +768,12 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
       {/* Large file banners */}
       {isLargeFile && mode === "fast" && (
         <div className="fv-xlsx__large-banner fv-xlsx__large-banner--warning">
-          当前 Excel 文件较大（{formatFileSize(fileSize)}），已默认使用快速模式：仅渲染前 {XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT.toLocaleString()} 行，并跳过图片解析。
+          {t.largeFileFastModeBanner.replace("{fileSize}", formatFileSize(fileSize)).replace("{rowLimit}", XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT.toLocaleString())}
         </div>
       )}
       {isLargeFile && mode === "fidelity" && (
         <div className="fv-xlsx__large-banner fv-xlsx__large-banner--danger">
-          当前正在使用高保真模式预览大文件，可能导致浏览器卡顿。
+          {t.largeFileFidelityBanner}
         </div>
       )}
 
@@ -839,7 +841,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
                                   <div key={imgIdx}
                                     className="fv-xlsx__cell-image-placeholder"
                                     style={{ width: 60, height: 40 }}
-                                    title={`不支持的图片格式: ${img.formatName || "未知"}`}
+                                    title={`${t.unsupportedImageFormat}: ${img.formatName || t.unknown}`}
                                   >
                                     <ImageOffIcon size={14} />
                                     <span style={{ fontSize: 8, color: "#9ca3af" }}>{img.formatName}</span>
@@ -894,14 +896,14 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
               {isTruncated && (
                 <tr>
                   <td colSpan={totalCols + 1} className="fv-xlsx__truncation-row fv-xlsx__truncation-row--warning">
-                    数据量较大，仅显示前 {MAX_RENDER_ROWS} 行（共 {allDisplayRows.length} 行）
+                    {t.truncatedRows.replace("{shown}", MAX_RENDER_ROWS.toLocaleString()).replace("{total}", allDisplayRows.length.toLocaleString())}
                   </td>
                 </tr>
               )}
               {displayRows.length === 0 && (
                 <tr>
                   <td colSpan={totalCols + 1} className="fv-xlsx__truncation-row fv-xlsx__truncation-row--empty">
-                    {searchTerm ? "未找到匹配数据" : "无数据"}
+                    {searchTerm ? t.noSearchResults : t.noData}
                   </td>
                 </tr>
               )}
@@ -915,7 +917,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
         <div className="fv-xlsx__comment-tooltip"
           style={{ left: hoveredComment.x, top: hoveredComment.y - 8, transform: "translate(-50%, -100%)" }}>
           <div className="fv-xlsx__comment-tooltip-header">
-            <MessageSquareIcon size={10} /> 批注
+            <MessageSquareIcon size={10} /> {t.comment}
           </div>
           <p className="fv-xlsx__comment-tooltip-text">{hoveredComment.text}</p>
         </div>

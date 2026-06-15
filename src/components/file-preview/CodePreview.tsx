@@ -3,6 +3,7 @@ import { CopyIcon, CheckIcon, WrapTextIcon } from "./icons";
 import { highlightCode as shikiHighlight, getShikiLanguage } from "./shiki";
 import { shouldHighlight } from "./limits";
 import { PlainTextLargePreview } from "./PlainTextLargePreview";
+import { useLocale } from "./core/i18n";
 import "./styles/ShikiSourceView.css";
 
 interface CodePreviewProps {
@@ -17,6 +18,7 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(true);
+  const t = useLocale();
 
   const language = useMemo(
     () => (isJson ? "json" : getShikiLanguage(fileName)),
@@ -104,7 +106,7 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
           <button
             onClick={handleCopy}
             className="fv-btn fv-btn--icon"
-            title="Copy code"
+            title={t.copyCode}
           >
             {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
           </button>

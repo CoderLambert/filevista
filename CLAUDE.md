@@ -42,6 +42,7 @@ src/
 │       │   ├── binary.ts    # readBinaryPreviewAs* helpers
 │       │   ├── download.ts  # downloadSource helper
 │       │   └── config.ts    # Asset base path configuration (setAssetBasePath/resolveAssetPath)
+│       │   └── i18n.ts      # Locale messages (zhCN/enUS) + LocaleProvider + useLocale()
 │       ├── hooks/           # React hooks for source reading
 │       ├── plugins/         # 16 built-in preview plugins + builtin-plugins.ts
 │       ├── preview-adapters/# Adapter components bridging plugins → preview components
@@ -89,6 +90,7 @@ The `file-preview/` module is **framework-agnostic and has zero external UI depe
 - **Theming**: Override CSS variables (`--fv-primary`, `--fv-muted`, `--fv-border`, etc.) to customize appearance
 - **Import**: `import './styles/index.css'` or individual `import './styles/PdfPreview.css'`
 - **Asset base path**: `core/config.ts` provides `setAssetBasePath()` / `resolveAssetPath()` for static assets (PDF.js worker, RTF.js bundles, demo files). Replaces `process.env.NEXT_PUBLIC_BASE_PATH`.
+- **i18n**: `core/i18n.ts` provides `LocaleMessages` type + `zhCN`/`enUS` locales + `LocaleProvider` context + `useLocale()` hook. All UI strings are externalized — zero hardcoded Chinese/English in components. Consumers can override locale via `<LocaleProvider value={enUS}>`.
 
 The app layer (`page.tsx`, layout) still uses Tailwind + shadcn/ui — only the file-preview module is decoupled.
 

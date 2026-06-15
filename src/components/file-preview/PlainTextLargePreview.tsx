@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { CopyIcon, CheckIcon, WrapTextIcon } from "./icons";
 import { formatFileSize } from "./utils";
 import { truncateContent } from "./limits";
+import { useLocale } from "./core/i18n";
 import "./styles/PlainTextLargePreview.css";
 
 interface PlainTextLargePreviewProps {
@@ -12,6 +13,7 @@ interface PlainTextLargePreviewProps {
 export function PlainTextLargePreview({ content, language }: PlainTextLargePreviewProps) {
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(true);
+  const t = useLocale();
 
   const displayContent = useMemo(() => truncateContent(content), [content]);
   const lineCount = useMemo(() => content.split("\n").length, [content]);
@@ -29,25 +31,25 @@ export function PlainTextLargePreview({ content, language }: PlainTextLargePrevi
         <div className="fv-plain-text__toolbar-left">
           <span className="fv-plain-text__lang-badge">{language}</span>
           <span className="fv-plain-text__line-count">
-            {lineCount.toLocaleString()} 行
+            {lineCount.toLocaleString()} {t.lines}
           </span>
           <span className="fv-plain-text__file-size">
             {formatFileSize(fileSize)}
           </span>
-          <span className="fv-plain-text__large-badge">大文件</span>
+          <span className="fv-plain-text__large-badge">{t.largeFile}</span>
         </div>
         <div className="fv-plain-text__toolbar-right">
           <button
             onClick={() => setWordWrap((w) => !w)}
             className={`fv-btn fv-btn--icon ${wordWrap ? "fv-source__btn-active" : ""}`}
-            title={wordWrap ? "关闭自动换行" : "开启自动换行"}
+            title={wordWrap ? t.wordWrapOff : t.wordWrapOn}
           >
             <WrapTextIcon size={14} />
           </button>
           <button
             onClick={handleCopy}
             className="fv-btn fv-btn--icon"
-            title="复制内容"
+            title={t.copyContent}
           >
             {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
           </button>

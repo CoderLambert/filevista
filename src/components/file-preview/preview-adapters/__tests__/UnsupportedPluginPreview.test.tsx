@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { UnsupportedPluginPreview } from "../UnsupportedPluginPreview";
 import type { FileInfo } from "../../utils";
+import { LocaleProvider, zhCN } from "../../core/i18n";
 
 vi.mock("../../core/download", () => ({
   downloadSource: vi.fn(),
@@ -63,6 +64,11 @@ function makeLegacyFile(
   };
 }
 
+/** Wrap component with LocaleProvider for i18n context. */
+function renderWithLocale(ui: React.ReactElement) {
+  return render(<LocaleProvider value={zhCN}>{ui}</LocaleProvider>);
+}
+
 describe("UnsupportedPluginPreview", () => {
   it("renders default unknown unsupported state", () => {
     const file: FileInfo = {
@@ -74,41 +80,40 @@ describe("UnsupportedPluginPreview", () => {
       source: { kind: "file", file: new File([], "unknown-file") },
     };
 
-    render(<UnsupportedPluginPreview file={file} />);
+    renderWithLocale(<UnsupportedPluginPreview file={file} />);
 
-    expect(screen.getByText("Preview Not Available")).toBeInTheDocument();
+    expect(screen.getByText(zhCN.previewNotAvailable)).toBeInTheDocument();
     expect(
-      screen.getByText("该文件类型 (unknown) 暂不支持浏览器端预览。")
+      screen.getByText(zhCN.unsupportedFileType.replace("{fileType}", "unknown"))
     ).toBeInTheDocument();
 
-    // With source-first, every FileInfo has a source, so download is always available
     expect(
-      screen.getByRole("button", { name: /download original/i })
+      screen.getByRole("button", { name: /download original|下载原文件/i })
     ).toBeInTheDocument();
   });
 
   it.each([
-    ["doc", "legacy.doc", "旧版 Word 格式暂不支持", ".docx"],
-    ["ppt", "legacy.ppt", "旧版 PowerPoint 格式暂不支持", ".pptx"],
-    ["xls", "legacy.xls", "旧版 Excel 格式暂不支持", ".xlsx"],
+    ["doc", "legacy.doc", zhCN.legacyDocTitle, ".docx"],
+    ["ppt", "legacy.ppt", zhCN.legacyPptTitle, ".pptx"],
+    ["xls", "legacy.xls", zhCN.legacyXlsTitle, ".xlsx"],
   ] as const)(
-    "renders Chinese unsupported copy and download button for %s",
+    "renders unsupported copy and download button for %s",
     (fileType, fileName, expectedTitle, expectedTargetExt) => {
-      render(<UnsupportedPluginPreview file={makeLegacyFile(fileType, fileName)} />);
+      renderWithLocale(<UnsupportedPluginPreview file={makeLegacyFile(fileType, fileName)} />);
 
       expect(screen.getByText(expectedTitle)).toBeInTheDocument();
       expect(screen.getByText(new RegExp(expectedTargetExt))).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /download original/i })
+        screen.getByRole("button", { name: /download original|下载原文件/i })
       ).toBeInTheDocument();
     }
   );
 
   it("renders download button when file has source", () => {
-    render(<UnsupportedPluginPreview file={makeLegacyFile("doc", "legacy.doc")} />);
+    renderWithLocale(<UnsupportedPluginPreview file={makeLegacyFile("doc", "legacy.doc")} />);
 
     expect(
-      screen.getByRole("button", { name: /download original/i })
+      screen.getByRole("button", { name: /download original|下载原文件/i })
     ).toBeInTheDocument();
   });
 
@@ -122,7 +127,7 @@ describe("UnsupportedPluginPreview", () => {
       source: { kind: "file", file: new File([], "unknown-file") },
     };
 
-    render(
+    renderWithLocale(
       <UnsupportedPluginPreview
         file={file}
         title="自定义标题"
@@ -136,13 +141,12 @@ describe("UnsupportedPluginPreview", () => {
 
   it("download triggers source download via PreviewFallback", async () => {
     const file = makeLegacyFile("doc", "legacy.doc");
-    render(<UnsupportedPluginPreview file={file} />);
+    renderWithLocale(<UnsupportedPluginPreview file={file} />);
 
-    const button = screen.getByRole("button", { name: /download original/i });
+    const button = screen.getByRole("button", { name: /download original|下载原文件/i });
 
     fireEvent.click(button);
 
-    // The download goes through downloadSource
     expect(downloadSource).toHaveBeenCalledWith(
       file.source,
       file.name,

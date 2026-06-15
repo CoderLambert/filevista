@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { EyeIcon, Code2Icon } from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";
+import { useLocale } from "./core/i18n";
 import "./styles/HtmlPreview.css";
 import "./styles/ViewModeBar.css";
 
@@ -14,6 +15,7 @@ type HtmlSecurityMode = "safe" | "trusted";
 
 export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
+  const t = useLocale();
 
   const [securityMode] = useState<HtmlSecurityMode>("safe");
   const sandbox =
@@ -37,14 +39,14 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
             className={`fv-view-mode-btn ${viewMode === "preview" ? "fv-view-mode-btn--active" : ""}`}
           >
             <EyeIcon size={13} />
-            预览
+            {t.preview}
           </button>
           <button
             onClick={() => setViewMode("source")}
             className={`fv-view-mode-btn ${viewMode === "source" ? "fv-view-mode-btn--active" : ""}`}
           >
             <Code2Icon size={13} />
-            源码
+            {t.source}
           </button>
         </div>
       </div>
