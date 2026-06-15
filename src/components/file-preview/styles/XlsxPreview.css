@@ -1,0 +1,181 @@
+.fv-xlsx {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.fv-xlsx__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--fv-border);
+  background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
+  flex-wrap: wrap;
+}
+.fv-xlsx__search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 16rem;
+}
+.fv-xlsx__search-icon {
+  position: absolute;
+  left: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--fv-muted-foreground);
+  pointer-events: none;
+}
+.fv-xlsx__search-input {
+  width: 100%;
+  padding: 0.25rem 0.5rem 0.25rem 1.75rem;
+  font-size: var(--fv-font-size-xs);
+  background: var(--fv-primary-foreground, #fff);
+  border: 1px solid var(--fv-border);
+  border-radius: var(--fv-radius);
+  outline: none;
+  color: var(--fv-primary);
+}
+.fv-xlsx__search-input:focus {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--fv-primary) 20%, transparent);
+}
+.fv-xlsx__mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: var(--fv-font-size-xs);
+  border-radius: var(--fv-radius);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--fv-muted-foreground);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.fv-xlsx__mode-btn:hover {
+  color: var(--fv-primary);
+  background: var(--fv-muted);
+}
+.fv-xlsx__mode-btn--active {
+  background: color-mix(in srgb, var(--fv-primary) 10%, transparent);
+  color: var(--fv-primary);
+  border-color: var(--fv-border);
+}
+.fv-xlsx__info {
+  font-size: var(--fv-font-size-xs);
+  color: var(--fv-muted-foreground);
+}
+.fv-xlsx__content {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+.fv-xlsx__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  gap: 0.75rem;
+}
+.fv-xlsx__loading-label {
+  font-size: var(--fv-font-size-sm);
+  color: var(--fv-muted-foreground);
+}
+.fv-xlsx__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  gap: 0.75rem;
+}
+.fv-xlsx__error-title {
+  font-size: var(--fv-font-size-lg);
+  font-weight: 500;
+}
+.fv-xlsx__error-msg {
+  font-size: var(--fv-font-size-sm);
+  color: var(--fv-muted-foreground);
+  max-width: 28rem;
+  text-align: center;
+}
+.fv-xlsx__table-wrap {
+  overflow: auto;
+  height: 100%;
+}
+.fv-xlsx__table {
+  width: 100%;
+  font-size: var(--fv-font-size-xs);
+  border-collapse: collapse;
+}
+.fv-xlsx__thead {
+  position: sticky;
+  top: 0;
+  background: color-mix(in srgb, var(--fv-muted) 80%, transparent);
+  z-index: 10;
+}
+.fv-xlsx__th {
+  padding: 0.375rem 0.5rem;
+  text-align: left;
+  font-weight: 500;
+  color: var(--fv-muted-foreground);
+  border-bottom: 1px solid var(--fv-border);
+  white-space: nowrap;
+}
+.fv-xlsx__td {
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--fv-border);
+  white-space: nowrap;
+  max-width: 20rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fv-xlsx__td--num {
+  color: var(--fv-muted-foreground);
+  font-family: var(--fv-font-mono);
+  text-align: right;
+}
+.fv-xlsx__comment-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fv-warning);
+  margin-left: 0.25rem;
+  cursor: help;
+}
+.fv-xlsx__link {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.fv-xlsx__empty-cell {
+  color: var(--fv-muted-foreground);
+  font-style: italic;
+}
+.fv-xlsx__image-placeholder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--fv-radius);
+  background: var(--fv-muted);
+  font-size: 10px;
+  color: var(--fv-muted-foreground);
+}
+.fv-xlsx__fast-mode-hint {
+  padding: 0.5rem 0.75rem;
+  background: var(--fv-warning-bg, #fffbeb);
+  border-bottom: 1px solid var(--fv-border);
+  font-size: var(--fv-font-size-xs);
+  color: var(--fv-warning-fg, #92400e);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+[data-fv-theme="dark"] .fv-xlsx__fast-mode-hint {
+  background: rgba(180, 83, 9, 0.15);
+  color: #fbbf24;
+}

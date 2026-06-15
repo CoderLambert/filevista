@@ -1,4 +1,3 @@
-"use client";
 
 import type { FileInfo } from "../utils";
 import { useObjectUrlFromSource } from "../hooks/useObjectUrlFromSource";

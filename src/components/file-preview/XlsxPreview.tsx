@@ -1,16 +1,15 @@
-"use client";
-
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
-  Search,
-  Table2,
-  ZoomIn,
-  ZoomOut,
-  ImageOff,
-  MessageSquare,
-  ExternalLink,
-  AlertTriangle,
-} from "lucide-react";
+  SearchIcon,
+  Table2Icon,
+  ZoomInIcon,
+  ZoomOutIcon,
+  ImageOffIcon,
+  MessageSquareIcon,
+  ExternalLinkIcon,
+  AlertTriangleIcon,
+} from "./icons";
+import "./styles/XlsxPreview.css";
 import { XLSX_PREVIEW_LIMITS } from "./limits";
 import { readBinaryPreviewAsUint8Array } from "./core/binary";
 import type { PreviewSource } from "./core/types";
@@ -670,7 +669,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
-        <AlertTriangle size={36} />
+        <AlertTriangleIcon size={36} />
         <p className="text-lg font-medium">解析失败</p>
         <p className="text-sm text-muted-foreground text-center max-w-md">{error}</p>
       </div>
@@ -700,7 +699,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
     <div className="flex flex-col h-full">
       {showLegacyWarning && (
         <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs">
-          <AlertTriangle size={14} />
+          <AlertTriangleIcon size={14} />
           <span>当前文件为旧版 .xls 格式，部分内容可能无法完整显示。建议另存为 .xlsx 格式以获得最佳预览效果。</span>
         </div>
       )}
@@ -708,7 +707,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30 gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <Table2 size={14} className="text-muted-foreground" />
+          <Table2Icon size={14} />
           {sheets.length > 1 && (
             <div className="flex gap-1 flex-wrap">
               {sheets.map((sheet, i) => (
@@ -747,15 +746,15 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
         </div>
         <div className="flex items-center gap-2">
           <div className="relative max-w-xs">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <SearchIcon size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input type="text" placeholder="搜索..." value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-36 pl-8 pr-3 py-1 text-xs bg-background border rounded-md focus:outline-none focus:ring-1 focus:ring-ring" />
           </div>
           <div className="flex items-center gap-0.5 border rounded-md px-1">
-            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="p-1 hover:bg-muted rounded transition-colors" title="缩小"><ZoomOut size={14} className="text-muted-foreground" /></button>
+            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="p-1 hover:bg-muted rounded transition-colors" title="缩小"><ZoomOutIcon size={14} /></button>
             <span className="text-xs text-muted-foreground w-10 text-center select-none">{zoom}%</span>
-            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="p-1 hover:bg-muted rounded transition-colors" title="放大"><ZoomIn size={14} className="text-muted-foreground" /></button>
+            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="p-1 hover:bg-muted rounded transition-colors" title="放大"><ZoomInIcon size={14} /></button>
           </div>
           <span className="text-xs text-muted-foreground select-none">
             {mode === "fast" && currentSheet?.totalRows > XLSX_PREVIEW_LIMITS.FAST_MODE_ROW_LIMIT ? (
@@ -850,7 +849,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
                                     style={{ width: 60, height: 40 }}
                                     title={`不支持的图片格式: ${img.formatName || "未知"}`}
                                   >
-                                    <ImageOff size={14} className="text-gray-400" />
+                                    <ImageOffIcon size={14} />
                                     <span style={{ fontSize: 8, color: "#9ca3af" }}>{img.formatName}</span>
                                   </div>
                                 ) : (
@@ -875,7 +874,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
                               className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-0.5"
                               style={{ fontSize: "inherit", fontFamily: "inherit" }}>
                               {cell.value}
-                              <ExternalLink size={10} className="shrink-0" />
+                              <ExternalLinkIcon size={10} />
                             </a>
                           ) : (
                             cell.value
@@ -925,7 +924,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
         <div className="fixed z-50 max-w-xs bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg shadow-lg p-3 text-xs text-amber-900 dark:text-amber-200"
           style={{ left: hoveredComment.x, top: hoveredComment.y - 8, transform: "translate(-50%, -100%)" }}>
           <div className="flex items-center gap-1 mb-1 font-medium text-amber-700 dark:text-amber-300">
-            <MessageSquare size={10} /> 批注
+            <MessageSquareIcon size={10} /> 批注
           </div>
           <p className="whitespace-pre-wrap break-words">{hoveredComment.text}</p>
         </div>

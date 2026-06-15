@@ -1,4 +1,3 @@
-"use client";
 
 import type { FileInfo } from "../utils";
 import { useSourceBase64 } from "../hooks/useSourceBase64";

@@ -1,12 +1,12 @@
-"use client";
-
 import React, { useEffect, useState, useRef, useMemo, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { highlightCode } from "@/lib/shiki";
-import { Eye, Code2 } from "lucide-react";
+import { highlightCode } from "./shiki";
+import { EyeIcon, Code2Icon } from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";
 import { FILE_PREVIEW_LIMITS } from "./limits";
+import "./styles/MarkdownPreview.css";
+import "./styles/ViewModeBar.css";
 
 interface MarkdownPreviewProps {
   content: string;
@@ -14,9 +14,6 @@ interface MarkdownPreviewProps {
 
 type ViewMode = "preview" | "source";
 
-/**
- * Extract text content from React children recursively.
- */
 function getTextContent(node: ReactNode): string {
   if (typeof node === "string") return node;
   if (typeof node === "number") return String(node);
@@ -62,7 +59,6 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
     mountedRef.current = true;
     let cancelled = false;
 
-    // Skip Shiki for oversized code blocks
     if (code.length > FILE_PREVIEW_LIMITS.SHIKI_MAX_CODE_BLOCK_SIZE) {
       queueMicrotask(() => {
         if (mountedRef.current) {
@@ -128,8 +124,7 @@ function ShikiPreContent({ code, language }: { code: string; language: string })
   }
 
   return (
-    <div className="md-code-block group relative not-prose">
-      <style dangerouslySetInnerHTML={{ __html: SHIKI_CODE_BLOCK_STYLES }} />
+    <div className="md-code-block not-prose">
       <div className="md-pre-header">
         <span className="md-lang-badge">{language}</span>
         <button onClick={handleCopy} className="md-copy-btn" title="Copy code">
@@ -150,39 +145,29 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
   const components = useMemo(() => ({ pre: ShikiPreBlock }), []);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* View mode toggle bar */}
-      <div className="flex items-center border-b bg-muted/20">
-        <div className="flex items-center px-2 py-1 gap-0.5">
+    <div className="fv-markdown">
+      <div className="fv-view-mode-bar">
+        <div className="fv-view-mode-group">
           <button
             onClick={() => setViewMode("preview")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              viewMode === "preview"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`fv-view-mode-btn ${viewMode === "preview" ? "fv-view-mode-btn--active" : ""}`}
           >
-            <Eye size={13} />
+            <EyeIcon size={13} />
             预览
           </button>
           <button
             onClick={() => setViewMode("source")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              viewMode === "source"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`fv-view-mode-btn ${viewMode === "source" ? "fv-view-mode-btn--active" : ""}`}
           >
-            <Code2 size={13} />
+            <Code2Icon size={13} />
             源码
           </button>
         </div>
       </div>
 
-      {/* Content area */}
-      <div className="flex-1 min-h-0">
+      <div className="fv-markdown__content">
         {viewMode === "preview" ? (
-          <div className="markdown-preview overflow-auto h-full">
+          <div className="fv-markdown__preview">
             <article className="prose prose-sm dark:prose-invert max-w-none px-6 py-5 sm:px-8 sm:py-6
               prose-headings:scroll-mt-20
               prose-h1:text-2xl prose-h1:font-extrabold prose-h1:tracking-tight
@@ -209,125 +194,3 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
     </div>
   );
 }
-
-// ── Shiki Code Block Styles (within prose) ──
-// Only the code-block-specific styles that prose doesn't provide.
-// The `not-prose` class on .md-code-block prevents prose from overriding these.
-const SHIKI_CODE_BLOCK_STYLES = `
-.md-code-block {
-  margin: 1.5em 0;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  position: relative;
-  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
-}
-
-.md-pre-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.375rem 0.75rem;
-  background: var(--color-muted, rgba(0, 0, 0, 0.03));
-  border-bottom: 1px solid var(--color-border, rgba(0, 0, 0, 0.06));
-}
-.md-lang-badge {
-  font-size: 0.6875rem;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
-  padding: 0.1em 0.5em;
-  border-radius: 0.25rem;
-  background: var(--color-muted, rgba(0, 0, 0, 0.06));
-  opacity: 0.75;
-  font-weight: 500;
-}
-.md-copy-btn {
-  padding: 0.25rem;
-  border-radius: 0.25rem;
-  color: inherit;
-  opacity: 0;
-  transition: opacity 0.15s;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.md-code-block:hover .md-copy-btn,
-.md-code-block .md-copy-btn:focus {
-  opacity: 0.5;
-}
-.md-copy-btn:hover {
-  opacity: 1 !important;
-  background: var(--color-muted, rgba(0, 0, 0, 0.06));
-}
-
-.md-pre-loading {
-  margin: 1.5em 0;
-  padding: 0.75rem 1rem;
-  font-size: 0.8125rem;
-  line-height: 1.7;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
-  overflow-x: auto;
-  tab-size: 2;
-  border-radius: 0.5rem;
-  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.08));
-  background: var(--color-muted, rgba(0, 0, 0, 0.02));
-}
-
-.md-code-block pre {
-  margin: 0 !important;
-  padding: 1rem 1.25rem !important;
-  font-size: 0.8125rem !important;
-  line-height: 1.7 !important;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", monospace) !important;
-  overflow-x: auto;
-  tab-size: 2;
-}
-
-/* ── Dual-theme CSS variable switching ── */
-.md-code-block .shiki {
-  background-color: var(--shiki-light-bg, #f6f8fa) !important;
-  color: var(--shiki-light, #24292e) !important;
-}
-.md-code-block .shiki span {
-  color: var(--shiki-light) !important;
-  background-color: var(--shiki-light-bg, transparent) !important;
-}
-.dark .md-code-block .shiki,
-html.dark .md-code-block .shiki {
-  background-color: var(--shiki-dark-bg, #24292e) !important;
-  color: var(--shiki-dark, #e1e4e8) !important;
-}
-.dark .md-code-block .shiki span,
-html.dark .md-code-block .shiki span {
-  color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg, transparent) !important;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not(:has(.light)) .md-code-block .shiki {
-    background-color: var(--shiki-dark-bg, #24292e) !important;
-    color: var(--shiki-dark, #e1e4e8) !important;
-  }
-  :root:not(:has(.light)) .md-code-block .shiki span {
-    color: var(--shiki-dark) !important;
-    background-color: var(--shiki-dark-bg, transparent) !important;
-  }
-}
-
-/* ── Line numbers ── */
-.md-code-block .shiki .line {
-  min-height: 1.7em;
-  padding-left: 3.5em;
-  position: relative;
-  display: inline-block;
-  width: 100%;
-}
-.md-code-block .shiki .line::before {
-  content: attr(data-line);
-  position: absolute;
-  left: 0;
-  width: 2.5em;
-  text-align: right;
-  opacity: 0.3;
-  user-select: none;
-  font-variant-numeric: tabular-nums;
-}
-`;

@@ -1,7 +1,6 @@
-"use client";
-
 import { useState, useMemo } from "react";
-import { ArrowUpDown, Search } from "lucide-react";
+import { ArrowUpDownIcon, SearchIcon } from "./icons";
+import "./styles/CsvPreview.css";
 
 interface CsvPreviewProps {
   content: string;
@@ -90,50 +89,35 @@ export function CsvPreview({ content, fileName }: CsvPreviewProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 p-3 border-b bg-muted/30">
-        <div className="relative flex-1 max-w-xs">
-          <Search
-            size={14}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
+    <div className="fv-csv">
+      <div className="fv-csv__toolbar">
+        <div className="fv-csv__search-wrap">
+          <span className="fv-csv__search-icon"><SearchIcon size={14} /></span>
           <input
             type="text"
             placeholder="Search in table..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-sm bg-background border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
+            className="fv-csv__search-input"
           />
         </div>
-        <span className="text-xs text-muted-foreground">
+        <span className="fv-csv__row-count">
           {sortedRows.length} row{sortedRows.length !== 1 ? "s" : ""}
         </span>
       </div>
 
-      {/* Table */}
-      <div className="overflow-auto flex-1">
-        <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-muted/80 backdrop-blur-sm z-10">
+      <div className="fv-csv__table-wrap">
+        <table className="fv-csv__table">
+          <thead className="fv-csv__thead">
             <tr>
-              <th className="px-3 py-2 text-left text-muted-foreground font-medium w-12 text-xs">
-                #
-              </th>
+              <th className="fv-csv__th fv-csv__th-num">#</th>
               {headers.map((header, i) => (
-                <th
-                  key={i}
-                  className="px-3 py-2 text-left font-medium text-xs cursor-pointer hover:bg-muted transition-colors whitespace-nowrap"
-                  onClick={() => handleSort(i)}
-                >
-                  <div className="flex items-center gap-1">
+                <th key={i} className="fv-csv__th" onClick={() => handleSort(i)}>
+                  <div className="fv-csv__th-inner">
                     <span>{header || `Column ${i + 1}`}</span>
-                    <ArrowUpDown
+                    <ArrowUpDownIcon
                       size={12}
-                      className={
-                        sortColumn === i
-                          ? "text-foreground"
-                          : "text-muted-foreground/50"
-                      }
+                      className={`fv-csv__sort-icon ${sortColumn === i ? "fv-csv__sort-icon--active" : ""}`}
                     />
                   </div>
                 </th>
@@ -142,15 +126,10 @@ export function CsvPreview({ content, fileName }: CsvPreviewProps) {
           </thead>
           <tbody>
             {sortedRows.map((row, rowIdx) => (
-              <tr
-                key={rowIdx}
-                className="border-b hover:bg-muted/50 transition-colors"
-              >
-                <td className="px-3 py-2 text-muted-foreground text-xs font-mono">
-                  {rowIdx + 1}
-                </td>
+              <tr key={rowIdx}>
+                <td className="fv-csv__td fv-csv__td-num">{rowIdx + 1}</td>
                 {headers.map((_, colIdx) => (
-                  <td key={colIdx} className="px-3 py-2 whitespace-nowrap">
+                  <td key={colIdx} className="fv-csv__td">
                     {row[colIdx] || ""}
                   </td>
                 ))}
@@ -158,10 +137,7 @@ export function CsvPreview({ content, fileName }: CsvPreviewProps) {
             ))}
             {sortedRows.length === 0 && (
               <tr>
-                <td
-                  colSpan={headers.length + 1}
-                  className="px-3 py-8 text-center text-muted-foreground"
-                >
+                <td colSpan={headers.length + 1} className="fv-csv__empty">
                   No matching rows found
                 </td>
               </tr>

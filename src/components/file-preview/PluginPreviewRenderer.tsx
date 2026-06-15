@@ -1,5 +1,3 @@
-"use client";
-
 import { Suspense, use, useMemo, useState, useCallback } from "react";
 import type { ComponentType } from "react";
 import type { FileInfo } from "./utils";
@@ -10,10 +8,8 @@ import { UnsupportedPluginPreview } from "./preview-adapters/UnsupportedPluginPr
 import { getPreviewSupportMeta } from "./support-status";
 import { PreviewErrorBoundary } from "./PreviewErrorBoundary";
 import { PreviewLoading } from "./PreviewLoading";
+import "./styles/PluginDebugBar.css";
 
-/**
- * Error thrown when a preview plugin chunk fails to load.
- */
 class PreviewPluginLoadError extends Error {
   constructor(
     public pluginId: string,
@@ -25,8 +21,6 @@ class PreviewPluginLoadError extends Error {
   }
 }
 
-// Module-level cache of plugin module promises — `use()` consumes these in render
-// without creating any components, satisfying react-hooks/static-components.
 type PluginModule = { default: ComponentType<{ file: FileInfo }> };
 const promiseCache = new WeakMap<PreviewPlugin, Promise<PluginModule>>();
 
@@ -50,8 +44,6 @@ interface PluginContentProps {
   file: FileInfo;
 }
 
-// Static component declared at module scope — `use()` reads the cached promise
-// and renders the resolved default export without creating a new component.
 function PluginContent({ plugin, file }: PluginContentProps) {
   const mod = use(getPluginPromise(plugin));
   const Component = mod.default;
@@ -108,19 +100,17 @@ export function PluginPreviewRenderer({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="fv-plugin-renderer">
       {showPluginDebug && (
-        <div className="flex items-center gap-2 border-b bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
-          <span className="font-medium text-foreground">Plugin Renderer</span>
+        <div className="fv-plugin-debug">
+          <span className="fv-plugin-debug__label">Plugin Renderer</span>
           <span>→</span>
           <span>{plugin.name}</span>
-          <span className="rounded bg-muted px-1.5 py-0.5 font-mono">
-            {plugin.id}
-          </span>
+          <span className="fv-plugin-debug__id">{plugin.id}</span>
         </div>
       )}
 
-      <div className="flex-1 min-h-0">
+      <div className="fv-plugin-renderer__content">
         <PreviewErrorBoundary
           file={file}
           pluginId={plugin.id}

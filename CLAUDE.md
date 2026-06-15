@@ -33,29 +33,34 @@ src/
 │   └── api/                # API routes (currently empty)
 ├── components/
 │   ├── ui/                 # shadcn/ui components (button, badge, tabs, etc.)
-│   └── file-preview/       # File type preview modules
-│       ├── FilePreviewRenderer.tsx   # TabCacheRenderer — switches between preview components
-│       ├── utils.ts                  # FileType detection, FileInfo interface, helpers
-│       ├── demos.ts                  # Demo file content (text inline + binary from /public)
-│       ├── code-languages.ts         # Code language detection rules
-│       ├── CodePreview.tsx           # Code highlighting via Shiki
-│       ├── MarkdownPreview.tsx       # Markdown rendering
-│       ├── PdfPreview.tsx            # PDF.js rendering
-│       ├── DocxPreview.tsx           # docx-preview rendering
-│       ├── DocPreview.tsx            # Legacy .doc — best-effort byte-level text extraction
-│       ├── PptxPreview.tsx           # PPTX rendering
-│       ├── XlsxPreview.tsx           # Excel/spreadsheet rendering
-│       ├── EpubPreview.tsx           # EPUB reader
-│       ├── ZipPreview.tsx            # ZIP file browser
-│       ├── SvgPreview.tsx            # SVG viewer
-│       ├── ImagePreview.tsx          # Image viewer
-│       ├── HtmlPreview.tsx           # HTML sandbox
-│       ├── CsvPreview.tsx            # CSV table viewer
-│       ├── ShikiSourceView.tsx       # Source code view with syntax highlighting
-│       └── *Preview.tsx              # Audio, Video, RTF, Text previews
+│   └── file-preview/       # File type preview modules (framework-agnostic)
+│       ├── core/            # Pure logic — types, plugin registry, source abstraction
+│       │   ├── types.ts     # PreviewSource, NormalizedFile
+│       │   ├── plugin.ts    # PreviewPlugin interface
+│       │   ├── registry.ts  # PreviewPluginRegistry class
+│       │   ├── source.ts    # readSourceAs* utilities
+│       │   ├── binary.ts    # readBinaryPreviewAs* helpers
+│       │   └── download.ts  # downloadSource helper
+│       ├── hooks/           # React hooks for source reading
+│       ├── plugins/         # 16 built-in preview plugins + builtin-plugins.ts
+│       ├── preview-adapters/# Adapter components bridging plugins → preview components
+│       ├── styles/          # CSS files — fv- prefixed BEM classes + CSS variables
+│       │   ├── base.css     # Design tokens + shared components (fv-btn, fv-spinner, etc.)
+│       │   ├── index.css    # Barrel import for all styles
+│       │   └── *.css        # Per-component stylesheets
+│       ├── icons.tsx        # 25 inline SVG icon components (zero dependencies)
+│       ├── shiki.ts         # Shiki highlighter config (local copy, no @/ imports)
+│       ├── PluginPreviewRenderer.tsx  # Plugin-based renderer with Suspense + ErrorBoundary
+│       ├── utils.ts         # FileType detection, FileInfo interface, helpers
+│       ├── demos.ts         # Demo file content (text inline + binary from /public)
+│       ├── support-status.ts # Preview support matrix
+│       ├── performance-limits.ts # Large file policy
+│       ├── limits.ts        # Shiki/display size limits
+│       ├── remote-url.ts    # URL loading + magic sniffing
+│       └── *Preview.tsx     # Individual preview components (PDF, DOCX, etc.)
 ├── lib/
 │   ├── utils.ts            # cn() utility (clsx + tailwind-merge)
-│   └── shiki.ts            # Shiki highlighter config + ext→lang mapping
+│   └── shiki.ts            # Shiki highlighter config (used by app layer)
 └── hooks/
     ├── use-mobile.ts       # Responsive breakpoint hook
     └── use-toast.ts        # Toast notification hook
@@ -64,10 +69,25 @@ src/
 ### Key Patterns
 
 - **File detection**: `detectFileType()` in `file-preview/utils.ts` maps filename/MIME → `FileType` union type
-- **Preview rendering**: `TabCacheRenderer` in `FilePreviewRenderer.tsx` mounts all file preview components simultaneously and toggles visibility via CSS `display` — this prevents re-parsing expensive formats (PDF/DOCX/XLSX) on tab switches
+- **Plugin architecture**: `PreviewPlugin` interface + `PreviewPluginRegistry` — each file type is a self-contained plugin with `match()` + `load()` (dynamic import). 16 built-in plugins registered in `plugins/builtin-plugins.ts`
+- **Preview rendering**: `PluginPreviewRenderer` uses React 19 `use()` + `Suspense` to lazily load plugin modules. Error boundary catches load/render failures
+- **Source abstraction**: `PreviewSource` union type (file / blob / arrayBuffer / url) — preview components never access raw file data directly, they use `readSourceAsText()`, `readSourceAsArrayBuffer()`, or the `useSourceText` / `useObjectUrlFromSource` hooks
 - **Binary vs text files**: Binary files are read as base64 or object URLs; text files are read as strings. The `processFile` callback in `page.tsx` handles this branching
-- **Shiki code highlighting**: Lazy-loaded via main entry — only used languages/themes are code-split. Config in `src/lib/shiki.ts`
+- **Shiki code highlighting**: Lazy-loaded via main entry — only used languages/themes are code-split. Config in `src/components/file-preview/shiki.ts`
 - **State management**: React state/hooks only — no global state library
+
+### CSS & Styling (file-preview)
+
+The `file-preview/` module is **framework-agnostic and has zero external UI dependencies**:
+
+- **No Tailwind** in preview components — uses `fv-` prefixed BEM-style CSS classes
+- **No lucide-react** — uses inline SVG icons from `icons.tsx`
+- **No shadcn/ui** — uses `.fv-btn`, `.fv-spinner`, `.fv-badge` etc. defined in `styles/base.css`
+- **Dark mode**: `[data-fv-theme="dark"]` selector on root element
+- **Theming**: Override CSS variables (`--fv-primary`, `--fv-muted`, `--fv-border`, etc.) to customize appearance
+- **Import**: `import './styles/index.css'` or individual `import './styles/PdfPreview.css'`
+
+The app layer (`page.tsx`, layout) still uses Tailwind + shadcn/ui — only the file-preview module is decoupled.
 
 ### shadcn/ui
 

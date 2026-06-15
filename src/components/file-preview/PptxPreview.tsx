@@ -1,4 +1,3 @@
-"use client";
 
 import {
   useEffect,
@@ -9,16 +8,16 @@ import {
   useImperativeHandle,
 } from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Grid3X3,
-  Monitor,
-  AlertTriangle,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Minimize2,
-} from "lucide-react";
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Grid3X3Icon,
+  MonitorIcon,
+  AlertTriangleIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+  Maximize2Icon,
+  Minimize2Icon,
+} from "./icons";
 import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
 import type { PreviewSource } from "./core/types";
 
@@ -327,7 +326,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
   if (ext === "ppt") {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
-        <AlertTriangle size={36} />
+        <AlertTriangleIcon size={36} />
         <p className="text-lg font-medium">格式不支持</p>
         <p className="text-sm text-muted-foreground text-center max-w-md">
           该文件为旧版 PowerPoint 二进制格式（.ppt），当前仅支持 Open XML
@@ -340,7 +339,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3 px-6">
-        <AlertTriangle size={36} />
+        <AlertTriangleIcon size={36} />
         <p className="text-lg font-medium">预览失败</p>
         <p className="text-sm text-muted-foreground text-center max-w-md">
           {error}
@@ -382,7 +381,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
             }`}
             title="幻灯片视图"
           >
-            <Monitor size={16} />
+            <MonitorIcon size={16} />
           </button>
           <button
             onClick={() => switchViewMode("grid")}
@@ -393,7 +392,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
             }`}
             title="缩略图视图"
           >
-            <Grid3X3 size={16} />
+            <Grid3X3Icon size={16} />
           </button>
 
           <div className="w-px h-4 bg-border mx-1" />
@@ -405,7 +404,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
               className="p-1 hover:bg-muted rounded transition-colors"
               title="缩小"
             >
-              <ZoomOut size={14} className="text-muted-foreground" />
+              <ZoomOutIcon size={14} className="text-muted-foreground" />
             </button>
             <span className="text-xs text-muted-foreground w-10 text-center select-none">
               {zoom}%
@@ -415,7 +414,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
               className="p-1 hover:bg-muted rounded transition-colors"
               title="放大"
             >
-              <ZoomIn size={14} className="text-muted-foreground" />
+              <ZoomInIcon size={14} className="text-muted-foreground" />
             </button>
           </div>
 
@@ -424,7 +423,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
             className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground"
             title="全屏"
           >
-            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            {isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
           </button>
         </div>
 
@@ -436,7 +435,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
               className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               title="上一页 (←)"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeftIcon size={16} />
             </button>
             <button
               onClick={nextSlide}
@@ -444,7 +443,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
               className="p-1.5 rounded-md hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               title="下一页 (→)"
             >
-              <ChevronRight size={16} />
+              <ChevronRightIcon size={16} />
             </button>
           </div>
         )}

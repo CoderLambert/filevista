@@ -1,8 +1,7 @@
-"use client";
-
 import { useState, useEffect, useMemo } from "react";
-import { Eye, Code2, Columns2, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { EyeIcon, Code2Icon, Columns2Icon, ZoomInIcon, ZoomOutIcon, RotateCwIcon } from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";
+import "./styles/SvgPreview.css";
 
 interface SvgPreviewProps {
   content: string;
@@ -26,27 +25,26 @@ export function SvgPreview({ content, fileName }: SvgPreviewProps) {
   }, [svgUrl]);
 
   const renderedView = (
-    <div className="flex flex-col h-full">
-      {/* Zoom controls */}
-      <div className="flex items-center justify-center gap-2 p-2 border-b bg-muted/30">
-        <button onClick={() => setZoom(z => Math.max(z - 25, 25))} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Zoom Out">
-          <ZoomOut size={14} />
+    <div className="fv-svg__panel">
+      <div className="fv-svg__toolbar">
+        <button onClick={() => setZoom(z => Math.max(z - 25, 25))} className="fv-btn fv-btn--icon" title="Zoom Out">
+          <ZoomOutIcon size={14} />
         </button>
-        <span className="text-xs font-mono min-w-[3rem] text-center">{zoom}%</span>
-        <button onClick={() => setZoom(z => Math.min(z + 25, 400))} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Zoom In">
-          <ZoomIn size={14} />
+        <span className="fv-svg__zoom-label">{zoom}%</span>
+        <button onClick={() => setZoom(z => Math.min(z + 25, 400))} className="fv-btn fv-btn--icon" title="Zoom In">
+          <ZoomInIcon size={14} />
         </button>
-        <div className="w-px h-4 bg-border mx-1" />
-        <button onClick={() => setRotation(r => (r + 90) % 360)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Rotate">
-          <RotateCw size={14} />
+        <div className="fv-toolbar__separator" />
+        <button onClick={() => setRotation(r => (r + 90) % 360)} className="fv-btn fv-btn--icon" title="Rotate">
+          <RotateCwIcon size={14} />
         </button>
-        <button onClick={() => { setZoom(100); setRotation(0); }} className="px-2 py-1 text-xs rounded-md hover:bg-muted transition-colors">Reset</button>
+        <button onClick={() => { setZoom(100); setRotation(0); }} className="fv-svg__reset-btn">Reset</button>
       </div>
-      <div className="flex-1 flex items-center justify-center p-6 overflow-auto bg-[repeating-conic-gradient(#80808020_0%_25%,transparent_0%_50%)] bg-[length:20px_20px]">
+      <div className="fv-svg__canvas">
         <img
           src={svgUrl}
           alt={fileName}
-          className="max-w-full transition-transform duration-200"
+          className="fv-svg__img"
           style={{ transform: `scale(${zoom / 100}) rotate(${rotation}deg)`, transformOrigin: "center center" }}
         />
       </div>
@@ -54,55 +52,41 @@ export function SvgPreview({ content, fileName }: SvgPreviewProps) {
   );
 
   return (
-    <div className="flex flex-col h-full">
-      {/* View mode toggle bar */}
-      <div className="flex items-center border-b bg-muted/20">
-        <div className="flex items-center px-2 py-1 gap-0.5">
+    <div className="fv-svg">
+      <div className="fv-svg__mode-bar">
+        <div className="fv-svg__mode-group">
           <button
             onClick={() => setViewMode("rendered")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              viewMode === "rendered"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`fv-svg__mode-btn ${viewMode === "rendered" ? "fv-svg__mode-btn--active" : ""}`}
           >
-            <Eye size={13} />
+            <EyeIcon size={13} />
             预览
           </button>
           <button
             onClick={() => setViewMode("source")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              viewMode === "source"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`fv-svg__mode-btn ${viewMode === "source" ? "fv-svg__mode-btn--active" : ""}`}
           >
-            <Code2 size={13} />
+            <Code2Icon size={13} />
             源码
           </button>
           <button
             onClick={() => setViewMode("split")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              viewMode === "split"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`fv-svg__mode-btn ${viewMode === "split" ? "fv-svg__mode-btn--active" : ""}`}
           >
-            <Columns2 size={13} />
+            <Columns2Icon size={13} />
             分栏
           </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className={`flex-1 min-h-0 ${viewMode === "split" ? "flex" : ""}`}>
+      <div className="fv-svg__content">
         {(viewMode === "rendered" || viewMode === "split") && (
-          <div className={`${viewMode === "split" ? "w-1/2 border-r" : "w-full h-full"}`}>
+          <div className={`fv-svg__panel ${viewMode === "split" ? "fv-svg__panel--split" : ""}`}>
             {renderedView}
           </div>
         )}
         {(viewMode === "source" || viewMode === "split") && (
-          <div className={`${viewMode === "split" ? "w-1/2" : "w-full h-full"}`}>
+          <div className={`fv-svg__panel ${viewMode === "split" ? "fv-svg__panel--split-source" : ""}`}>
             <ShikiSourceView content={content} fileName={fileName} language="xml" />
           </div>
         )}

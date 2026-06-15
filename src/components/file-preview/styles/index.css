@@ -1,0 +1,40 @@
+/**
+ * FileVista — Main stylesheet.
+ *
+ * Import this file to get all preview component styles.
+ *   import '@filevista/react/styles'
+ *
+ * Or import individual component styles for tree-shaking:
+ *   import '@filevista/react/styles/PdfPreview.css'
+ */
+
+/* ── Design tokens & shared components ── */
+@import "./base.css";
+
+/* ── Shared view-mode toggle bar ── */
+@import "./ViewModeBar.css";
+
+/* ── Shared plugin debug bar ── */
+@import "./PluginDebugBar.css";
+
+/* ── Component styles ── */
+@import "./PreviewLoading.css";
+@import "./PreviewFallback.css";
+@import "./LargeFileHint.css";
+@import "./LargeFileGate.css";
+@import "./UnsupportedLegacyOfficePreview.css";
+@import "./ImagePreview.css";
+@import "./SvgPreview.css";
+@import "./AudioPreview.css";
+@import "./VideoPreview.css";
+@import "./ShikiSourceView.css";
+@import "./PlainTextLargePreview.css";
+@import "./PdfPreview.css";
+@import "./DocxPreview.css";
+@import "./DocPreview.css";
+@import "./MarkdownPreview.css";
+@import "./HtmlPreview.css";
+@import "./RtfPreview.css";
+@import "./CsvPreview.css";
+@import "./ZipPreview.css";
+@import "./XlsxPreview.css";

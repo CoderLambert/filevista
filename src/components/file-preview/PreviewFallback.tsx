@@ -1,11 +1,9 @@
-"use client";
-
 import { useState } from "react";
-import { AlertTriangle, Download, Copy } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { AlertTriangleIcon, DownloadIcon, CopyIcon } from "./icons";
 import type { FileInfo } from "./utils";
 import { formatFileSize } from "./utils";
 import { downloadSource } from "./core/download";
+import "./styles/PreviewFallback.css";
 
 export type PreviewFallbackKind =
   | "unsupported"
@@ -77,9 +75,7 @@ function PreviewErrorDetails({
   pluginId?: string;
   pluginName?: string;
 }) {
-  const [expanded, setExpanded] = useState(
-    () => process.env.NODE_ENV === "development",
-  );
+  const [expanded, setExpanded] = useState(false);
 
   if (!error) return null;
 
@@ -88,44 +84,36 @@ function PreviewErrorDetails({
       ? `${error.name}: ${error.message}`
       : String(error);
 
-  const isDev = process.env.NODE_ENV === "development";
-
   return (
-    <div className="mt-2 w-full max-w-sm space-y-1">
-      {isDev && (
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="text-[10px] text-muted-foreground hover:text-foreground underline"
-        >
-          {expanded ? "Hide" : "Show"} error details
-        </button>
-      )}
+    <div className="fv-fallback__details">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="fv-fallback__details-toggle"
+      >
+        {expanded ? "Hide" : "Show"} error details
+      </button>
 
       {expanded && (
-        <div className="relative">
-          <pre className="rounded-md bg-muted p-2 text-[10px] text-left overflow-auto max-h-32 whitespace-pre-wrap break-all">
-            {pluginName && `Plugin: ${pluginName}\n`}
-            {pluginId && `ID: ${pluginId}\n`}
-            {message}
-          </pre>
-          {isDev && (
-            <button
-              onClick={() => {
-                const text = [
-                  pluginName && `Plugin: ${pluginName}`,
-                  pluginId && `ID: ${pluginId}`,
-                  message,
-                ]
-                  .filter(Boolean)
-                  .join("\n");
-                navigator.clipboard.writeText(text);
-              }}
-              className="absolute top-1.5 right-1.5 p-1 rounded hover:bg-muted-foreground/20"
-              title="Copy error details"
-            >
-              <Copy className="h-3 w-3 text-muted-foreground" />
-            </button>
-          )}
+        <div className="fv-fallback__details-pre">
+          {pluginName && `Plugin: ${pluginName}\n`}
+          {pluginId && `ID: ${pluginId}\n`}
+          {message}
+          <button
+            onClick={() => {
+              const text = [
+                pluginName && `Plugin: ${pluginName}`,
+                pluginId && `ID: ${pluginId}`,
+                message,
+              ]
+                .filter(Boolean)
+                .join("\n");
+              navigator.clipboard.writeText(text);
+            }}
+            className="fv-fallback__details-copy"
+            title="Copy error details"
+          >
+            <CopyIcon size={12} />
+          </button>
         </div>
       )}
     </div>
@@ -144,40 +132,38 @@ export function PreviewFallback({
   canDownload = true,
 }: PreviewFallbackProps) {
   return (
-    <div className="flex h-full min-h-[320px] items-center justify-center p-6">
-      <div className="max-w-lg space-y-4 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-          <AlertTriangle className="h-6 w-6 text-muted-foreground" />
+    <div className="fv-fallback">
+      <div className="fv-fallback__inner">
+        <div className="fv-fallback__icon-wrap">
+          <AlertTriangleIcon size={24} />
         </div>
 
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">
+        <div>
+          <h3 className="fv-fallback__title">
             {title ?? getFallbackTitle(kind)}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="fv-fallback__desc">
             {description ?? getFallbackDescription(kind)}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="fv-fallback__meta">
             {file.name} · {formatFileSize(file.size)}
           </p>
         </div>
 
-        <div className="flex justify-center gap-2">
+        <div className="fv-fallback__actions">
           {onRetry && (
-            <Button onClick={onRetry} size="sm">
+            <button className="fv-btn fv-btn--primary fv-btn--sm" onClick={onRetry}>
               Retry
-            </Button>
+            </button>
           )}
 
           {canDownload && (
-            <Button
-              variant="outline"
-              size="sm"
+            <button
+              className="fv-btn fv-btn--outline fv-btn--sm"
               onClick={() => downloadSource(file.source, file.name, file.type)}
             >
-              <Download className="h-4 w-4 mr-1.5" />
-              Download original
-            </Button>
+              <DownloadIcon size={16} /> Download original
+            </button>
           )}
         </div>
 

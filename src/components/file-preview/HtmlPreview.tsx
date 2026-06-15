@@ -1,8 +1,8 @@
-"use client";
-
 import { useState, useEffect, useMemo } from "react";
-import { Eye, Code2 } from "lucide-react";
+import { EyeIcon, Code2Icon } from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";
+import "./styles/HtmlPreview.css";
+import "./styles/ViewModeBar.css";
 
 interface HtmlPreviewProps {
   content: string;
@@ -15,12 +15,10 @@ type HtmlSecurityMode = "safe" | "trusted";
 export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
 
-  // Sandbox HTML content by default (no scripts, no same-origin access)
   const [securityMode] = useState<HtmlSecurityMode>("safe");
   const sandbox =
     securityMode === "trusted" ? "allow-scripts allow-same-origin" : "";
 
-  // Create a blob URL for sandboxed iframe rendering (with cleanup to avoid memory leaks)
   const blobUrl = useMemo(() => {
     const blob = new Blob([content], { type: "text/html" });
     return URL.createObjectURL(blob);
@@ -31,44 +29,33 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
   }, [blobUrl]);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* View mode toggle bar */}
-      <div className="flex items-center border-b bg-muted/20">
-        <div className="flex items-center px-2 py-1 gap-0.5">
+    <div className="fv-html">
+      <div className="fv-view-mode-bar">
+        <div className="fv-view-mode-group">
           <button
             onClick={() => setViewMode("preview")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              viewMode === "preview"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`fv-view-mode-btn ${viewMode === "preview" ? "fv-view-mode-btn--active" : ""}`}
           >
-            <Eye size={13} />
+            <EyeIcon size={13} />
             预览
           </button>
           <button
             onClick={() => setViewMode("source")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              viewMode === "source"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`fv-view-mode-btn ${viewMode === "source" ? "fv-view-mode-btn--active" : ""}`}
           >
-            <Code2 size={13} />
+            <Code2Icon size={13} />
             源码
           </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-h-0">
+      <div className="fv-html__content">
         {viewMode === "preview" ? (
           <iframe
             src={blobUrl}
             sandbox={sandbox}
             referrerPolicy="no-referrer"
-            className="w-full h-full border-0"
-            style={{ minHeight: "500px" }}
+            className="fv-html__iframe"
             title={fileName}
           />
         ) : (

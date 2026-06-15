@@ -1,0 +1,159 @@
+/* ── Shiki Source View ── */
+
+.fv-source {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.fv-source__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--fv-border);
+  background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
+}
+.fv-source__toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.fv-source__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.fv-source__lang-badge {
+  font-size: var(--fv-font-size-xs);
+  font-family: var(--fv-font-mono);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--fv-radius);
+  background: color-mix(in srgb, var(--fv-primary) 10%, transparent);
+  color: var(--fv-primary);
+}
+.fv-source__line-count {
+  font-size: var(--fv-font-size-xs);
+  color: var(--fv-muted-foreground);
+}
+.fv-source__btn-active {
+  background: color-mix(in srgb, var(--fv-primary) 10%, transparent);
+  color: var(--fv-primary);
+}
+.fv-source__content {
+  flex: 1;
+  overflow: auto;
+}
+.fv-source__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0;
+}
+.fv-source__loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+.fv-source__loading-label {
+  font-size: var(--fv-font-size-xs);
+  color: var(--fv-muted-foreground);
+}
+
+/* ── Shiki wrapper ── */
+.fv-shiki-wrapper pre {
+  margin: 0 !important;
+  padding: 1rem 1.5rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.7 !important;
+  font-family: var(--fv-font-mono) !important;
+  overflow-x: auto;
+  tab-size: 2;
+}
+.fv-shiki-wrap pre { white-space: pre-wrap !important; word-break: break-word !important; }
+.fv-shiki-wrap .line { white-space: pre-wrap; word-break: break-word; }
+.fv-shiki-nowrap pre { white-space: pre !important; }
+.fv-shiki-nowrap .line { white-space: pre; }
+
+/* ── Line numbers ── */
+.fv-shiki-wrapper .line {
+  min-height: 1.7em;
+  padding-left: 3.5em;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+.fv-shiki-wrapper .line::before {
+  content: attr(data-line);
+  position: absolute;
+  left: 0;
+  width: 2.5em;
+  text-align: right;
+  opacity: 0.3;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Dual theme switching ── */
+.fv-shiki-wrapper .shiki {
+  background-color: var(--shiki-light-bg, #fff) !important;
+  color: var(--shiki-light, #24292e) !important;
+}
+.fv-shiki-wrapper .shiki span {
+  color: var(--shiki-light) !important;
+  background-color: var(--shiki-light-bg, transparent) !important;
+}
+.dark .fv-shiki-wrapper .shiki,
+html.dark .fv-shiki-wrapper .shiki,
+[data-fv-theme="dark"] .fv-shiki-wrapper .shiki {
+  background-color: var(--shiki-dark-bg, #24292e) !important;
+  color: var(--shiki-dark, #e1e4e8) !important;
+}
+.dark .fv-shiki-wrapper .shiki span,
+html.dark .fv-shiki-wrapper .shiki span,
+[data-fv-theme="dark"] .fv-shiki-wrapper .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg, transparent) !important;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(:has(.light)) .fv-shiki-wrapper .shiki {
+    background-color: var(--shiki-dark-bg, #24292e) !important;
+    color: var(--shiki-dark, #e1e4e8) !important;
+  }
+  :root:not(:has(.light)) .fv-shiki-wrapper .shiki span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg, transparent) !important;
+  }
+}
+
+/* ── Plain text fallback ── */
+.fv-shiki-plaintext pre {
+  margin: 0;
+  padding: 1rem 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  font-family: var(--fv-font-mono);
+  background-color: var(--fv-code-bg);
+  color: var(--fv-code-fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.fv-shiki-plaintext .line {
+  display: flex;
+  min-height: 1.7em;
+}
+.fv-shiki-plaintext .linenumber {
+  display: inline-block;
+  width: 2.5em;
+  text-align: right;
+  padding-right: 1em;
+  opacity: 0.3;
+  user-select: none;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.fv-shiki-plaintext .linecontent {
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

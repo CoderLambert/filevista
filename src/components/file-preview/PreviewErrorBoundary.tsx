@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import type { FileInfo } from "./utils";
 import { PreviewFallback, type PreviewFallbackKind } from "./PreviewFallback";
@@ -46,14 +44,12 @@ export class PreviewErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn("[preview-error-boundary]", {
-        error,
-        info,
-        file: this.props.file.name,
-        pluginId: this.props.pluginId,
-      });
-    }
+    console.warn("[preview-error-boundary]", {
+      error,
+      info,
+      file: this.props.file.name,
+      pluginId: this.props.pluginId,
+    });
   }
 
   render() {

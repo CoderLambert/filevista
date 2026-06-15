@@ -1,12 +1,11 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import JSZip from "jszip";
-import { File, Folder, FolderOpen } from "lucide-react";
+import { FileIcon, FolderIcon, FolderOpenIcon } from "./icons";
 import { formatFileSize, base64ToUint8Array } from "./utils";
+import "./styles/ZipPreview.css";
 
 interface ZipPreviewProps {
-  content: string; // base64 encoded
+  content: string;
   fileName: string;
 }
 
@@ -31,10 +30,6 @@ async function parseZipFile(base64Content: string): Promise<ZipEntry[]> {
     const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
     const depth = parts.length - 1;
 
-    // jszip 3.x exposes the parsed ZIP central-directory entry on a `_data`
-    // internal field. There is no public API for uncompressed size without
-    // decompressing the entry, so we tap the internal shape and gracefully
-    // fall back to 0 if jszip's internals change in a future major version.
     const internal = (file as unknown as { _data?: { uncompressedSize?: number } })._data;
     const size = internal?.uncompressedSize ?? 0;
 
@@ -48,7 +43,6 @@ async function parseZipFile(base64Content: string): Promise<ZipEntry[]> {
     });
   });
 
-  // Sort: directories first, then by path
   entries.sort((a, b) => {
     if (a.isDir && !b.isDir) return -1;
     if (!a.isDir && b.isDir) return 1;
@@ -76,7 +70,6 @@ export function ZipPreview({ content, fileName }: ZipPreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset state when content changes — derived state during render
   const [prevContent, setPrevContent] = useState(content);
   if (prevContent !== content) {
     setPrevContent(content);
@@ -100,9 +93,7 @@ export function ZipPreview({ content, fileName }: ZipPreviewProps) {
         setLoading(false);
       }
     );
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [content]);
 
   const fileCount = entries.filter(e => !e.isDir).length;
@@ -111,59 +102,53 @@ export function ZipPreview({ content, fileName }: ZipPreviewProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        <p className="text-muted-foreground text-sm">Reading archive...</p>
+      <div className="fv-zip__loading">
+        <div className="fv-spinner fv-spinner--lg" />
+        <p className="fv-zip__loading-label">Reading archive...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3">
-        <p className="text-lg font-medium">Parsing Failed</p>
-        <p className="text-sm text-muted-foreground">{error}</p>
+      <div className="fv-zip__error">
+        <p className="fv-zip__error-title">Parsing Failed</p>
+        <p className="fv-zip__error-msg">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Summary bar */}
-      <div className="flex items-center gap-4 px-4 py-2.5 border-b bg-muted/30 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <FolderOpen size={14} />
+    <div className="fv-zip">
+      <div className="fv-zip__summary">
+        <span className="fv-zip__summary-item">
+          <FolderOpenIcon size={14} />
           {dirCount} folder{dirCount !== 1 ? "s" : ""}
         </span>
-        <span className="flex items-center gap-1">
-          <File size={14} />
+        <span className="fv-zip__summary-item">
+          <FileIcon size={14} />
           {fileCount} file{fileCount !== 1 ? "s" : ""}
         </span>
         <span>•</span>
         <span>Total: {formatFileSize(totalSize)}</span>
       </div>
 
-      {/* File tree */}
-      <div className="flex-1 overflow-auto p-2">
-        <div className="space-y-0.5">
-          {entries.map((entry, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-muted/60 transition-colors"
-              style={{ paddingLeft: `${12 + entry.depth * 20}px` }}
-            >
-              <span className="text-sm shrink-0">{getFileIcon(entry)}</span>
-              <span className={`text-sm truncate flex-1 ${entry.isDir ? "font-medium" : ""}`}>
-                {entry.name}
-              </span>
-              {!entry.isDir && entry.size > 0 && (
-                <span className="text-[10px] text-muted-foreground shrink-0">
-                  {formatFileSize(entry.size)}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
+      <div className="fv-zip__tree">
+        {entries.map((entry, i) => (
+          <div
+            key={i}
+            className="fv-zip__entry"
+            style={{ paddingLeft: `${12 + entry.depth * 20}px` }}
+          >
+            <span className="fv-zip__entry-icon">{getFileIcon(entry)}</span>
+            <span className={`fv-zip__entry-name ${entry.isDir ? "fv-zip__entry-name--dir" : ""}`}>
+              {entry.name}
+            </span>
+            {!entry.isDir && entry.size > 0 && (
+              <span className="fv-zip__entry-size">{formatFileSize(entry.size)}</span>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

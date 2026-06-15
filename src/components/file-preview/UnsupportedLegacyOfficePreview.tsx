@@ -1,7 +1,6 @@
-"use client";
-
-import { AlertTriangle, Download } from "lucide-react";
+import { AlertTriangleIcon, DownloadIcon } from "./icons";
 import { base64ToUint8Array } from "./utils";
+import "./styles/UnsupportedLegacyOfficePreview.css";
 
 interface UnsupportedLegacyOfficePreviewProps {
   type: "ppt" | "xls";
@@ -38,20 +37,20 @@ export function UnsupportedLegacyOfficePreview({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full min-h-75 text-muted-foreground gap-4 px-6">
-      <AlertTriangle className="h-10 w-10 text-amber-500" />
+    <div className="fv-legacy-office">
+      <AlertTriangleIcon size={40} className="fv-legacy-office__icon" />
 
-      <div className="space-y-2 text-center">
-        <p className="text-lg font-medium text-foreground">{title}</p>
-        <p className="text-sm max-w-md">{description}</p>
+      <div className="fv-legacy-office__body">
+        <p className="fv-legacy-office__title">{title}</p>
+        <p className="fv-legacy-office__desc">{description}</p>
       </div>
 
       {content && (
         <button
           onClick={handleDownload}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm hover:bg-primary/90 transition-colors"
+          className="fv-btn fv-btn--primary"
         >
-          <Download size={14} />
+          <DownloadIcon size={14} />
           下载原文件
         </button>
       )}

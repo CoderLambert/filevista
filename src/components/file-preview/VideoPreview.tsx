@@ -1,4 +1,4 @@
-"use client";
+import "./styles/VideoPreview.css";
 
 interface VideoPreviewProps {
   url: string;
@@ -7,11 +7,11 @@ interface VideoPreviewProps {
 
 export function VideoPreview({ url, fileName }: VideoPreviewProps) {
   return (
-    <div className="flex items-center justify-center h-full min-h-[400px] p-6 bg-black/5 dark:bg-black/20 rounded-lg">
+    <div className="fv-video">
       <video
         src={url}
         controls
-        className="max-w-full max-h-[70vh] rounded-lg shadow-lg"
+        className="fv-video__player"
         aria-label={fileName}
       >
         Your browser does not support the video tag.

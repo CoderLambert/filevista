@@ -1,8 +1,8 @@
-"use client";
-
 import { useEffect, useState, useRef } from "react";
+import { AlertCircleIcon } from "./icons";
 import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
 import type { PreviewSource } from "./core/types";
+import "./styles/DocxPreview.css";
 
 interface DocxPreviewProps {
   content?: string | null;
@@ -16,7 +16,6 @@ export function DocxPreview({ content, source, fileName }: DocxPreviewProps) {
   const [error, setError] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(0);
 
-  // Reset state when inputs change — derived during render
   const [prevDeps, setPrevDeps] = useState({ content, source });
   if (prevDeps.content !== content || prevDeps.source !== source) {
     setPrevDeps({ content, source });
@@ -32,14 +31,12 @@ export function DocxPreview({ content, source, fileName }: DocxPreviewProps) {
 
     (async () => {
       try {
-        // Dynamic import to avoid SSR issues — docx-preview uses browser-only APIs
         const { renderAsync } = await import("docx-preview");
         if (cancelled) return;
 
         const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
         if (cancelled) return;
 
-        // Clear previous content
         container.innerHTML = "";
 
         await renderAsync(buffer, container, undefined, {
@@ -61,7 +58,6 @@ export function DocxPreview({ content, source, fileName }: DocxPreviewProps) {
 
         if (cancelled) return;
 
-        // Count pages
         const pages = container.querySelectorAll(".docx-wrapper > section");
         setPageCount(pages.length);
         setLoading(false);
@@ -82,96 +78,34 @@ export function DocxPreview({ content, source, fileName }: DocxPreviewProps) {
   }, [content, source]);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Document info bar */}
+    <div className="fv-docx">
       {pageCount > 0 && !loading && (
-        <div className="px-4 py-1.5 border-b bg-muted/30 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">
-            {fileName}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {pageCount} page{pageCount !== 1 ? "s" : ""}
-          </span>
+        <div className="fv-docx__info-bar">
+          <span>{fileName}</span>
+          <span>{pageCount} page{pageCount !== 1 ? "s" : ""}</span>
         </div>
       )}
 
-      {/* Document content — always rendered so containerRef is always available */}
-      <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800/50 relative">
-        {/* docx-preview container styles */}
-        <style dangerouslySetInnerHTML={{ __html: DOCX_PREVIEW_STYLES }} />
-
-        {/* Loading overlay */}
+      <div className="fv-docx__viewport">
         {loading && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800/50">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            <p className="text-muted-foreground text-sm mt-3">Rendering document...</p>
+          <div className="fv-docx__overlay">
+            <div className="fv-docx__overlay-spinner">
+              <div className="fv-spinner fv-spinner--lg" />
+            </div>
+            <p style={{ fontSize: 'var(--fv-font-size-sm)', color: 'var(--fv-muted-foreground)' }}>Rendering document...</p>
           </div>
         )}
 
-        {/* Error overlay */}
         {error && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800/50 text-destructive gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <p className="text-lg font-medium">Rendering Failed</p>
-            <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+          <div className="fv-docx__overlay">
+            <AlertCircleIcon size={48} />
+            <p className="fv-docx__overlay-title">Rendering Failed</p>
+            <p className="fv-docx__overlay-msg">{error}</p>
           </div>
         )}
 
-        {/* Render target — always in DOM so ref is always available */}
-        <div
-          ref={containerRef}
-          className="docx-preview-container"
-        />
+        <div ref={containerRef} className="docx-preview-container" />
       </div>
     </div>
   );
 }
-
-// Styles for docx-preview rendering
-const DOCX_PREVIEW_STYLES = `
-  /* Container layout */
-  .docx-preview-container {
-    padding: 20px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  /* Override docx-wrapper to center pages */
-  .docx-preview-container .docx-wrapper {
-    background: transparent !important;
-    padding: 0 !important;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-  }
-
-  /* Page styling */
-  .docx-preview-container .docx-wrapper > section.docx {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08) !important;
-    margin-bottom: 0 !important;
-  }
-
-  /* Dark mode adjustments */
-  @media (prefers-color-scheme: dark) {
-    .docx-preview-container .docx-wrapper > section.docx {
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
-    }
-  }
-
-  /* Ensure images scale within pages */
-  .docx-preview-container .docx-wrapper img {
-    max-width: 100%;
-    height: auto;
-  }
-
-  /* Fix table rendering */
-  .docx-preview-container .docx-wrapper table {
-    border-collapse: collapse;
-  }
-`;

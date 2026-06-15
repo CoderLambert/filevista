@@ -1,5 +1,3 @@
-"use client";
-
 import { ShikiSourceView } from "./ShikiSourceView";
 
 interface TextPreviewProps {

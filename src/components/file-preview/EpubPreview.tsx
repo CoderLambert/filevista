@@ -1,16 +1,15 @@
-"use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import JSZip from "jszip";
 import {
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  List,
-  Search,
-  X,
-  ChevronDown,
-} from "lucide-react";
+  BookOpenIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ListIcon,
+  SearchIcon,
+  XIcon,
+  ChevronDownIcon,
+} from "./icons";
 import { base64ToUint8Array } from "./utils";
 
 interface EpubPreviewProps {
@@ -566,7 +565,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
   if (error || !bookData) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-destructive gap-3">
-        <BookOpen size={48} className="opacity-50" />
+        <BookOpenIcon size={48} className="opacity-50" />
         <p className="text-lg font-medium">Failed to Load E-book</p>
         <p className="text-sm text-muted-foreground">{error || "Unknown error"}</p>
       </div>
@@ -576,7 +575,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
   if (bookData.chapters.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-3">
-        <BookOpen size={48} />
+        <BookOpenIcon size={48} />
         <p className="text-lg font-medium">No Chapters Found</p>
       </div>
     );
@@ -614,7 +613,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
       <div className="px-4 py-2 border-b bg-muted/30">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <BookOpen size={14} className="text-muted-foreground shrink-0" />
+            <BookOpenIcon size={14} className="text-muted-foreground shrink-0" />
             <span className="text-sm font-medium truncate">
               {bookData.title || fileName}
             </span>
@@ -627,7 +626,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
           <div className="flex items-center gap-2 shrink-0">
             {/* Search */}
             <div className="relative">
-              <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <SearchIcon size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
@@ -643,7 +642,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                   }}
                   className="absolute right-1.5 top-1/2 -translate-y-1/2"
                 >
-                  <X size={12} className="text-muted-foreground hover:text-foreground" />
+                  <XIcon size={12} className="text-muted-foreground hover:text-foreground" />
                 </button>
               )}
             </div>
@@ -657,7 +656,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               }`}
               title="Table of Contents"
             >
-              <List size={16} />
+              <ListIcon size={16} />
             </button>
           </div>
         </div>
@@ -744,7 +743,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               disabled={currentChapter === 0}
               className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeftIcon size={16} />
             </button>
 
             {/* Chapter dropdown */}
@@ -759,7 +758,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
                 <span className="truncate font-medium text-foreground">
                   {chapter.title}
                 </span>
-                <ChevronDown
+                <ChevronDownIcon
                   size={14}
                   className={`shrink-0 text-muted-foreground transition-transform ${
                     showChapterDropdown ? "rotate-180" : ""
@@ -798,7 +797,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               disabled={currentChapter === bookData.chapters.length - 1}
               className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronRight size={16} />
+              <ChevronRightIcon size={16} />
             </button>
           </div>
 
@@ -835,7 +834,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               disabled={currentChapter === 0}
               className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeftIcon size={16} />
               <span className="hidden sm:inline">Previous</span>
             </button>
             <span className="text-xs text-muted-foreground">
@@ -849,7 +848,7 @@ export function EpubPreview({ content, fileName }: EpubPreviewProps) {
               className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <span className="hidden sm:inline">Next</span>
-              <ChevronRight size={16} />
+              <ChevronRightIcon size={16} />
             </button>
           </div>
         </div>

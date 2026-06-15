@@ -1,0 +1,30 @@
+.fv-plugin-debug {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--fv-border);
+  background: color-mix(in srgb, var(--fv-muted) 20%, transparent);
+  padding: 0.375rem 0.75rem;
+  font-size: 11px;
+  color: var(--fv-muted-foreground);
+}
+.fv-plugin-debug__label {
+  font-weight: 500;
+  color: var(--fv-primary);
+}
+.fv-plugin-debug__id {
+  border-radius: var(--fv-radius);
+  background: var(--fv-muted);
+  padding: 0.125rem 0.375rem;
+  font-family: var(--fv-font-mono);
+}
+.fv-plugin-renderer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.fv-plugin-renderer__content {
+  flex: 1;
+  min-height: 0;
+}

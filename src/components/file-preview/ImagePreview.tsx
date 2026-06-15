@@ -1,7 +1,6 @@
-"use client";
-
-import { ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { ZoomInIcon, ZoomOutIcon, RotateCwIcon } from "./icons";
 import { useState } from "react";
+import "./styles/ImagePreview.css";
 
 interface ImagePreviewProps {
   url: string;
@@ -21,48 +20,29 @@ export function ImagePreview({ url, fileName }: ImagePreviewProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center justify-center gap-2 p-3 border-b bg-muted/30">
-        <button
-          onClick={handleZoomOut}
-          className="p-1.5 rounded-md hover:bg-muted transition-colors"
-          title="Zoom Out"
-        >
-          <ZoomOut size={16} />
+    <div className="fv-image">
+      <div className="fv-image__toolbar">
+        <button onClick={handleZoomOut} className="fv-btn fv-btn--icon" title="Zoom Out">
+          <ZoomOutIcon size={16} />
         </button>
-        <span className="text-sm font-mono min-w-[4rem] text-center">
-          {zoom}%
-        </span>
-        <button
-          onClick={handleZoomIn}
-          className="p-1.5 rounded-md hover:bg-muted transition-colors"
-          title="Zoom In"
-        >
-          <ZoomIn size={16} />
+        <span className="fv-image__zoom-label">{zoom}%</span>
+        <button onClick={handleZoomIn} className="fv-btn fv-btn--icon" title="Zoom In">
+          <ZoomInIcon size={16} />
         </button>
-        <div className="w-px h-5 bg-border mx-1" />
-        <button
-          onClick={handleRotate}
-          className="p-1.5 rounded-md hover:bg-muted transition-colors"
-          title="Rotate"
-        >
-          <RotateCw size={16} />
+        <div className="fv-toolbar__separator" />
+        <button onClick={handleRotate} className="fv-btn fv-btn--icon" title="Rotate">
+          <RotateCwIcon size={16} />
         </button>
-        <button
-          onClick={handleReset}
-          className="px-3 py-1 rounded-md text-xs hover:bg-muted transition-colors"
-        >
+        <button onClick={handleReset} className="fv-image__reset-btn">
           Reset
         </button>
       </div>
 
-      {/* Image container */}
-      <div className="flex-1 flex items-center justify-center p-6 overflow-auto bg-[repeating-conic-gradient(#80808020_0%_25%,transparent_0%_50%)] bg-[length:20px_20px]">
+      <div className="fv-image__canvas">
         <img
           src={url}
           alt={fileName}
-          className="max-w-full transition-transform duration-200"
+          className="fv-image__img"
           style={{
             transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
             transformOrigin: "center center",

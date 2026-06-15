@@ -1,10 +1,9 @@
-"use client";
-
-import { useEffect, useState, useMemo } from "react";
-import { Copy, Check, WrapText } from "lucide-react";
-import { highlightCode as shikiHighlight, getShikiLanguage } from "@/lib/shiki";
+import { useState, useEffect, useMemo } from "react";
+import { CopyIcon, CheckIcon, WrapTextIcon } from "./icons";
+import { highlightCode as shikiHighlight, getShikiLanguage } from "./shiki";
 import { shouldHighlight } from "./limits";
 import { PlainTextLargePreview } from "./PlainTextLargePreview";
+import "./styles/ShikiSourceView.css";
 
 interface CodePreviewProps {
   content: string;
@@ -24,7 +23,6 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
     [isJson, fileName]
   );
 
-  // Format JSON if needed
   const displayContent = useMemo(() => {
     if (isJson) {
       try {
@@ -36,7 +34,6 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
     return content;
   }, [content, isJson]);
 
-  // Line count for display
   const lineCount = useMemo(
     () => displayContent.split("\n").length,
     [displayContent]
@@ -44,8 +41,6 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
 
   const canHighlight = shouldHighlight(displayContent);
 
-  // Reset loading/html when inputs change — derived state during render (not in effect).
-  // This is the React 19 recommended pattern: see rerender-derived-state-no-effect.
   const [prevDeps, setPrevDeps] = useState({ displayContent, language });
   if (prevDeps.displayContent !== displayContent || prevDeps.language !== language) {
     setPrevDeps({ displayContent, language });
@@ -85,77 +80,58 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Early return for large files — avoids duplicate toolbar
   if (!canHighlight) {
     return <PlainTextLargePreview content={displayContent} language={language} />;
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">
-            {language}
-          </span>
-          <span className="text-xs text-muted-foreground">
+    <div className="fv-source">
+      <div className="fv-source__toolbar">
+        <div className="fv-source__toolbar-left">
+          <span className="fv-source__lang-badge">{language}</span>
+          <span className="fv-source__line-count">
             {lineCount} line{lineCount !== 1 ? "s" : ""}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="fv-source__toolbar-right">
           <button
             onClick={() => setWordWrap((w) => !w)}
-            className={`p-1.5 rounded-md transition-colors ${
-              wordWrap
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted"
-            }`}
+            className={`fv-btn fv-btn--icon ${wordWrap ? "fv-source__btn-active" : ""}`}
             title={wordWrap ? "Disable word wrap" : "Enable word wrap"}
           >
-            <WrapText size={14} />
+            <WrapTextIcon size={14} />
           </button>
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition-colors"
+            className="fv-btn fv-btn--icon"
             title="Copy code"
           >
-            {copied ? (
-              <Check size={14} className="text-green-500" />
-            ) : (
-              <Copy size={14} />
-            )}
+            {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
           </button>
         </div>
       </div>
 
-      {/* Code content */}
-      <div className="flex-1 overflow-auto">
-        {/* Dual-theme CSS variable switching + line number styles */}
-        <style dangerouslySetInnerHTML={{ __html: SHIKI_STYLES }} />
-
+      <div className="fv-source__content">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="flex flex-col items-center gap-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-              <p className="text-xs text-muted-foreground">
-                Loading syntax highlighter...
-              </p>
+          <div className="fv-source__loading">
+            <div className="fv-source__loading-inner">
+              <div className="fv-spinner" />
+              <p className="fv-source__loading-label">Loading syntax highlighter...</p>
             </div>
           </div>
         ) : html ? (
           <div
-            className={`shiki-wrapper ${wordWrap ? "shiki-wrap" : "shiki-nowrap"}`}
+            className={`fv-shiki-wrapper ${wordWrap ? "fv-shiki-wrap" : "fv-shiki-nowrap"}`}
             dangerouslySetInnerHTML={{ __html: html }}
           />
         ) : (
-          // Fallback: plain text with line numbers
-          <div className="shiki-plaintext">
+          <div className="fv-shiki-plaintext">
             <pre>
               <code>
                 {displayContent.split("\n").map((line, i) => (
                   <div key={i} className="line">
                     <span className="linenumber">{i + 1}</span>
-                    <span className="linecontent">{line || "\u00A0"}</span>
+                    <span className="linecontent">{line || " "}</span>
                   </div>
                 ))}
               </code>
@@ -166,113 +142,3 @@ export function CodePreview({ content, fileName, isJson }: CodePreviewProps) {
     </div>
   );
 }
-
-// ── Styles for Shiki dual-theme rendering + line numbers ──
-const SHIKI_STYLES = `
-  /* ── Base wrapper ── */
-  .shiki-wrapper pre {
-    margin: 0 !important;
-    padding: 1rem 1.5rem !important;
-    font-size: 0.8125rem !important;
-    line-height: 1.7 !important;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-      "Liberation Mono", monospace !important;
-    overflow-x: auto;
-    tab-size: 2;
-  }
-
-  /* ── Word wrap / nowrap ── */
-  .shiki-wrap pre { white-space: pre-wrap !important; word-break: break-word !important; }
-  .shiki-wrap .line { white-space: pre-wrap; word-break: break-word; }
-  .shiki-nowrap pre { white-space: pre !important; }
-  .shiki-nowrap .line { white-space: pre; }
-
-  /* ── Line numbers (via data-line attribute from transformer) ── */
-  .shiki-wrapper .line {
-    min-height: 1.7em;
-    padding-left: 3.5em;
-    position: relative;
-    display: inline-block;
-    width: 100%;
-  }
-  .shiki-wrapper .line::before {
-    content: attr(data-line);
-    position: absolute;
-    left: 0;
-    width: 2.5em;
-    text-align: right;
-    opacity: 0.3;
-    user-select: none;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── Dual theme switching via CSS variables ── */
-  /* Light mode (default) */
-  .shiki-wrapper .shiki {
-    background-color: var(--shiki-light-bg, #fff) !important;
-    color: var(--shiki-light, #24292e) !important;
-  }
-  .shiki-wrapper .shiki span {
-    color: var(--shiki-light) !important;
-    background-color: var(--shiki-light-bg, transparent) !important;
-  }
-
-  /* Dark mode */
-  .dark .shiki-wrapper .shiki,
-  html.dark .shiki-wrapper .shiki {
-    background-color: var(--shiki-dark-bg, #24292e) !important;
-    color: var(--shiki-dark, #e1e4e8) !important;
-  }
-  .dark .shiki-wrapper .shiki span,
-  html.dark .shiki-wrapper .shiki span {
-    color: var(--shiki-dark) !important;
-    background-color: var(--shiki-dark-bg, transparent) !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not(:has(.light)) .shiki-wrapper .shiki {
-      background-color: var(--shiki-dark-bg, #24292e) !important;
-      color: var(--shiki-dark, #e1e4e8) !important;
-    }
-    :root:not(:has(.light)) .shiki-wrapper .shiki span {
-      color: var(--shiki-dark) !important;
-      background-color: var(--shiki-dark-bg, transparent) !important;
-    }
-  }
-
-  /* ── Plain text fallback styles ── */
-  .shiki-plaintext pre {
-    margin: 0;
-    padding: 1rem 1.5rem;
-    font-size: 0.8125rem;
-    line-height: 1.7;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-      "Liberation Mono", monospace;
-    background-color: #f6f8fa;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .dark .shiki-plaintext pre {
-    background-color: #1b1f23;
-    color: #e1e4e8;
-  }
-  .shiki-plaintext .line {
-    display: flex;
-    min-height: 1.7em;
-  }
-  .shiki-plaintext .linenumber {
-    display: inline-block;
-    width: 2.5em;
-    text-align: right;
-    padding-right: 1em;
-    opacity: 0.3;
-    user-select: none;
-    flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
-  }
-  .shiki-plaintext .linecontent {
-    flex: 1;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-`;
