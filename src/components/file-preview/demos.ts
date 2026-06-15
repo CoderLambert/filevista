@@ -367,7 +367,7 @@ RATE_LIMIT_MAX=100`,
 {\info{\title FileVista RTF Demo}{author FileVista}}
 
 {\pard\qc\b\fs36 FileVista RTF 富文本预览演示\b0\par}
-{\pard\qc\i\fs20 基于 rtf.js + DOMPurify + iframe sandbox 的纯前端渲染方案\i0\par}
+{\pard\qc\i\fs20 基于 @jonahschulte/rtf-toolkit + DOMPurify + iframe sandbox 的纯前端渲染方案\i0\par}
 
 {\pard\brdrb\brdrs\brdrw10\brsp100 \par}
 
@@ -388,7 +388,7 @@ RATE_LIMIT_MAX=100`,
 
 {\pard 采用三层架构设计：\par}
 
-{\pard {\b 第一层：\b0 rtf.js 负责将 RTF 解析并渲染为 HTML 元素。\par}
+{\pard {\b 第一层：\b0 @jonahschulte/rtf-toolkit 负责将 RTF 解析为 AST 并渲染为 HTML。\par}
 {\pard {\b 第二层：\b0 DOMPurify 负责清洗 HTML，移除脚本和危险属性。\par}
 {\pard {\b 第三层：\b0 iframe sandbox 负责隔离渲染上下文，阻止脚本执行。\par}
 

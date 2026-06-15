@@ -8,7 +8,6 @@ import { PreviewFallback } from "../PreviewFallback";
 import { PreviewLoading } from "../PreviewLoading";
 
 export default function RtfPreviewAdapter({ file }: { file: FileInfo }) {
-  const [buffer, setBuffer] = useState<ArrayBuffer | null>(null);
   const [rawText, setRawText] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -19,18 +18,14 @@ export default function RtfPreviewAdapter({ file }: { file: FileInfo }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(null);
-    setBuffer(null);
     setRawText(null);
 
-    // Read source as ArrayBuffer (preserves original bytes)
-    // and also as string (for source view + text-extraction fallback)
-    Promise.all([
-      readSourceAsArrayBuffer(file.source),
-      readSourceAsTextSafe(file.source),
-    ])
-      .then(([buf, text]) => {
+    // RTF is a 7-bit ASCII text format (Unicode escapes are encoded as
+    // \uNNNN). Decoding via TextDecoder preserves the original bytes
+    // losslessly while giving us the string the parser needs.
+    readSourceAsTextSafe(file.source)
+      .then((text) => {
         if (!cancelled) {
-          setBuffer(buf);
           setRawText(text);
           setLoading(false);
         }
@@ -51,7 +46,7 @@ export default function RtfPreviewAdapter({ file }: { file: FileInfo }) {
     return <PreviewLoading label="Loading RTF..." />;
   }
 
-  if (error || buffer === null || rawText === null) {
+  if (error || rawText === null) {
     return (
       <PreviewFallback
         kind="source-read-failed"
@@ -63,22 +58,15 @@ export default function RtfPreviewAdapter({ file }: { file: FileInfo }) {
     );
   }
 
-  return (
-    <RtfPreview
-      buffer={buffer}
-      rawText={rawText}
-      fileName={file.name}
-    />
-  );
+  return <RtfPreview rawText={rawText} fileName={file.name} />;
 }
 
 /**
- * Read source as text with a fallback.
- * Unlike the standard `readSourceAsText`, this uses the ArrayBuffer
- * path to decode with TextDecoder, which preserves the original bytes.
+ * Read source as text via TextDecoder on the underlying ArrayBuffer.
+ * RTF files are ASCII (with `\uNNNN` for non-ASCII), so utf-8 decoding
+ * with `fatal: false` is the right strategy.
  */
 async function readSourceAsTextSafe(source: NonNullable<FileInfo["source"]>): Promise<string> {
   const buffer = await readSourceAsArrayBuffer(source);
-  // Use TextDecoder with 'utf-8' and 'fatal: false' for robust decoding
   return new TextDecoder("utf-8", { fatal: false }).decode(buffer);
 }

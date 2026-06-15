@@ -1,22 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Eye, Code2 } from "lucide-react";
 import DOMPurify from "dompurify";
+import { parseRTF } from "@jonahschulte/rtf-toolkit";
 import { ShikiSourceView } from "./ShikiSourceView";
-import { loadRtfJsGlobals } from "./rtf/load-rtfjs";
+import { renderRtfAstToHtml } from "./rtf/render-rtf";
 
 interface RtfPreviewProps {
-  /** Original RTF bytes (ArrayBuffer) — must not be re-encoded. */
-  buffer: ArrayBuffer;
-  /** Raw RTF text string (for source view and text-extraction fallback). */
+  /** Raw RTF text string (used for parsing, source view, and text-extraction fallback). */
   rawText: string;
   fileName: string;
 }
 
 type ViewMode = "preview" | "source";
 
-// ── RTF text extraction (fallback for complex / unrenderable RTF) ──
+// ── RTF text extraction (fallback for unparseable RTF) ──
 
 /**
  * Basic RTF text extractor.
@@ -76,32 +75,31 @@ function extractRtfText(rtf: string): string[] {
   return paragraphs;
 }
 
-// ── RTF → HTML via rtf.js (bundle) + DOMPurify ──
+// ── RTF → HTML via @jonahschulte/rtf-toolkit + DOMPurify ──
 
 /**
- * Convert RTF ArrayBuffer to sanitized HTML string.
- * Uses the official rtf.js bundle (loaded via dynamic script tags)
- * to parse and render RTF as DOM elements, then DOMPurify to sanitize.
+ * Convert RTF text to sanitized HTML string.
  *
- * @returns `{ html: string }` on success, or `{ error: string }` on failure.
+ * Pipeline:
+ *   1. `@jonahschulte/rtf-toolkit` parses the RTF text into an AST.
+ *   2. Our `renderRtfAstToHtml` walks the AST and emits clean semantic HTML
+ *      (`<h1>/<h2>/<h3>/<p>` with inline `<strong>/<em>/<u>` runs). The
+ *      toolkit's built-in `toHTML()` collapses everything into a single
+ *      `<p>` because it doesn't split on `{\pard ... \par}` groups, so we
+ *      bypass it.
+ *   3. DOMPurify sanitizes the result against XSS.
+ *
+ * @returns `{ html }` on success, or `{ error }` on parser failure — caller
+ *   falls back to plain-text extraction in that case.
  */
-async function buildRtfHtml(
-  buffer: ArrayBuffer,
-): Promise<{ html: string | null; error: string | null }> {
+function buildRtfHtml(
+  rawText: string,
+): { html: string | null; error: string | null } {
   try {
-    const { RTFJS } = await loadRtfJsGlobals();
+    const doc = parseRTF(rawText);
+    const rawHtml = renderRtfAstToHtml(doc);
 
-    const doc = new RTFJS.Document(buffer, {});
-    const elements = await doc.render();
-
-    // Serialize elements to HTML string
-    const container = document.createElement("div");
-    for (const el of elements) {
-      container.appendChild(el);
-    }
-    const rawHtml = container.innerHTML;
-
-    // Sanitize with DOMPurify — strip scripts, event handlers, and dangerous URLs
+    // Sanitize with DOMPurify — strip scripts, event handlers, dangerous URLs
     const sanitized = DOMPurify.sanitize(rawHtml, {
       USE_PROFILES: {
         html: true,
@@ -138,14 +136,11 @@ async function buildRtfHtml(
 
     return { html: sanitized, error: null };
   } catch (err) {
-    console.error("[FileVista][RTF] rich render failed:", err);
-
+    // Expected: not every RTF in the wild is parseable. The caller falls back
+    // to plain-text extraction, so log at `warn` to avoid Next.js's dev-overlay
+    // treating this recoverable case as an application error.
     const message = err instanceof Error ? err.message : String(err);
-
-    if (process.env.NODE_ENV === "development") {
-      console.warn("[FileVista][RTF] fallback reason:", message);
-    }
-
+    console.warn("[FileVista][RTF] rich render failed, falling back to text:", message);
     return { html: null, error: message };
   }
 }
@@ -161,33 +156,54 @@ function buildIframeDoc(html: string): string {
 <meta charset="utf-8">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #1f2937; background: #fff; }
-  body { padding: 24px; }
-  p { margin-bottom: 0.75rem; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1f2937;
+    background: #fff;
+  }
+  body { padding: 32px 40px; max-width: 860px; margin: 0 auto; }
+  h1, h2, h3 { line-height: 1.3; font-weight: 600; color: #111827; }
+  h1 { font-size: 1.75rem; margin: 1.4rem 0 0.9rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb; }
+  h2 { font-size: 1.4rem; margin: 1.3rem 0 0.7rem; padding-bottom: 0.35rem; border-bottom: 1px solid #e5e7eb; }
+  h3 { font-size: 1.15rem; margin: 1.1rem 0 0.55rem; }
+  h1:first-child, h2:first-child, h3:first-child { margin-top: 0; }
+  p { margin: 0 0 0.8rem; }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 600; color: #111827; }
+  em { font-style: italic; }
+  u { text-decoration: underline; text-underline-offset: 2px; }
+  table { border-collapse: collapse; width: 100%; margin: 0.8rem 0; }
+  th, td { border: 1px solid #e5e7eb; padding: 8px 12px; text-align: left; }
   th { background: #f9fafb; font-weight: 600; }
   a { color: #2563eb; text-decoration: underline; }
-  blockquote { border-left: 3px solid #e5e7eb; padding-left: 16px; margin: 12px 0; color: #6b7280; }
-  pre { background: #f3f4f6; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 13px; }
-  code { background: #f3f4f6; padding: 2px 4px; border-radius: 3px; font-size: 13px; }
+  blockquote {
+    border-left: 3px solid #d1d5db;
+    padding: 0.25rem 0 0.25rem 1rem;
+    margin: 0.8rem 0;
+    color: #4b5563;
+  }
+  pre { background: #f3f4f6; padding: 12px 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 0.8rem 0; }
+  code { background: #f3f4f6; padding: 2px 5px; border-radius: 3px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   pre code { background: none; padding: 0; }
-  ul, ol { padding-left: 24px; margin-bottom: 0.75rem; }
+  ul, ol { padding-left: 1.6rem; margin: 0 0 0.8rem; }
   li { margin-bottom: 0.25rem; }
-  h1 { font-size: 24px; margin-bottom: 12px; }
-  h2 { font-size: 20px; margin-bottom: 10px; }
-  h3 { font-size: 16px; margin-bottom: 8px; }
   img { max-width: 100%; height: auto; }
-  hr { border: none; border-top: 1px solid #e5e7eb; margin: 16px 0; }
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.2rem 0; }
   @media (prefers-color-scheme: dark) {
-    html, body { color: #d1d5db; background: #1f2937; }
-    th { background: #374151; }
-    th, td { border-color: #4b5563; }
-    pre { background: #111827; }
-    code { background: #111827; }
+    html, body { color: #d1d5db; background: #111827; }
+    h1, h2, h3 { color: #f3f4f6; }
+    h1, h2 { border-color: #374151; }
+    strong { color: #f9fafb; }
+    th { background: #1f2937; }
+    th, td { border-color: #374151; }
+    pre, code { background: #1f2937; }
     blockquote { border-color: #4b5563; color: #9ca3af; }
     a { color: #60a5fa; }
-    hr { border-color: #4b5563; }
+    hr { border-color: #374151; }
   }
 </style>
 </head>
@@ -199,32 +215,19 @@ ${html}
 
 // ── RtfPreview component ──
 
-export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
+export function RtfPreview({ rawText, fileName }: RtfPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
-  const [iframeHtml, setIframeHtml] = useState<string | null>(null);
-  const [renderError, setRenderError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    buildRtfHtml(buffer).then((result) => {
-      if (!cancelled) {
-        if (result.html !== null) {
-          setIframeHtml(buildIframeDoc(result.html));
-          setRenderError(null);
-        } else {
-          setIframeHtml(null);
-          setRenderError(result.error);
-        }
-      }
-    });
-
-    return () => {
-      cancelled = true;
+  // parseRTF + toHTML are pure & synchronous — useMemo, not useEffect.
+  const { iframeHtml, renderError } = useMemo(() => {
+    const result = buildRtfHtml(rawText);
+    return {
+      iframeHtml: result.html !== null ? buildIframeDoc(result.html) : null,
+      renderError: result.error,
     };
-  }, [buffer]);
+  }, [rawText]);
 
-  const paragraphs = extractRtfText(rawText);
+  const paragraphs = useMemo(() => extractRtfText(rawText), [rawText]);
 
   return (
     <div className="flex flex-col h-full">
@@ -275,7 +278,7 @@ export function RtfPreview({ buffer, rawText, fileName }: RtfPreviewProps) {
               title={`Preview of ${fileName}`}
             />
           ) : renderError ? (
-            /* Fallback: text extraction when rtf.js fails */
+            /* Fallback: text extraction when rtf-toolkit fails */
             <div className="overflow-auto h-full p-6">
               <div className="max-w-3xl mx-auto">
                 <div className="flex items-center gap-2 mb-4 text-amber-600 dark:text-amber-400">
