@@ -1,5 +1,10 @@
 # @filevista/file-preview
 
+[![npm version](https://img.shields.io/npm/v/@filevista/file-preview.svg?style=flat-square)](https://www.npmjs.com/package/@filevista/file-preview)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/@filevista/file-preview?style=flat-square&label=gzip)](https://bundlephobia.com/package/@filevista/file-preview)
+[![license](https://img.shields.io/npm/l/@filevista/file-preview?style=flat-square)](./LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/CoderLambert/filevista/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/CoderLambert/filevista/actions/workflows/ci.yml)
+
 > Browser-side file preview toolkit for React — 20+ formats with zero server processing.
 
 Render PDF, DOCX, PPTX, XLSX, EPUB, RTF, Markdown, code, images, video, audio, ZIP, CSV, SVG, HTML, and plain text — all in the browser. Files never leave the user's device.
@@ -142,6 +147,16 @@ A registry built from a subset of plugins also means the bundler will tree-shake
 ## Supported formats
 
 PDF · DOCX · PPTX · XLSX · EPUB · RTF · Markdown · HTML · code (Shiki-highlighted) · plain text · CSV · JSON · SVG · images · video · audio · ZIP listing.
+
+## Browser support
+
+| Browser | Minimum |
+| --- | --- |
+| Chrome / Edge | 90+ |
+| Firefox | 88+ |
+| Safari | 14+ |
+
+The library relies on browser-native `File`/`Blob`/`ArrayBuffer`, `fetch`, `URL.createObjectURL`, and dynamic `import()`. PDF preview additionally uses a Web Worker (PDF.js). No polyfills are shipped — if you need to support older browsers, add the relevant polyfills yourself.
 
 ## License
 

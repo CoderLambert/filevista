@@ -18,9 +18,13 @@
     "lint": "pnpm -r run lint",
     "typecheck": "pnpm --filter @filevista/file-preview build && pnpm -r run typecheck",
     "test": "pnpm --filter @filevista/file-preview test",
-    "check": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build"
+    "check": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm run build:lib && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "typescript": "^5"
   }
 }

@@ -161,32 +161,26 @@ A 是较大架构改动，建议 0.2 版本再做。
 
 可选——保持当前"build → typecheck"工作流也合理，更确定性。
 
-### [ ] 11. CI 工作流
+### [x] 11. CI / Release 工作流
 
-`.github/workflows/` 是 monorepo 拆分前的旧结构，需要重写：
+- `ci.yml` 已在 `449964b` 重写为 pnpm + monorepo（lint + typecheck + test + build）
+- 新增 `release.yml`：changesets 双触发——push 带 pending changeset → 开 Version Packages PR；PR merge 后 → `changeset publish` 发 npm。配置 npm provenance（OIDC `id-token: write`）+ 完整 history（changelog diff 需要）
+- 需要仓库 secret：`NPM_AUTH_TOKEN`（npm "Automation" token）
 
-- `ci.yml`：lint + typecheck + test + build:lib + build:playground 矩阵（Node 22.x）
-- `release.yml`：tag → npm publish（配合 changesets）
+### [x] 12. 版本管理工具
 
-### [ ] 12. 版本管理工具
+- 安装 `@changesets/cli`（root devDep）
+- `.changeset/config.json`：`access: public`、`ignore: ["@filevista/playground"]`（private 包不发版）
+- root package.json 加 `changeset` / `version` / `release` 脚本
+- 首发 changeset：`.changeset/initial-release.md`（minor bump 0.1.0 → 0.2.0）
 
-引入 [`changesets`](https://github.com/changesets/changesets)：
+### [x] 13. README 增强
 
-```bash
-pnpm add -D -w @changesets/cli
-pnpm changeset init
-```
+- npm version / bundlephobia minzip / license / CI status 四个 shield badge
+- 浏览器兼容矩阵章节（Chrome 90+ / Firefox 88+ / Safari 14+）
+- License 章节说明 LGPL-3.0-or-later + COPYING（GPL-3.0）
 
-PR 里写 changeset，merge 后自动出 `changeset version` PR，再 merge 即发版。
-
-### [ ] 13. README 增强
-
-补充：
-
-- bundle size badge（bundlejs.com / bundlephobia）
-- 浏览器兼容矩阵（Chrome 90+ / Safari 14+ / Firefox 88+）
-- "只用 PDF 预览"最小示例（#4 完成后）
-- API 参考链接（typedoc 自动生成）
+**仍未做**：typedoc 自动生成 API 参考链接（#14 一起或单独视需求）。
 
 ### [ ] 14. CJS 输出（视需求）
 
