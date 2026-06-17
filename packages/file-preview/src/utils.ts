@@ -322,7 +322,7 @@ export function generateId(): string {
  * Decode base64 string to Uint8Array.
  * Shared utility used by PDF, DOCX, DOC, PPTX, XLSX, EPUB, ZIP preview components.
  */
-export function base64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
+export function base64ToUint8Array(base64: string): Uint8Array {
   const binaryString = atob(base64);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {

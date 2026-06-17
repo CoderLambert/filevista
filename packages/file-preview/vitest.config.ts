@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     environment: "node", // individual tests opt in to jsdom via `// @vitest-environment jsdom`
     globals: false,
-    setupFiles: ["./vitest.setup.ts"],
+    setupFiles: ["./src/__tests__/setup.ts"],
     include: [
       "src/**/*.test.ts",
       "src/**/*.test.tsx",

@@ -371,7 +371,7 @@ async function parseXlsx(
   // exceljs's typings ask for Node's Buffer, but its browser bundle
   // accepts any ArrayBufferView at runtime. Pass the underlying ArrayBuffer
   // to satisfy both layers without a structured cast.
-  await workbook.xlsx.load(bytes.buffer);
+  await workbook.xlsx.load(bytes.buffer as ArrayBuffer);
 
   const sheets: SheetData[] = [];
   const isFast = mode === "fast";

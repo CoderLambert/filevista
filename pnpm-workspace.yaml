@@ -9,6 +9,7 @@ allowBuilds:
   '@swc/core': true
   canvas: false
   es5-ext: true
+  esbuild: true
   prisma: false
   sharp: true
   unrs-resolver: true

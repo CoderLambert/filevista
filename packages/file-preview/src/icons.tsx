@@ -5,6 +5,8 @@
  * Consumers can override size via the `size` prop; color follows `currentColor`.
  */
 
+import { Children } from "react";
+
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   size?: number;
 }
@@ -33,7 +35,7 @@ function icon(props: IconProps, ...children: React.ReactNode[]) {
       strokeLinejoin={defaults.strokeLinejoin}
       {...rest}
     >
-      {children}
+      {Children.toArray(children)}
     </svg>
   );
 }

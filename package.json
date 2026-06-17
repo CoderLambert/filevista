@@ -9,12 +9,14 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @filevista/playground dev",
+    "dev": "pnpm --filter @filevista/file-preview build && pnpm --filter @filevista/playground dev",
     "build": "pnpm --filter @filevista/file-preview build && pnpm --filter @filevista/playground build",
     "build:lib": "pnpm --filter @filevista/file-preview build",
-    "build:playground": "pnpm --filter @filevista/playground build",
+    "build:playground": "pnpm --filter @filevista/file-preview build && pnpm --filter @filevista/playground build",
+    "start": "pnpm --filter @filevista/playground start",
+    "preview": "pnpm run build && pnpm run start",
     "lint": "pnpm -r run lint",
-    "typecheck": "pnpm -r run typecheck",
+    "typecheck": "pnpm --filter @filevista/file-preview build && pnpm -r run typecheck",
     "test": "pnpm --filter @filevista/file-preview test",
     "check": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build"
   },
