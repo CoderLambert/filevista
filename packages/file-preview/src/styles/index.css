@@ -20,9 +20,7 @@
 /* ── Component styles ── */
 @import "./PreviewLoading.css";
 @import "./PreviewFallback.css";
-@import "./LargeFileHint.css";
 @import "./LargeFileGate.css";
-@import "./UnsupportedLegacyOfficePreview.css";
 @import "./ImagePreview.css";
 @import "./SvgPreview.css";
 @import "./AudioPreview.css";
@@ -31,7 +29,6 @@
 @import "./PlainTextLargePreview.css";
 @import "./PdfPreview.css";
 @import "./DocxPreview.css";
-@import "./DocPreview.css";
 @import "./MarkdownPreview.css";
 @import "./HtmlPreview.css";
 @import "./RtfPreview.css";

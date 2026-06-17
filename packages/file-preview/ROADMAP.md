@@ -102,17 +102,25 @@ cd packages/file-preview && pnpm pack --dry-run
 - `utils.ts` 内部用，从 `index.ts` 移除
 - 真有外部需要再单独导出（`@filevista/file-preview/utils` 子路径）
 
-### [ ] 6. 清理迁移残留
+### [x] 6. 清理迁移残留
 
-确认是否冗余、删一份：
+确认 4 类候选后实际删除了 5 个源文件 + 3 个 CSS + 1 个测试：
 
-```
-src/CodePreview.tsx
-src/preview-adapters/SourceCodePreviewAdapter.tsx
+**真重复（删）**：
 
-src/UnsupportedPluginPreview.tsx
-src/preview-adapters/UnsupportedPluginPreview.tsx
-```
+- `src/UnsupportedPluginPreview.tsx` —— 与 `src/preview-adapters/UnsupportedPluginPreview.tsx` 字节相同；只有 adapter 版本被 `PluginPreviewRenderer` 引用
+
+**死代码 orphan（删）**：
+
+- `src/DocPreview.tsx` + `src/styles/DocPreview.css`
+- `src/LargeFileHint.tsx` + `src/styles/LargeFileHint.css` + `src/__tests__/LargeFileHint.test.tsx`
+- `src/UnsupportedLegacyOfficePreview.tsx` + `src/styles/UnsupportedLegacyOfficePreview.css`
+
+均无 importer，仅自引用 + `styles/index.css` 的 `@import`（已同步清理）。
+
+**保留（不是重复）**：
+
+- `src/CodePreview.tsx`（pure render） + `src/preview-adapters/SourceCodePreviewAdapter.tsx`（I/O glue）—— 这是有意的分层模式，其他 adapter 同样架构。
 
 ### [ ] 7. 补核心渲染路径的测试
 
