@@ -69,7 +69,8 @@
     "jszip": "^3.10.1",
     "pdfjs-dist": "^4.4.0",
     "pptx-preview": "^1.0.7",
-    "rtf.js": "^3.0.9"
+    "rtf.js": "^3.0.9",
+    "x-data-spreadsheet": "^1.1.9"
   },
   "peerDependenciesMeta": {
     "docx-preview": {
@@ -88,6 +89,9 @@
       "optional": true
     },
     "rtf.js": {
+      "optional": true
+    },
+    "x-data-spreadsheet": {
       "optional": true
     }
   },
@@ -113,7 +117,8 @@
     "rtf.js": "^3.0.9",
     "tsup": "^8.3.0",
     "typescript": "^5",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "x-data-spreadsheet": "^1.1.9"
   },
   "engines": {
     "node": ">=22"

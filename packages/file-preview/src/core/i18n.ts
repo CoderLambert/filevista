@@ -84,6 +84,11 @@ export interface LocaleMessages {
   unsupportedImageFormat: string;
   unknown: string;
   downloadOriginal: string;
+  enhancedRenderer: string;
+  tableRenderer: string;
+  enhancedRendererTitle: string;
+  tableRendererTitle: string;
+  enhancedRendererUnavailable: string;
 
   // Plain text
   lines: string;
@@ -190,6 +195,11 @@ export const zhCN: LocaleMessages = {
   unsupportedImageFormat: "不支持的图片格式",
   unknown: "未知",
   downloadOriginal: "下载原文件",
+  enhancedRenderer: "增强",
+  tableRenderer: "表格",
+  enhancedRendererTitle: "增强模式：使用类 Excel 电子表格渲染器",
+  tableRendererTitle: "表格模式：使用稳定的 HTML 表格预览",
+  enhancedRendererUnavailable: "增强电子表格渲染器不可用，已自动降级为表格预览。",
 
   // Plain text
   lines: "行",
@@ -296,6 +306,11 @@ export const enUS: LocaleMessages = {
   unsupportedImageFormat: "Unsupported image format",
   unknown: "Unknown",
   downloadOriginal: "Download Original",
+  enhancedRenderer: "Enhanced",
+  tableRenderer: "Table",
+  enhancedRendererTitle: "Enhanced mode: Excel-like spreadsheet renderer",
+  tableRendererTitle: "Table mode: stable HTML table preview",
+  enhancedRendererUnavailable: "Enhanced spreadsheet renderer is unavailable. Falling back to table preview.",
 
   // Plain text
   lines: "lines",

@@ -10,6 +10,10 @@ export const XLSX_PREVIEW_LIMITS = {
   LARGE_FILE_SIZE: 10 * 1024 * 1024, // 10 MB
   /** Files larger than this are not recommended for fidelity mode */
   MAX_FIDELITY_FILE_SIZE: 30 * 1024 * 1024, // 30 MB
+  /** Enhanced spreadsheet renderer is not used for files larger than this */
+  ENHANCED_RENDERER_MAX_FILE_SIZE: 10 * 1024 * 1024, // 10 MB
+  /** Enhanced spreadsheet renderer gives up if total cells exceed this */
+  ENHANCED_RENDERER_MAX_CELLS: 200_000,
 } as const;
 
 export const FILE_PREVIEW_LIMITS = {
