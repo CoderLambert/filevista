@@ -301,7 +301,7 @@ type PreviewErrorCode =
 | 1 | React 18 兼容 | ✅ + CI 矩阵 | `a5fb84d` + `fa3b770` |
 | 2 | 大文件保护默认内置 | ✅ | `957a2fa` |
 | 3 | 远程 URL maxBytes | ✅ | `31e65f1` |
-| 4 | 本地 magic bytes 检测 | ⏳ | — |
+| 4 | 本地 magic bytes 检测 | ✅ | `8beacbd` |
 | 5 | PreviewError 标准化 | ⏳ | — |
 | 6 | supported-formats.md | ✅ | `ee4ffc9` |
 
