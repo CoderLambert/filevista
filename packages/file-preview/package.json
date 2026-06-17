@@ -1,6 +1,6 @@
 {
   "name": "@filevista/file-preview",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Browser-side file preview toolkit for React — 20+ formats (PDF, DOCX, PPTX, XLSX, EPUB, RTF, code, images, video, audio …) with zero server processing.",
   "keywords": [
     "react",
@@ -71,12 +71,24 @@
     "rtf.js": "^3.0.9"
   },
   "peerDependenciesMeta": {
-    "docx-preview": { "optional": true },
-    "exceljs": { "optional": true },
-    "jszip": { "optional": true },
-    "pdfjs-dist": { "optional": true },
-    "pptx-preview": { "optional": true },
-    "rtf.js": { "optional": true }
+    "docx-preview": {
+      "optional": true
+    },
+    "exceljs": {
+      "optional": true
+    },
+    "jszip": {
+      "optional": true
+    },
+    "pdfjs-dist": {
+      "optional": true
+    },
+    "pptx-preview": {
+      "optional": true
+    },
+    "rtf.js": {
+      "optional": true
+    }
   },
   "dependencies": {
     "dompurify": "^3.4.8",
