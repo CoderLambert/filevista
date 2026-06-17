@@ -63,3 +63,47 @@ jobs:
       # `build` builds the library, then the playground production bundle.
       - name: Build all packages
         run: pnpm run build
+
+  # The library declares peerDependencies react ^18.2 || ^19. To actually
+  # honor that claim (not just "the code doesn't import use()"), run the
+  # library's test suite against a React 18 install via pnpm overrides.
+  # This job only exercises the library — the playground is a React 19 app
+  # and is not expected to build under 18.
+  react18-compat:
+    name: Library tests under React 18
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Pin react/react-dom to 18.3.1 for this job only. pnpm 11 reads
+      # overrides from pnpm-workspace.yaml, so append them there before
+      # installing. --no-frozen-lockfile because the override diverges from
+      # the committed lockfile (which is React 19).
+      - name: Pin React 18 via overrides
+        run: |
+          printf '\noverrides:\n  react: 18.3.1\n  react-dom: 18.3.1\n' >> pnpm-workspace.yaml
+          tail -5 pnpm-workspace.yaml
+
+      - name: Install dependencies (React 18)
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Print resolved React version
+        run: node -e "console.log('react', require('react').version)"
+
+      - name: Build library
+        run: pnpm run build:lib
+
+      - name: Run library tests (React 18)
+        run: pnpm --filter @lamberl-lee/file-preview test

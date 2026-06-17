@@ -1,4 +1,4 @@
-import { Suspense, use, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import type { ComponentType } from "react";
 import type { FileInfo } from "./utils";
 import type { PreviewPlugin } from "./core/plugin";
@@ -44,10 +44,52 @@ interface PluginContentProps {
   file: FileInfo;
 }
 
+// Load state for a plugin module. We use an explicit state machine instead of
+// React 19's `use(promise)` so the library stays compatible with React 18
+// (where `use` is unavailable). The three states map to:
+//   loading → show <PreviewLoading />
+//   error  → throw so the surrounding <PreviewErrorBoundary> catches it
+//            (this preserves the existing Retry path: invalidatePluginPromise
+//            + resetKey bump forces a remount with a fresh promise)
+//   ready  → render the resolved component
+type PluginContentState =
+  | { status: "loading" }
+  | { status: "ready"; Component: ComponentType<{ file: FileInfo }> }
+  | { status: "error"; error: Error };
+
 function PluginContent({ plugin, file }: PluginContentProps) {
-  const mod = use(getPluginPromise(plugin));
-  const Component = mod.default;
-  return <Component file={file} />;
+  const [state, setState] = useState<PluginContentState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ status: "loading" });
+
+    getPluginPromise(plugin)
+      .then((mod) => {
+        if (!cancelled) {
+          setState({ status: "ready", Component: mod.default });
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setState({
+            status: "error",
+            error:
+              error instanceof Error
+                ? error
+                : new Error(String(error)),
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [plugin]);
+
+  if (state.status === "loading") return <PreviewLoading />;
+  if (state.status === "error") throw state.error;
+  return <state.Component file={file} />;
 }
 
 export interface PluginPreviewRendererProps {
@@ -118,9 +160,7 @@ export function PluginPreviewRenderer({
           resetKey={`${file.id}:${plugin.id}:${retryKey}`}
           onRetry={handleRetry}
         >
-          <Suspense fallback={<PreviewLoading />}>
-            <PluginContent plugin={plugin} file={file} />
-          </Suspense>
+          <PluginContent plugin={plugin} file={file} />
         </PreviewErrorBoundary>
       </div>
     </div>
