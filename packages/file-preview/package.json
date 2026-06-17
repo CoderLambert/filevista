@@ -119,6 +119,7 @@
   },
   "license": "LGPL-3.0-or-later",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }
