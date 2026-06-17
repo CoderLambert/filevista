@@ -47,6 +47,7 @@
   "files": [
     "dist",
     "scripts",
+    "docs",
     "README.md",
     "LICENSE",
     "COPYING"

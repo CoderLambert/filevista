@@ -148,6 +148,12 @@ A registry built from a subset of plugins also means the bundler will tree-shake
 
 PDF · DOCX · PPTX · XLSX · EPUB · RTF · Markdown · HTML · code (Shiki-highlighted) · plain text · CSV · JSON · SVG · images · video · audio · ZIP listing.
 
+> **Before integrating, read [`docs/supported-formats.md`](./docs/supported-formats.md).**
+> It documents *what each format actually renders* — and, more importantly, what it
+> doesn't (no PowerPoint animations, no XLSX formula recomputation, DOC/PPT/XLS
+> legacy formats are downgrades, etc.). Reading this prevents the most common
+> integration disappointments.
+
 ## Browser support
 
 | Browser | Minimum |
