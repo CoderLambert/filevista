@@ -124,6 +124,7 @@ export { zipPlugin } from "./plugins/zip-plugin";
 export {
   processRemoteUrl,
   RemoteUrlError,
+  DEFAULT_REMOTE_MAX_BYTES,
   type RemoteUrlErrorCode,
   type RemoteLoadProgress,
   type ProcessRemoteUrlOptions,

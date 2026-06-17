@@ -29,7 +29,23 @@ export interface RemoteLoadProgress {
 export interface ProcessRemoteUrlOptions {
   signal?: AbortSignal;
   onProgress?: (progress: RemoteLoadProgress) => void;
+  /**
+   * Maximum bytes to download from the remote URL.
+   *
+   * Defaults to 100 MB. If the server advertises a `Content-Length` above
+   * this, the download is rejected before any bytes are transferred. If the
+   * server omits `Content-Length`, the download is aborted mid-stream the
+   * moment `received` crosses the limit — so an unbounded response can never
+   * exhaust browser memory.
+   *
+   * On either path the rejection is a `RemoteUrlError` with code
+   * `FILE_TOO_LARGE`. Set to `Infinity` to disable the limit entirely.
+   */
+  maxBytes?: number;
 }
+
+/** Default remote download cap. Overridable via `ProcessRemoteUrlOptions.maxBytes`. */
+export const DEFAULT_REMOTE_MAX_BYTES = 100 * 1024 * 1024;
 
 type FileNameSource =
   | "content-disposition"
@@ -502,12 +518,31 @@ function getContentLength(response: Response): number | null {
 
 async function readResponseAsArrayBufferWithProgress(
   response: Response,
-  options: ProcessRemoteUrlOptions
+  options: ProcessRemoteUrlOptions,
+  url: string
 ): Promise<ArrayBuffer> {
   const total = getContentLength(response);
+  const maxBytes = options.maxBytes ?? DEFAULT_REMOTE_MAX_BYTES;
+
+  // Pre-flight: if the server tells us up front the file is too big, refuse
+  // before allocating any memory or transferring the body.
+  if (total !== null && total > maxBytes) {
+    throw new RemoteUrlError(
+      "FILE_TOO_LARGE",
+      `Remote file is ${total} bytes, exceeds the ${maxBytes}-byte limit.`,
+      url
+    );
+  }
 
   if (!response.body) {
     const buffer = await response.arrayBuffer();
+    if (buffer.byteLength > maxBytes) {
+      throw new RemoteUrlError(
+        "FILE_TOO_LARGE",
+        `Remote file is ${buffer.byteLength} bytes, exceeds the ${maxBytes}-byte limit.`,
+        url
+      );
+    }
     options.onProgress?.({
       received: buffer.byteLength,
       total,
@@ -538,6 +573,21 @@ async function readResponseAsArrayBufferWithProgress(
       if (value) {
         chunks.push(value);
         received += value.byteLength;
+
+        // No Content-Length (or a lying one): abort as soon as we cross the
+        // cap so an unbounded stream can't drain memory.
+        if (received > maxBytes) {
+          try {
+            await reader.cancel();
+          } catch {
+            // ignore
+          }
+          throw new RemoteUrlError(
+            "FILE_TOO_LARGE",
+            `Remote file exceeded the ${maxBytes}-byte limit after ${received} bytes (no reliable Content-Length).`,
+            url
+          );
+        }
 
         options.onProgress?.({
           received,
@@ -615,7 +665,11 @@ export async function processRemoteUrl(
       contentDisposition
     );
 
-    buffer = await readResponseAsArrayBufferWithProgress(response, options);
+    buffer = await readResponseAsArrayBufferWithProgress(
+      response,
+      options,
+      parsedUrl.toString()
+    );
 
     const magicResult = sniffMagic(buffer);
 
