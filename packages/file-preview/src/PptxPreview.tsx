@@ -1,9 +1,8 @@
-
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
-  useCallback,
   forwardRef,
   useImperativeHandle,
 } from "react";
@@ -21,38 +20,89 @@ import {
 import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
 import type { PreviewSource } from "./core/types";
 import { useLocale } from "./core/i18n";
+import { usePptxFitScale } from "./pptx/usePptxFitScale";
+import { readPptxInsight } from "./pptx/read-pptx-insight";
+import { PptxSummaryFallback } from "./PptxSummaryFallback";
+import type {
+  PptxFitMode,
+  PptxInsight,
+  PptxPreviewProps,
+  PptxRenderHandle,
+  PptxReadyInfo,
+  PptxViewMode,
+} from "./pptx/types";
+import {
+  PPTX_BASE_WIDTH,
+  PPTX_BASE_HEIGHT,
+  PPTX_MAX_ZOOM,
+  PPTX_MIN_ZOOM,
+  PPTX_ZOOM_STEP,
+} from "./pptx/constants";
 import "./styles/PptxPreview.css";
-
-interface PptxPreviewProps {
-  content?: string | null;
-  source?: PreviewSource;
-  fileName: string;
-}
-
-type ViewMode = "slide" | "grid";
 
 /**
  * Lightweight post-render: silently replace images that browsers can't display
  * (e.g. EMF/WMF) with a barely-visible dotted-border placeholder instead of
  * the default broken-image icon.
  */
-const UNSUPPORTED_IMG_FORMATS = ["image/x-emf", "image/x-wmf", "image/emf", "image/wmf"];
+const UNSUPPORTED_IMG_FORMATS = [
+  "image/x-emf",
+  "image/x-wmf",
+  "image/emf",
+  "image/wmf",
+];
 
 function hideBrokenImages(container: HTMLElement) {
   const images = container.querySelectorAll("img");
   images.forEach((img) => {
     const src = img.src || "";
     const isUnsupported = UNSUPPORTED_IMG_FORMATS.some(
-      (fmt) => src.startsWith(`data:${fmt}`) || src.includes(fmt.replace("/", "/"))
+      (fmt) => src.startsWith(`data:${fmt}`) || src.includes(fmt)
     );
     if (isUnsupported) {
-      // Replace with a subtle transparent 1px placeholder
       img.src =
         "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
       img.style.opacity = "0.15";
-      img.style.background = "repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 0 0 / 8px 8px";
+      img.style.background =
+        "repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 0 0 / 8px 8px";
     }
   });
+}
+
+/**
+ * Remove internal scrollbars and navigation elements injected by pptx-preview.
+ * In slide mode we enforce overflow:hidden on every descendant to prevent
+ * nested scrolling that breaks the fit-to-container layout.
+ */
+function cleanupPptxPreviewDom(container: HTMLElement, mode: PptxViewMode) {
+  hideBrokenImages(container);
+
+  const navElements = container.querySelectorAll(
+    ".pre-btn, .next-btn, .pagination, [class*='pre-btn'], [class*='next-btn'], [class*='pagination'], button"
+  );
+  navElements.forEach((el) => {
+    (el as HTMLElement).style.display = "none";
+  });
+
+  if (mode === "slide") {
+    const candidates = container.querySelectorAll<HTMLElement>("*");
+    candidates.forEach((el) => {
+      const style = window.getComputedStyle(el);
+      const hasScroll =
+        style.overflow === "auto" ||
+        style.overflow === "scroll" ||
+        style.overflowX === "auto" ||
+        style.overflowX === "scroll" ||
+        style.overflowY === "auto" ||
+        style.overflowY === "scroll";
+
+      if (hasScroll) {
+        el.style.overflow = "hidden";
+        el.style.overflowX = "hidden";
+        el.style.overflowY = "hidden";
+      }
+    });
+  }
 }
 
 // Lazy-load pptx-preview to avoid SSR issues
@@ -64,25 +114,31 @@ async function getPptxPreview() {
   return pptxPreviewModule;
 }
 
-export interface PptxRenderHandle {
-  goToSlide: (index: number) => void;
-  nextSlide: () => void;
-  prevSlide: () => void;
-}
+// ─── PptxRenderContainer ─────────────────────────────────────────────────────
 
-// Inner component that re-mounts on content/mode changes (avoids setState-in-effect lint issue)
 const PptxRenderContainer = forwardRef<
   PptxRenderHandle,
   {
     content?: string | null;
     source?: PreviewSource;
-    mode: ViewMode;
-    zoom: number;
-    onReady: (info: { slideCount: number; currentIndex: number }) => void;
-    onError: (error: string) => void;
+    mode: PptxViewMode;
+    scale: number;
+    baseWidth?: number;
+    baseHeight?: number;
+    onReady: (info: PptxReadyInfo) => void;
+    onError: (error: Error) => void;
   }
 >(function PptxRenderContainer(
-  { content, source, mode, zoom, onReady, onError },
+  {
+    content,
+    source,
+    mode,
+    scale,
+    baseWidth = PPTX_BASE_WIDTH,
+    baseHeight = PPTX_BASE_HEIGHT,
+    onReady,
+    onError,
+  },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -98,6 +154,9 @@ const PptxRenderContainer = forwardRef<
         const clamped = Math.max(0, Math.min(index, slideCountRef.current - 1));
         try {
           viewer.renderSingleSlide(clamped);
+          if (containerRef.current) {
+            cleanupPptxPreviewDom(containerRef.current, mode);
+          }
         } catch (err) {
           console.warn("Slide navigation error:", err);
         }
@@ -107,6 +166,9 @@ const PptxRenderContainer = forwardRef<
         if (!viewer) return;
         try {
           viewer.renderNextSlide();
+          if (containerRef.current) {
+            cleanupPptxPreviewDom(containerRef.current, mode);
+          }
         } catch {}
       },
       prevSlide() {
@@ -114,10 +176,13 @@ const PptxRenderContainer = forwardRef<
         if (!viewer) return;
         try {
           viewer.renderPreSlide();
+          if (containerRef.current) {
+            cleanupPptxPreviewDom(containerRef.current, mode);
+          }
         } catch {}
       },
     }),
-    []
+    [mode]
   );
 
   useEffect(() => {
@@ -125,7 +190,8 @@ const PptxRenderContainer = forwardRef<
     let cancelled = false;
 
     async function render() {
-      if (!containerRef.current) return;
+      const container = containerRef.current;
+      if (!container) return;
 
       // Destroy previous viewer
       if (viewerRef.current) {
@@ -134,29 +200,26 @@ const PptxRenderContainer = forwardRef<
         } catch {
           // ignore
         }
-
         viewerRef.current = null;
       }
 
-      containerRef.current.innerHTML = "";
+      container.innerHTML = "";
 
       try {
         const { init } = await getPptxPreview();
         if (cancelled || !containerRef.current) return;
 
         const viewer = init(containerRef.current, {
-          width: 960,
-          height: 540,
+          width: baseWidth,
+          height: baseHeight,
           mode: mode === "grid" ? "list" : "slide",
         });
 
         viewerRef.current = viewer;
 
         const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
-
         if (cancelled) return;
 
-        // Use preview() for simpler flow (load + render in one call)
         await viewer.preview(buffer);
         if (cancelled) return;
 
@@ -165,28 +228,19 @@ const PptxRenderContainer = forwardRef<
         const idx = viewer.currentIndex || 0;
         slideCountRef.current = count;
 
+        if (containerRef.current) {
+          cleanupPptxPreviewDom(containerRef.current, mode);
+        }
+
         onReady({ slideCount: count, currentIndex: idx });
-
-        // Post-render: hide broken images & library navigation
-        try {
-          if (containerRef.current) {
-            hideBrokenImages(containerRef.current);
-
-            // Hide built-in navigation elements rendered by the library
-            const navElements = containerRef.current.querySelectorAll(
-              ".pre-btn, .next-btn, .pagination, [class*='pre-btn'], [class*='next-btn'], [class*='pagination'], button"
-            );
-            navElements.forEach((el) => {
-              (el as HTMLElement).style.display = "none";
-            });
-          }
-        } catch {}
       } catch (err) {
         if (!cancelled) {
           onError(
             err instanceof Error
-              ? err.message
-              : "PPTX preview failed — file may be corrupted or unsupported"
+              ? err
+              : new Error(
+                  "PPTX preview failed — file may be corrupted or unsupported"
+                )
           );
         }
       }
@@ -203,7 +257,6 @@ const PptxRenderContainer = forwardRef<
         } catch {
           // ignore
         }
-
         viewerRef.current = null;
       }
 
@@ -211,73 +264,132 @@ const PptxRenderContainer = forwardRef<
         containerRef.current.innerHTML = "";
       }
     };
-  }, [content, source, mode, onReady, onError]);
+  }, [content, source, mode, baseWidth, baseHeight, onReady, onError]);
 
   return (
     <div
+      className="fv-pptx__stage"
       style={{
-        zoom: zoom / 100,
-        maxWidth: "100%",
-        overflow: "hidden",
+        width: baseWidth * scale,
+        height: baseHeight * scale,
       }}
     >
       <div
-        ref={containerRef}
-        className="fv-pptx__render-container"
+        className="fv-pptx__scale-layer"
         style={{
-          minWidth: mode === "slide" ? 960 : undefined,
-          minHeight: mode === "slide" ? 540 : undefined,
+          width: baseWidth,
+          height: baseHeight,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
         }}
-      />
+      >
+        <div
+          ref={containerRef}
+          className={`fv-pptx__render-container ${
+            mode === "slide"
+              ? "fv-pptx__render-container--slide"
+              : "fv-pptx__render-container--grid"
+          }`}
+          style={{
+            width: baseWidth,
+            height: mode === "slide" ? baseHeight : undefined,
+            minHeight: mode === "slide" ? baseHeight : undefined,
+          }}
+        />
+      </div>
     </div>
   );
 });
 
-export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [slideCount, setSlideCount] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [viewMode, setViewMode] = useState<ViewMode>("slide");
-  const [zoom, setZoom] = useState(100);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [renderKey, setRenderKey] = useState(0);
-  const renderHandleRef = useRef<PptxRenderHandle>(null);
+// ─── PptxPreview ──────────────────────────────────────────────────────────────
+
+export function PptxPreview({
+  content,
+  source,
+  fileName,
+  fit = "contain",
+  initialZoom = 100,
+  minZoom = PPTX_MIN_ZOOM,
+  maxZoom = PPTX_MAX_ZOOM,
+  baseWidth = PPTX_BASE_WIDTH,
+  baseHeight = PPTX_BASE_HEIGHT,
+  onReady,
+  onError,
+  onSlideChange,
+}: PptxPreviewProps) {
   const t = useLocale();
 
-  // Stable callbacks for PptxRenderContainer
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const renderHandleRef = useRef<PptxRenderHandle>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [insight, setInsight] = useState<PptxInsight | null>(null);
+  const [slideCount, setSlideCount] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [viewMode, setViewMode] = useState<PptxViewMode>("slide");
+  const [userZoom, setUserZoom] = useState(initialZoom);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [renderKey, setRenderKey] = useState(0);
+
+  const fitState = usePptxFitScale({
+    viewportRef,
+    fit,
+    userZoom,
+    baseWidth,
+    baseHeight,
+  });
+
+  const ext = fileName.toLowerCase().split(".").pop() || "";
+
   const handleReady = useCallback(
     (info: { slideCount: number; currentIndex: number }) => {
       setSlideCount(info.slideCount);
       setCurrentSlide(info.currentIndex);
       setLoading(false);
       setError(null);
+      onReady?.(info);
     },
-    []
+    [onReady]
   );
 
-  const handleError = useCallback((errMessage: string) => {
-    setError(errMessage);
-    setLoading(false);
-  }, []);
+  const handleError = useCallback(
+    async (err: Error) => {
+      setError(err);
+      setLoading(false);
 
-  // Handle view mode switch
-  const switchViewMode = useCallback((mode: ViewMode) => {
+      // Try to extract a structural summary for the fallback view
+      try {
+        const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
+        const pptxInsight = await readPptxInsight(buffer);
+        if (pptxInsight.slideCount > 0) {
+          setInsight(pptxInsight);
+        }
+      } catch {
+        // Insight extraction also failed — bare error state is fine
+      }
+
+      onError?.(err);
+    },
+    [onError, source, content]
+  );
+
+  const switchViewMode = useCallback((mode: PptxViewMode) => {
     setViewMode(mode);
     setLoading(true);
     setError(null);
     setRenderKey((k) => k + 1);
   }, []);
 
-  // Navigation
   const goToSlide = useCallback(
     (index: number) => {
       if (viewMode !== "slide") return;
       const clamped = Math.max(0, Math.min(index, slideCount - 1));
       renderHandleRef.current?.goToSlide(clamped);
       setCurrentSlide(clamped);
+      onSlideChange?.(clamped);
     },
-    [slideCount, viewMode]
+    [slideCount, viewMode, onSlideChange]
   );
 
   const nextSlide = useCallback(() => {
@@ -287,6 +399,52 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
   const prevSlide = useCallback(() => {
     goToSlide(currentSlide - 1);
   }, [currentSlide, goToSlide]);
+
+  const zoomOut = useCallback(() => {
+    setUserZoom((z) => Math.max(minZoom, z - PPTX_ZOOM_STEP));
+  }, [minZoom]);
+
+  const zoomIn = useCallback(() => {
+    setUserZoom((z) => Math.min(maxZoom, z + PPTX_ZOOM_STEP));
+  }, [maxZoom]);
+
+  const resetZoom = useCallback(() => {
+    setUserZoom(100);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const el =
+      viewportRef.current?.closest("[data-preview-container]") ||
+      viewportRef.current;
+
+    if (!el) return;
+
+    if (!document.fullscreenElement) {
+      el.requestFullscreen()
+        .then(() => setIsFullscreen(true))
+        .catch(() => {});
+    } else {
+      document.exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(() => {});
+    }
+  }, []);
+
+  // Fullscreen change → re-measure + optionally remount
+  useEffect(() => {
+    function onFullscreenChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+      // Delay remount to allow fullscreen layout to settle
+      setTimeout(() => {
+        setRenderKey((k) => k + 1);
+      }, 50);
+    }
+
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+    };
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -304,48 +462,26 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [viewMode, loading, prevSlide, nextSlide]);
 
-  // Fullscreen toggle
-  const toggleFullscreen = useCallback(() => {
-    const el = document.querySelector("[data-preview-container]");
-    if (!el) return;
-    if (!document.fullscreenElement) {
-      el.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
-    } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
-    }
-  }, []);
-
-  useEffect(() => {
-    function onFullscreenChange() {
-      setIsFullscreen(!!document.fullscreenElement);
-    }
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () =>
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-  }, []);
-
   // Detect .ppt files early
-  const ext = fileName.toLowerCase().split(".").pop() || "";
   if (ext === "ppt") {
     return (
       <div className="fv-pptx__error">
         <AlertTriangleIcon size={36} className="fv-pptx__error-icon" />
         <p className="fv-pptx__error-title">{t.formatNotSupported}</p>
-        <p className="fv-pptx__error-msg">
-          {t.legacyPptDesc}
-        </p>
+        <p className="fv-pptx__error-msg">{t.legacyPptDesc}</p>
       </div>
     );
   }
 
   if (error) {
+    if (insight) {
+      return <PptxSummaryFallback insight={insight} error={error} />;
+    }
     return (
       <div className="fv-pptx__error">
         <AlertTriangleIcon size={36} className="fv-pptx__error-icon" />
         <p className="fv-pptx__error-title">{t.previewFailed}</p>
-        <p className="fv-pptx__error-msg">
-          {error}
-        </p>
+        <p className="fv-pptx__error-msg">{error.message}</p>
       </div>
     );
   }
@@ -364,9 +500,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
             </>
           ) : (
             <>
-              <span className="fv-pptx__slide-count">
-                {slideCount}
-              </span>
+              <span className="fv-pptx__slide-count">{slideCount}</span>
               <span className="fv-pptx__slide-label">{t.page}</span>
             </>
           )}
@@ -394,15 +528,21 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
           {/* Zoom controls */}
           <div className="fv-pptx__zoom-group">
             <button
-              onClick={() => setZoom(Math.max(50, zoom - 10))}
+              onClick={zoomOut}
               className="fv-pptx__zoom-btn"
               title={t.zoomOut}
             >
               <ZoomOutIcon size={14} />
             </button>
-            <span className="fv-pptx__zoom-label">{zoom}%</span>
             <button
-              onClick={() => setZoom(Math.min(200, zoom + 10))}
+              onClick={resetZoom}
+              className="fv-pptx__zoom-label"
+              title="Reset zoom"
+            >
+              {userZoom}%
+            </button>
+            <button
+              onClick={zoomIn}
               className="fv-pptx__zoom-btn"
               title={t.zoomIn}
             >
@@ -415,7 +555,11 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
             className="fv-pptx__fullscreen-btn"
             title={t.fullscreen}
           >
-            {isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
+            {isFullscreen ? (
+              <Minimize2Icon size={16} />
+            ) : (
+              <Maximize2Icon size={16} />
+            )}
           </button>
         </div>
 
@@ -442,7 +586,7 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
       </div>
 
       {/* Content area */}
-      <div className="fv-pptx__content">
+      <div ref={viewportRef} className="fv-pptx__content">
         {loading && (
           <div className="fv-pptx__loading-overlay">
             <div className="fv-spinner fv-spinner--lg" />
@@ -452,14 +596,22 @@ export function PptxPreview({ content, source, fileName }: PptxPreviewProps) {
           </div>
         )}
 
-        <div className={viewMode === "slide" ? "fv-pptx__slide-wrap" : "fv-pptx__grid-wrap"}>
+        <div
+          className={
+            viewMode === "slide"
+              ? "fv-pptx__slide-wrap"
+              : "fv-pptx__grid-wrap"
+          }
+        >
           <PptxRenderContainer
             key={renderKey}
             ref={renderHandleRef}
             content={content}
             source={source}
             mode={viewMode}
-            zoom={zoom}
+            scale={fitState.displayScale}
+            baseWidth={baseWidth}
+            baseHeight={baseHeight}
             onReady={handleReady}
             onError={handleError}
           />

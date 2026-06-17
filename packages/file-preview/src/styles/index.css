@@ -36,4 +36,5 @@
 @import "./ZipPreview.css";
 @import "./XlsxPreview.css";
 @import "./PptxPreview.css";
+@import "./PptxSummaryFallback.css";
 @import "./EpubPreview.css";
