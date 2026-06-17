@@ -1,62 +1,6 @@
-import type { PreviewSource } from "./core/types";
-
-export const ALL_FILE_TYPES = [
-  "pdf",
-  "markdown",
-  "json",
-  "code",
-  "docx",
-  "doc",
-  "pptx",
-  "ppt",
-  "xlsx",
-  "xls",
-  "html",
-  "zip",
-  "svg",
-  "rtf",
-  "epub",
-  "image",
-  "text",
-  "csv",
-  "video",
-  "audio",
-  "unknown",
-] as const;
-
-export type FileType = (typeof ALL_FILE_TYPES)[number];
-
-export interface FileInfo {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  fileType: FileType;
-
-  /**
-   * Primary source abstraction.
-   *
-   * Stage 18.0 makes source mandatory. Preview adapters should read
-   * file data from this field via readSourceAsText/readSourceAsArrayBuffer.
-   */
-  source: PreviewSource;
-
-  /**
-   * @deprecated Use source + readSourceAsText/readSourceAsArrayBuffer instead.
-   *
-   * Temporary compatibility field for legacy preview components.
-   * New code should not populate or depend on this field.
-   */
-  content?: string | null;
-
-  /**
-   * @deprecated Use source or adapter-local object URL instead.
-   *
-   * Temporary compatibility field for legacy media preview components.
-   * New code should not populate or depend on this field.
-   */
-  url?: string | null;
-}
+import type { FileType } from "./core/types";
+export type { FileType, FileInfo } from "./core/types";
+export { ALL_FILE_TYPES } from "./core/types";
 
 const CODE_EXTENSIONS: Record<string, string> = {
   js: "javascript",

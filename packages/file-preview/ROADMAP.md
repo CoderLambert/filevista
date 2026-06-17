@@ -92,15 +92,18 @@ cd packages/file-preview && pnpm pack --dry-run
 
 **参考**：`react-pdf`、`@uiw/react-md-editor` 都是这个模式。
 
-### [ ] 5. 收紧公共 API 边界
+### [x] 5. 收紧公共 API 边界
 
-`utils.ts` 的所有内部工具（`generateId`、`formatFileSize`、`base64ToUint8Array`）都从 `index.ts` re-export，发版后 SemVer 锁死无法重构。
+`utils.ts` 原本导出 11 个符号且全部从 `index.ts` 直通；其中只有 `detectFileType` + 类型是真正的对外 API，其它是颜色/标签/格式化/id 这种 app-level UI 约定，发包后会被 SemVer 锁死。
 
-**方案**：
+**实际改动**：
 
-- 把对外的 `FileType` / `FileInfo` 抽到 `core/types.ts`
-- `utils.ts` 内部用，从 `index.ts` 移除
-- 真有外部需要再单独导出（`@filevista/file-preview/utils` 子路径）
+- `core/types.ts` 接收 `FileType` / `FileInfo` / `ALL_FILE_TYPES` 的权威定义（顺手破除 `utils.ts ↔ core/types.ts` 的循环依赖）
+- `utils.ts` 改为从 `core/types.ts` re-export 类型，保留所有 helper 给内部使用
+- `index.ts` 收紧：从原来的 11 个 utils 导出 → 只剩 `detectFileType` + 类型
+- Playground 把删掉的 7 个 helper 内联到 `apps/playground/src/lib/file-helpers.ts`（包括 Tailwind palette 的 `getFileTypeColor`/`getFileTypeLabel`，本来就是 playground 的 UI 约定，应该归 app 拥有）
+
+**对外消失的 API**：`generateId`、`formatFileSize`、`base64ToUint8Array`、`getFileExtension`、`getLanguageFromFilename`、`getFileTypeColor`、`getFileTypeLabel`。需要二进制读取的消费者用 `readBinaryPreviewAsArrayBuffer` / `readBinaryPreviewAsUint8Array`（公开稳定 API）。
 
 ### [x] 6. 清理迁移残留
 

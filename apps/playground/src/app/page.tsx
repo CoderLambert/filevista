@@ -24,11 +24,6 @@ import {
   type FileInfo,
   type FileType,
   detectFileType,
-  getFileTypeColor,
-  getFileTypeLabel,
-  formatFileSize,
-  generateId,
-  base64ToUint8Array,
   PluginPreviewRenderer,
   LargeFileGate,
   DEMO_FILES,
@@ -38,6 +33,13 @@ import {
   RemoteUrlError,
   type RemoteLoadProgress,
 } from "@filevista/file-preview";
+import {
+  getFileTypeColor,
+  getFileTypeLabel,
+  formatFileSize,
+  generateId,
+  base64ToUint8Array,
+} from "@/lib/file-helpers";
 import "@filevista/file-preview/styles/index.css";
 
 // Initialize asset base path from Next.js env (used by PDF.js worker, RTF.js bundles, demo files)

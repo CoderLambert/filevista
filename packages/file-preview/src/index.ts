@@ -20,7 +20,10 @@ export {
 export type {
   PreviewSource,
   NormalizedFile,
+  FileType,
+  FileInfo,
 } from "./core/types";
+export { ALL_FILE_TYPES } from "./core/types";
 export type { PreviewPlugin } from "./core/plugin";
 export {
   PreviewPluginRegistry,
@@ -62,20 +65,8 @@ export {
   type LocaleMessages,
 } from "./core/i18n";
 
-// ─── File detection & metadata ────────────────────────────────────────────
-export {
-  ALL_FILE_TYPES,
-  detectFileType,
-  getFileExtension,
-  getLanguageFromFilename,
-  getFileTypeColor,
-  getFileTypeLabel,
-  formatFileSize,
-  generateId,
-  base64ToUint8Array,
-  type FileType,
-  type FileInfo,
-} from "./utils";
+// ─── File detection ───────────────────────────────────────────────────────
+export { detectFileType } from "./utils";
 
 // Support matrix — which renderers cover which file types.
 export {
