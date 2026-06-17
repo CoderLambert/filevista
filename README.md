@@ -44,8 +44,8 @@ https://coderlambert.github.io/filevista/
 ## 本地开发
 
 ```bash
-bun install
-bun run dev
+pnpm install
+pnpm run dev
 ```
 
 访问：
@@ -57,21 +57,22 @@ http://localhost:3000
 ## 本地验证
 
 ```bash
-bun run lint
-bun run test:run
-bun run build
+pnpm run lint
+pnpm run typecheck
+pnpm run test
+pnpm run build
 ```
 
 或：
 
 ```bash
-bun run check
+pnpm run check
 ```
 
 ## GitHub Pages 构建
 
 ```bash
-bun run build:pages
+pnpm --filter @filevista/playground run build:pages
 ```
 
 ## GitHub Actions
