@@ -51,7 +51,10 @@ describe("processRemoteUrl HTTP errors", () => {
     globalThis.fetch = vi.fn(async () => new Response(null, { status: 404 }));
     await expect(
       processRemoteUrl("https://example.com/missing.pdf"),
-    ).rejects.toMatchObject({ code: "HTTP_ERROR" });
+    ).rejects.toMatchObject({
+      code: "REMOTE_HTTP_ERROR",
+      remoteCode: "HTTP_ERROR",
+    });
   });
 
   it("maps a fetch rejection (CORS/network) to NETWORK_OR_CORS", async () => {
@@ -60,7 +63,10 @@ describe("processRemoteUrl HTTP errors", () => {
     });
     await expect(
       processRemoteUrl("https://example.com/file.pdf"),
-    ).rejects.toMatchObject({ code: "NETWORK_OR_CORS" });
+    ).rejects.toMatchObject({
+      code: "REMOTE_CORS_ERROR",
+      remoteCode: "NETWORK_OR_CORS",
+    });
   });
 
   it("propagates AbortError as ABORTED, not NETWORK_OR_CORS", async () => {

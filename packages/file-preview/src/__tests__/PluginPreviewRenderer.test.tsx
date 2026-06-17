@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {
   afterEach,
   beforeEach,
@@ -86,16 +86,23 @@ describe("PluginPreviewRenderer routing", () => {
     expect(stub.load).toHaveBeenCalledOnce();
   });
 
-  it("falls back to UnsupportedPluginPreview when no plugin matches", () => {
+  it("falls back to UnsupportedPluginPreview when no plugin matches", async () => {
     const registry = createPreviewPluginRegistry([stubPlugin("pdf").plugin]);
     const file = mockFile("docx"); // not registered
+    const onError = vi.fn();
 
-    render(<PluginPreviewRenderer file={file} registry={registry} />);
+    render(<PluginPreviewRenderer file={file} registry={registry} onError={onError} />);
 
     // UnsupportedPluginPreview shows the file name in its meta line
     expect(screen.getByText(/mock\.docx/)).toBeInTheDocument();
     // and offers a download button — by label text from the default zhCN locale
     expect(screen.getByRole("button", { name: /下载/ })).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: "UNSUPPORTED_FILE_TYPE" }),
+      );
+    });
   });
 
   it("shows the plugin debug bar only when showPluginDebug=true", async () => {
@@ -145,15 +152,25 @@ describe("PluginPreviewRenderer load failures", () => {
       loadError: new Error("boom-load-error"),
     });
     const registry = createPreviewPluginRegistry([stub.plugin]);
+    const onError = vi.fn();
 
     await act(async () => {
-      render(<PluginPreviewRenderer file={mockFile("pdf")} registry={registry} />);
+      render(
+        <PluginPreviewRenderer
+          file={mockFile("pdf")}
+          registry={registry}
+          onError={onError}
+        />,
+      );
     });
 
     // PreviewFallback shows the failedToLoadPreview title from zhCN
     expect(await screen.findByText(/预览加载失败/)).toBeInTheDocument();
     // and a Retry button
     expect(screen.getByRole("button", { name: /Retry/i })).toBeInTheDocument();
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "RENDER_FAILED" }),
+    );
   });
 });
 

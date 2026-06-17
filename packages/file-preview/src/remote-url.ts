@@ -1,6 +1,7 @@
 import { detectFileType, generateId } from "./utils";
 import type { FileInfo } from "./utils";
 import { sniffMagic, sniffZipContainer } from "./core/magic-bytes";
+import { PreviewError, type PreviewErrorCode } from "./core/preview-error";
 
 export type RemoteUrlErrorCode =
   | "INVALID_URL"
@@ -10,14 +11,31 @@ export type RemoteUrlErrorCode =
   | "ABORTED"
   | "FILE_TOO_LARGE";
 
-export class RemoteUrlError extends Error {
+function mapRemoteUrlErrorCode(code: RemoteUrlErrorCode): PreviewErrorCode {
+  switch (code) {
+    case "NETWORK_OR_CORS":
+      return "REMOTE_CORS_ERROR";
+    case "HTTP_ERROR":
+      return "REMOTE_HTTP_ERROR";
+    default:
+      return code;
+  }
+}
+
+export class RemoteUrlError extends PreviewError {
+  readonly remoteCode: RemoteUrlErrorCode;
+
   constructor(
-    public code: RemoteUrlErrorCode,
+    code: RemoteUrlErrorCode,
     message: string,
-    public url?: string
+    url?: string
   ) {
-    super(message);
+    super(mapRemoteUrlErrorCode(code), message, {
+      url,
+      details: { remoteCode: code },
+    });
     this.name = "RemoteUrlError";
+    this.remoteCode = code;
   }
 }
 

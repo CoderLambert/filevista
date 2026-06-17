@@ -49,6 +49,7 @@ describe("loadWithOptionalDep — error handling", () => {
 
       await expect(load()).rejects.toBeInstanceOf(MissingPeerDependencyError);
       await expect(load()).rejects.toMatchObject({
+        code: "MISSING_PEER_DEPENDENCY",
         packageName: "pdfjs-dist",
         featureLabel: "PDF preview",
       });

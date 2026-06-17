@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { FileInfo } from "../utils";
+import { PreviewError } from "./preview-error";
 
 export interface PreviewPlugin {
   id: string;
@@ -37,19 +38,21 @@ export function loadWithOptionalDep<T>(
   };
 }
 
-export class MissingPeerDependencyError extends Error {
+export class MissingPeerDependencyError extends PreviewError {
   constructor(
     public packageName: string,
     public featureLabel: string,
-    public cause: unknown,
+    cause: unknown,
   ) {
     super(
+      "MISSING_PEER_DEPENDENCY",
       `${featureLabel} requires the optional peer dependency "${packageName}".\n\n` +
         `Install it in your app:\n` +
         `  pnpm add ${packageName}\n` +
         `  # or: npm install ${packageName}\n` +
         `  # or: yarn add ${packageName}\n\n` +
         `See: https://github.com/CoderLambert/filevista/tree/main/packages/file-preview#optional-peer-dependencies`,
+      { cause, details: { packageName, featureLabel } },
     );
     this.name = "MissingPeerDependencyError";
   }

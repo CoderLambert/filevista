@@ -29,6 +29,13 @@ export {
   PreviewPluginRegistry,
   createPreviewPluginRegistry,
 } from "./core/registry";
+export {
+  PreviewError,
+  isPreviewError,
+  normalizePreviewError,
+  type PreviewErrorCode,
+  type PreviewErrorOptions,
+} from "./core/preview-error";
 
 // Source utilities — read PreviewSource as text / ArrayBuffer / base64 / object URL.
 export {

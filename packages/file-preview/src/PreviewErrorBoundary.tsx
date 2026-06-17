@@ -1,6 +1,7 @@
 import React from "react";
 import type { FileInfo } from "./utils";
 import { PreviewFallback, type PreviewFallbackKind } from "./PreviewFallback";
+import { normalizePreviewError, isPreviewError, type PreviewError } from "./core/preview-error";
 
 interface PreviewErrorBoundaryProps {
   file: FileInfo;
@@ -8,6 +9,7 @@ interface PreviewErrorBoundaryProps {
   pluginName?: string;
   resetKey: string;
   onRetry: () => void;
+  onError?: (error: PreviewError) => void;
   children: React.ReactNode;
 }
 
@@ -44,18 +46,30 @@ export class PreviewErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
+    const previewError = normalizePreviewError(error, {
+      code: "RENDER_FAILED",
+      message: "Preview rendering failed",
+      pluginId: this.props.pluginId,
+      pluginName: this.props.pluginName,
+      fileName: this.props.file.name,
+    });
+
     console.warn("[preview-error-boundary]", {
-      error,
+      error: previewError,
       info,
       file: this.props.file.name,
       pluginId: this.props.pluginId,
     });
+
+    this.props.onError?.(previewError);
   }
 
   render() {
     if (this.state.error) {
       const kind: PreviewFallbackKind =
-        this.state.error.name === "PreviewPluginLoadError"
+        this.state.error.name === "PreviewPluginLoadError" ||
+        (isPreviewError(this.state.error) &&
+          this.state.error.code === "MISSING_PEER_DEPENDENCY")
           ? "plugin-load-failed"
           : "render-failed";
 

@@ -253,9 +253,9 @@ const meta = await detectFileMeta(source);
 
 **测试**：`detect-meta.test.ts` 覆盖 magic 优先于错误扩展名、ZIP container、OLE、extension fallback、MIME fallback。
 
-### [ ] 5. PreviewError 标准化错误码
+### [x] 5. PreviewError 标准化错误码
 
-**目标**：业务方能 `error.code === "MISSING_PEER_DEPENDENCY"` 做兜底。
+**完成**：业务方可以稳定依赖 `error.code`（不要 parse message）做埋点、重试、兜底 UI。
 
 ```ts
 type PreviewErrorCode =
@@ -264,16 +264,23 @@ type PreviewErrorCode =
   | "FILE_TOO_LARGE"
   | "REMOTE_CORS_ERROR"
   | "REMOTE_HTTP_ERROR"
+  | "INVALID_URL"
+  | "UNSUPPORTED_PROTOCOL"
+  | "ABORTED"
   | "PARSE_FAILED"
   | "RENDER_FAILED"
   | "SECURITY_BLOCKED";
 ```
 
 **改动**：
-- 新建 `core/preview-error.ts`：`PreviewError` 类 + 联合类型
-- 把现有 `MissingPeerDependencyError` / `RemoteUrlError` / `PreviewPluginLoadError` 都收编进 `PreviewError`（保留旧类作为子类，向后兼容)
-- `PluginPreviewRenderer` 加 `onError(error: PreviewError)` 回调
-- 测试覆盖每个 code 的契约稳定性（未来重构 message 不会破坏 code）
+- 新建 `core/preview-error.ts`：`PreviewError` 类 + `isPreviewError` + `normalizePreviewError`
+- `MissingPeerDependencyError` 继承 `PreviewError(code: "MISSING_PEER_DEPENDENCY")`
+- `RemoteUrlError` 继承 `PreviewError`，标准码为 `REMOTE_CORS_ERROR` / `REMOTE_HTTP_ERROR` 等，同时保留 `remoteCode` 兼容原远程错误语义
+- `PreviewPluginLoadError` 继承 `PreviewError`，并透传底层 `MissingPeerDependencyError` 的 code
+- `PluginPreviewRenderer` 新增 `onError(error: PreviewError)`，覆盖 unsupported / plugin load / render crash
+- `index.ts` 导出 `PreviewError`、`PreviewErrorCode`、helpers
+
+**测试**：更新 plugin-load / remote-url / PluginPreviewRenderer 测试，确保 code 契约稳定。
 
 ### [x] 6. supported-formats.md
 

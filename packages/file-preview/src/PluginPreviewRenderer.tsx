@@ -9,15 +9,24 @@ import { getPreviewSupportMeta } from "./support-status";
 import { PreviewErrorBoundary } from "./PreviewErrorBoundary";
 import { PreviewLoading } from "./PreviewLoading";
 import { LargeFileGate } from "./LargeFileGate";
+import { PreviewError, isPreviewError } from "./core/preview-error";
+import type { PreviewErrorCode } from "./core/preview-error";
 import "./styles/PluginDebugBar.css";
 
-class PreviewPluginLoadError extends Error {
+class PreviewPluginLoadError extends PreviewError {
   constructor(
     public pluginId: string,
     public pluginName: string,
-    public cause: unknown,
+    cause: unknown,
   ) {
-    super(`Failed to load preview plugin: ${pluginName}`);
+    const code: PreviewErrorCode = isPreviewError(cause)
+      ? cause.code
+      : "RENDER_FAILED";
+    super(code, `Failed to load preview plugin: ${pluginName}`, {
+      cause,
+      pluginId,
+      pluginName,
+    });
     this.name = "PreviewPluginLoadError";
   }
 }
@@ -98,6 +107,13 @@ export interface PluginPreviewRendererProps {
   registry?: PreviewPluginRegistry;
   showPluginDebug?: boolean;
   /**
+   * Called with a stable PreviewError whenever the renderer reaches a
+   * consumer-actionable failure path (unsupported file type, plugin load
+   * failure, render crash). Prefer switching on `error.code` over parsing
+   * `error.message`.
+   */
+  onError?: (error: PreviewError) => void;
+  /**
    * Large-file protection policy.
    *
    * - `"default"` (default): the renderer wraps its output in an internal
@@ -114,6 +130,7 @@ export function PluginPreviewRenderer({
   file,
   registry,
   showPluginDebug = false,
+  onError,
   largeFilePolicy = "default",
 }: PluginPreviewRendererProps) {
   const [retryKey, setRetryKey] = useState(0);
@@ -126,6 +143,17 @@ export function PluginPreviewRenderer({
     () => finalRegistry.resolve(file),
     [finalRegistry, file]
   );
+
+  useEffect(() => {
+    if (plugin) return;
+    onError?.(
+      new PreviewError(
+        "UNSUPPORTED_FILE_TYPE",
+        `Unsupported file type: ${file.fileType}`,
+        { fileName: file.name, details: { fileType: file.fileType } },
+      ),
+    );
+  }, [file.fileType, file.name, onError, plugin]);
 
   const handleRetry = useCallback(() => {
     if (plugin) {
@@ -172,6 +200,7 @@ export function PluginPreviewRenderer({
           pluginName={plugin.name}
           resetKey={`${file.id}:${plugin.id}:${retryKey}`}
           onRetry={handleRetry}
+          onError={onError}
         >
           <PluginContent plugin={plugin} file={file} />
         </PreviewErrorBoundary>
