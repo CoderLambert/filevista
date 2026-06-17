@@ -22,13 +22,17 @@ import type { PreviewSource } from "./core/types";
 import { useLocale } from "./core/i18n";
 import { usePptxFitScale } from "./pptx/usePptxFitScale";
 import { readPptxInsight } from "./pptx/read-pptx-insight";
+import { readPptxSemanticDeck } from "./pptx/read-pptx-semantic-deck";
+import { normalizePptxPreviewModel } from "./pptx/normalize-preview-model";
 import { PptxSummaryFallback } from "./PptxSummaryFallback";
+import { PptxSemanticFallback } from "./PptxSemanticFallback";
 import type {
   PptxFitMode,
   PptxInsight,
   PptxPreviewProps,
   PptxRenderHandle,
   PptxReadyInfo,
+  PptxSemanticDeck,
   PptxViewMode,
 } from "./pptx/types";
 import {
@@ -103,6 +107,70 @@ function cleanupPptxPreviewDom(container: HTMLElement, mode: PptxViewMode) {
       }
     });
   }
+}
+
+function getViewerReadyInfo(viewer: any): PptxReadyInfo {
+  const slideCount = Math.max(
+    0,
+    Number(viewer?.pptx?.slides?.length ?? viewer?.slideCount ?? 0)
+  );
+  const currentIndex =
+    typeof viewer?.currentIndex === "number" && viewer.currentIndex >= 0
+      ? viewer.currentIndex
+      : 0;
+
+  return { slideCount, currentIndex };
+}
+
+function getRenderedSlideCount(container: HTMLElement) {
+  return container.querySelectorAll(".pptx-preview-slide-wrapper").length;
+}
+
+function hasRenderedSlides(container: HTMLElement) {
+  return getRenderedSlideCount(container) > 0;
+}
+
+async function getReliableReadyInfo(
+  viewer: any,
+  container: HTMLElement,
+  buffer: ArrayBuffer
+): Promise<PptxReadyInfo> {
+  const readyInfo = getViewerReadyInfo(viewer);
+  if (readyInfo.slideCount > 0) {
+    return readyInfo;
+  }
+
+  try {
+    const pptxInsight = await readPptxInsight(buffer);
+    if (pptxInsight.slideCount > 0) {
+      return {
+        slideCount: pptxInsight.slideCount,
+        currentIndex: readyInfo.currentIndex,
+      };
+    }
+  } catch {
+    // Best-effort fallback only.
+  }
+
+  const renderedSlideCount = getRenderedSlideCount(container);
+  if (renderedSlideCount > 0) {
+    return {
+      slideCount: renderedSlideCount,
+      currentIndex: readyInfo.currentIndex,
+    };
+  }
+
+  return readyInfo;
+}
+
+function isRecoverablePptxPreviewError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+
+  return (
+    error.message.includes("produced no rendered slides") ||
+    error.message.includes("background") ||
+    error.message.includes("Cannot read properties of undefined")
+  );
 }
 
 // Lazy-load pptx-preview to avoid SSR issues
@@ -209,30 +277,71 @@ const PptxRenderContainer = forwardRef<
         const { init } = await getPptxPreview();
         if (cancelled || !containerRef.current) return;
 
-        const viewer = init(containerRef.current, {
-          width: baseWidth,
-          height: baseHeight,
-          mode: mode === "grid" ? "list" : "slide",
-        });
-
-        viewerRef.current = viewer;
-
         const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
         if (cancelled) return;
 
-        await viewer.preview(buffer);
+        const createViewer = () =>
+          init(containerRef.current!, {
+            width: baseWidth,
+            height: baseHeight,
+            mode: mode === "grid" ? "list" : "slide",
+          });
+
+        let viewer = createViewer();
+        viewerRef.current = viewer;
+
+        try {
+          await viewer.preview(buffer);
+          if (!containerRef.current || !hasRenderedSlides(containerRef.current)) {
+            throw new Error("PPTX preview produced no rendered slides");
+          }
+        } catch (previewError) {
+          if (!isRecoverablePptxPreviewError(previewError)) {
+            throw previewError;
+          }
+
+          try {
+            viewer.destroy?.();
+          } catch {
+            // ignore
+          }
+
+          if (containerRef.current) {
+            containerRef.current.innerHTML = "";
+          }
+
+          viewer = createViewer();
+          viewerRef.current = viewer;
+
+          await viewer.load(buffer);
+          if (cancelled) return;
+
+          normalizePptxPreviewModel(viewer.pptx);
+
+          const count = viewer.pptx?.slides?.length || viewer.slideCount || 0;
+          if (mode === "grid") {
+            for (let i = 0; i < count; i += 1) {
+              viewer.htmlRender?.renderSlide(i);
+            }
+            viewer.currentIndex = 0;
+          } else if (count > 0) {
+            viewer.renderSingleSlide(0);
+          }
+
+          if (!containerRef.current || !hasRenderedSlides(containerRef.current)) {
+            throw new Error("PPTX preview produced no rendered slides");
+          }
+        }
         if (cancelled) return;
 
-        const pptx = viewer.pptx;
-        const count = pptx?.slides?.length || viewer.slideCount || 0;
-        const idx = viewer.currentIndex || 0;
-        slideCountRef.current = count;
+        const readyInfo = await getReliableReadyInfo(viewer, container, buffer);
+        slideCountRef.current = readyInfo.slideCount;
 
         if (containerRef.current) {
           cleanupPptxPreviewDom(containerRef.current, mode);
         }
 
-        onReady({ slideCount: count, currentIndex: idx });
+        onReady(readyInfo);
       } catch (err) {
         if (!cancelled) {
           onError(
@@ -325,6 +434,7 @@ export function PptxPreview({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [insight, setInsight] = useState<PptxInsight | null>(null);
+  const [semanticDeck, setSemanticDeck] = useState<PptxSemanticDeck | null>(null);
   const [slideCount, setSlideCount] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [viewMode, setViewMode] = useState<PptxViewMode>("slide");
@@ -348,6 +458,8 @@ export function PptxPreview({
       setCurrentSlide(info.currentIndex);
       setLoading(false);
       setError(null);
+      setInsight(null);
+      setSemanticDeck(null);
       onReady?.(info);
     },
     [onReady]
@@ -361,6 +473,15 @@ export function PptxPreview({
       // Try to extract a structural summary for the fallback view
       try {
         const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
+        try {
+          const semantic = await readPptxSemanticDeck(buffer);
+          if (semantic.slides.length > 0) {
+            setSemanticDeck(semantic);
+          }
+        } catch {
+          // Semantic fallback is best-effort.
+        }
+
         const pptxInsight = await readPptxInsight(buffer);
         if (pptxInsight.slideCount > 0) {
           setInsight(pptxInsight);
@@ -474,6 +595,9 @@ export function PptxPreview({
   }
 
   if (error) {
+    if (semanticDeck) {
+      return <PptxSemanticFallback deck={semanticDeck} error={error} />;
+    }
     if (insight) {
       return <PptxSummaryFallback insight={insight} error={error} />;
     }

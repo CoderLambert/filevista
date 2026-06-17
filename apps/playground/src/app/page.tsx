@@ -1,7 +1,7 @@
 "use client";
 
 import "x-data-spreadsheet/dist/xspreadsheet.css";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import {
   Upload,
   FileText,
@@ -27,6 +27,8 @@ import {
   detectFileType,
   detectFileMeta,
   PluginPreviewRenderer,
+  builtinPreviewPlugins,
+  createPreviewPluginRegistry,
   setAssetBasePath,
   processRemoteUrl,
   RemoteUrlError,
@@ -40,6 +42,7 @@ import {
   base64ToUint8Array,
 } from "@/lib/file-helpers";
 import { DEMO_FILES, fetchBinaryDemoFiles } from "@/lib/demos";
+import { nutrientPptxPlugin } from "@/lib/nutrient-pptx-plugin";
 import "@lamberl-lee/file-preview/styles/index.css";
 
 // Initialize asset base path from Next.js env (used by PDF.js worker, RTF.js bundles, demo files)
@@ -72,6 +75,8 @@ const FILE_TYPE_ICONS: Record<FileType, string> = {
 const DEFAULT_REMOTE_URL =
   "https://501351981.github.io/vue-office/examples/dist/static/test-files/test.pptx";
 
+type PptxEngine = "builtin" | "nutrient";
+
 export default function Home() {
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
@@ -80,9 +85,22 @@ export default function Home() {
   const [remoteUrl, setRemoteUrl] = useState(DEFAULT_REMOTE_URL);
   const [loadingRemoteUrl, setLoadingRemoteUrl] = useState(false);
   const [remoteProgress, setRemoteProgress] = useState<RemoteLoadProgress | null>(null);
+  const [pptxEngine, setPptxEngine] = useState<PptxEngine>("builtin");
   const remoteAbortRef = useRef<AbortController | null>(null);
+  const nutrientRegistry = useMemo(
+    () =>
+      createPreviewPluginRegistry([
+        nutrientPptxPlugin,
+        ...builtinPreviewPlugins,
+      ]),
+    []
+  );
 
   const activeFile = files.find((f) => f.id === activeFileId) || null;
+  const previewRegistry =
+    activeFile?.fileType === "pptx" && pptxEngine === "nutrient"
+      ? nutrientRegistry
+      : undefined;
 
   const processFile = useCallback(async (file: File): Promise<FileInfo> => {
     const meta = await detectFileMeta({ kind: "file", file });
@@ -555,6 +573,35 @@ export default function Home() {
                 </div>
               </div>
 
+              {activeFile.fileType === "pptx" && (
+                <div className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
+                  <span className="text-xs text-muted-foreground">
+                    PPTX Engine
+                  </span>
+                  <Tabs
+                    value={pptxEngine}
+                    onValueChange={(value) =>
+                      setPptxEngine(value as PptxEngine)
+                    }
+                    className="gap-0"
+                  >
+                    <TabsList className="h-8">
+                      <TabsTrigger value="builtin" className="px-3 text-xs">
+                        builtin.pptx
+                      </TabsTrigger>
+                      <TabsTrigger value="nutrient" className="px-3 text-xs">
+                        Nutrient trial
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <p className="text-[10px] leading-relaxed text-muted-foreground">
+                    Nutrient is a commercial SDK. Without
+                    `NEXT_PUBLIC_NUTRIENT_LICENSE_KEY`, it runs in trial mode
+                    and may show a watermark.
+                  </p>
+                </div>
+              )}
+
               {/* Tabs for multi-file navigation (mobile) */}
               {files.length > 1 && (
                 <div className="border-b px-4 py-1.5 lg:hidden overflow-x-auto">
@@ -584,6 +631,7 @@ export default function Home() {
               <div className="flex-1 min-h-0">
                 <PluginPreviewRenderer
                   file={activeFile}
+                  registry={previewRegistry}
                   showPluginDebug={process.env.NODE_ENV === "development"}
                 />
               </div>

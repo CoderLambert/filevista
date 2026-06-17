@@ -5,7 +5,7 @@
  * Consumers can override size via the `size` prop; color follows `currentColor`.
  */
 
-import { Children, cloneElement, isValidElement } from "react";
+import { Children } from "react";
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   size?: number;
@@ -35,12 +35,7 @@ function icon(props: IconProps, ...children: React.ReactNode[]) {
       strokeLinejoin={defaults.strokeLinejoin}
       {...rest}
     >
-      {Children.map(children, (child, index) => {
-        if (isValidElement(child)) {
-          return cloneElement(child, { key: index } as any);
-        }
-        return child;
-      })}
+      {Children.toArray(children)}
     </svg>
   );
 }
@@ -181,7 +176,12 @@ export function Table2Icon(props: IconProps) {
 }
 
 export function MonitorIcon(props: IconProps) {
-  return icon(props, <><rect width="20" height="14" x="2" y="3" rx="2" />, <line x1="8" y1="21" x2="16" y2="21" />, <line x1="12" y1="17" x2="12" y2="21" /></>);
+  return icon(
+    props,
+    <rect width="20" height="14" x="2" y="3" rx="2" />,
+    <line x1="8" y1="21" x2="16" y2="21" />,
+    <line x1="12" y1="17" x2="12" y2="21" />
+  );
 }
 
 /* ── Alerts & Status ── */
@@ -224,7 +224,11 @@ export function MessageSquareIcon(props: IconProps) {
 /* ── File & Folder ── */
 
 export function FileIcon(props: IconProps) {
-  return icon(props, <><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />, <path d="M14 2v4a2 2 0 0 0 2 2h4" /></>);
+  return icon(
+    props,
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />,
+    <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+  );
 }
 
 export function FolderIcon(props: IconProps) {
@@ -236,17 +240,31 @@ export function FolderOpenIcon(props: IconProps) {
 }
 
 export function BookOpenIcon(props: IconProps) {
-  return icon(props, <><path d="M12 7v14" />, <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4z" /></>);
+  return icon(
+    props,
+    <path d="M12 7v14" />,
+    <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4z" />
+  );
 }
 
 /* ── Sort ── */
 
 export function ArrowUpDownIcon(props: IconProps) {
-  return icon(props, <><path d="m21 16-4 4-4-4" />, <path d="M17 20V4" />, <path d="m3 8 4-4 4 4" />, <path d="M7 4v16" /></>);
+  return icon(
+    props,
+    <path d="m21 16-4 4-4-4" />,
+    <path d="M17 20V4" />,
+    <path d="m3 8 4-4 4 4" />,
+    <path d="M7 4v16" />
+  );
 }
 
 /* ── Close ── */
 
 export function XIcon(props: IconProps) {
-  return icon(props, <><path d="M18 6 6 18" />, <path d="m6 6 12 12" /></>);
+  return icon(
+    props,
+    <path d="M18 6 6 18" />,
+    <path d="m6 6 12 12" />
+  );
 }

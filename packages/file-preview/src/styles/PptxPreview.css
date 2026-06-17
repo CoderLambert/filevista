@@ -140,7 +140,8 @@
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--fv-canvas-bg);
 }
 
@@ -169,6 +170,7 @@
   min-width: 0;
   min-height: 100%;
   padding: 1rem;
+  overflow: hidden;
 }
 @media (min-width: 768px) {
   .fv-pptx__slide-wrap {

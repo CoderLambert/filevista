@@ -63,3 +63,42 @@ export interface PptxInsight {
   imageCount: number;
   slides: PptxSlideInsight[];
 }
+
+export interface PptxSemanticDeck {
+  title: string;
+  width: number;
+  height: number;
+  slides: PptxSemanticSlide[];
+}
+
+export interface PptxSemanticSlide {
+  title: string;
+  background: string;
+  elements: PptxSemanticElement[];
+}
+
+export type PptxSemanticElement = PptxSemanticShape | PptxSemanticText;
+
+export interface PptxSemanticShape {
+  kind: "shape";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+}
+
+export interface PptxSemanticText {
+  kind: "text";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text: string;
+  color: string;
+  fontSize: number;
+  bold: boolean;
+  italic: boolean;
+  align: "left" | "center" | "right";
+  verticalAlign: "top" | "center" | "bottom";
+}

@@ -1,0 +1,111 @@
+.fv-pptx-semantic {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  padding: 1.5rem;
+  overflow: auto;
+  background: var(--fv-canvas-bg);
+  gap: 1.25rem;
+}
+
+.fv-pptx-semantic__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--fv-radius);
+  background: color-mix(in srgb, var(--fv-danger, #ef4444) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fv-danger, #ef4444) 20%, transparent);
+}
+
+.fv-pptx-semantic__notice-icon {
+  flex-shrink: 0;
+  color: var(--fv-danger, #ef4444);
+  margin-top: 0.125rem;
+}
+
+.fv-pptx-semantic__notice strong {
+  display: block;
+  font-size: var(--fv-font-size-sm);
+  font-weight: 600;
+  color: var(--fv-foreground);
+}
+
+.fv-pptx-semantic__notice-desc {
+  display: block;
+  font-size: var(--fv-font-size-xs);
+  color: var(--fv-muted-foreground);
+  margin-top: 0.125rem;
+}
+
+.fv-pptx-semantic__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  font-size: var(--fv-font-size-sm);
+  color: var(--fv-muted-foreground);
+}
+
+.fv-pptx-semantic__meta-item {
+  font-weight: 500;
+  color: var(--fv-foreground);
+}
+
+.fv-pptx-semantic__meta-sep {
+  color: var(--fv-border);
+}
+
+.fv-pptx-semantic__slides {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fv-pptx-semantic__slide-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fv-pptx-semantic__slide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fv-pptx-semantic__slide-title {
+  font-size: var(--fv-font-size-sm);
+  font-weight: 600;
+  margin: 0;
+  color: var(--fv-foreground);
+}
+
+.fv-pptx-semantic__slide-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--fv-border) 80%, transparent);
+  border-radius: calc(var(--fv-radius) + 2px);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.fv-pptx-semantic__shape,
+.fv-pptx-semantic__text {
+  position: absolute;
+}
+
+.fv-pptx-semantic__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  white-space: pre-wrap;
+  padding: 0.2rem 0.3rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
