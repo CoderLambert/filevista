@@ -26,8 +26,6 @@ import {
   detectFileType,
   PluginPreviewRenderer,
   LargeFileGate,
-  DEMO_FILES,
-  fetchBinaryDemoFiles,
   setAssetBasePath,
   processRemoteUrl,
   RemoteUrlError,
@@ -40,6 +38,7 @@ import {
   generateId,
   base64ToUint8Array,
 } from "@/lib/file-helpers";
+import { DEMO_FILES, fetchBinaryDemoFiles } from "@/lib/demos";
 import "@filevista/file-preview/styles/index.css";
 
 // Initialize asset base path from Next.js env (used by PDF.js worker, RTF.js bundles, demo files)

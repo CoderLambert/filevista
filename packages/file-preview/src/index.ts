@@ -129,12 +129,6 @@ export {
   type ProcessRemoteUrlOptions,
 } from "./remote-url";
 
-// ─── Demo files (optional — useful for getting-started examples) ──────────
-export {
-  DEMO_FILES,
-  fetchBinaryDemoFiles,
-} from "./demos";
-
 // ─── React hooks ──────────────────────────────────────────────────────────
 export {
   useSourceText,
