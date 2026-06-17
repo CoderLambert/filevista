@@ -8,6 +8,7 @@ import { UnsupportedPluginPreview } from "./preview-adapters/UnsupportedPluginPr
 import { getPreviewSupportMeta } from "./support-status";
 import { PreviewErrorBoundary } from "./PreviewErrorBoundary";
 import { PreviewLoading } from "./PreviewLoading";
+import { LargeFileGate } from "./LargeFileGate";
 import "./styles/PluginDebugBar.css";
 
 class PreviewPluginLoadError extends Error {
@@ -96,12 +97,24 @@ export interface PluginPreviewRendererProps {
   file: FileInfo;
   registry?: PreviewPluginRegistry;
   showPluginDebug?: boolean;
+  /**
+   * Large-file protection policy.
+   *
+   * - `"default"` (default): the renderer wraps its output in an internal
+   *   `LargeFileGate` that warns at 20 MB, requires confirmation at 50 MB,
+   *   and blocks preview (download only) at 100 MB. This is the safe
+   *   default — real users upload unpredictable files.
+   * - `"off"`: no gate. Use only when the caller enforces its own size
+   *   policy or is previewing trusted, size-bounded content.
+   */
+  largeFilePolicy?: "default" | "off";
 }
 
 export function PluginPreviewRenderer({
   file,
   registry,
   showPluginDebug = false,
+  largeFilePolicy = "default",
 }: PluginPreviewRendererProps) {
   const [retryKey, setRetryKey] = useState(0);
 
@@ -141,7 +154,7 @@ export function PluginPreviewRenderer({
     );
   }
 
-  return (
+  const content = (
     <div className="fv-plugin-renderer">
       {showPluginDebug && (
         <div className="fv-plugin-debug">
@@ -165,4 +178,10 @@ export function PluginPreviewRenderer({
       </div>
     </div>
   );
+
+  // Default: protect against accidentally previewing huge files. The gate
+  // is a no-op for files under the 20 MB warning threshold, so normal-size
+  // previews render exactly as before.
+  if (largeFilePolicy === "off") return content;
+  return <LargeFileGate file={file}>{content}</LargeFileGate>;
 }

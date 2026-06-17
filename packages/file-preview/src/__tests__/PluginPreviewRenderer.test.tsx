@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import {
   afterEach,
   beforeEach,
@@ -186,3 +186,88 @@ describe("PluginPreviewRenderer load caching", () => {
     expect(stub.load).toHaveBeenCalledOnce();
   });
 });
+
+// ─── large file policy (built-in LargeFileGate) ───────────────────────────
+
+describe("PluginPreviewRenderer large-file policy", () => {
+  const BLOCK = 100 * 1024 * 1024; // 100 MB → block threshold
+  const CONFIRM = 50 * 1024 * 1024; // 50 MB → confirm threshold
+
+  function largeFile(fileType: FileType, size: number): FileInfo {
+    return {
+      id: `large-${fileType}-${size}`,
+      name: `large.${fileType}`,
+      size,
+      type: "",
+      fileType,
+      source: { kind: "blob", blob: new Blob(["mock"]) },
+    };
+  }
+
+  it("blocks preview for files >= 100 MB and offers download instead", async () => {
+    const stub = stubPlugin("pdf");
+    const registry = createPreviewPluginRegistry([stub.plugin]);
+
+    await act(async () => {
+      render(
+        <PluginPreviewRenderer
+          file={largeFile("pdf", BLOCK)}
+          registry={registry}
+        />,
+      );
+    });
+
+    // Block UI: title + download button, and the plugin must NOT have loaded.
+    expect(screen.getByText(/too large to preview/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /download original file/i }),
+    ).toBeInTheDocument();
+    expect(stub.load).not.toHaveBeenCalled();
+  });
+
+  it("requires confirmation before previewing a 50–100 MB file", async () => {
+    const stub = stubPlugin("pdf");
+    const registry = createPreviewPluginRegistry([stub.plugin]);
+
+    await act(async () => {
+      render(
+        <PluginPreviewRenderer
+          file={largeFile("pdf", CONFIRM)}
+          registry={registry}
+        />,
+      );
+    });
+
+    // Confirm prompt visible; plugin not loaded yet.
+    expect(screen.getByText(/large file preview/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /preview anyway/i })).toBeInTheDocument();
+    expect(stub.load).not.toHaveBeenCalled();
+
+    // User confirms → preview loads.
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /preview anyway/i }));
+    });
+    await screen.findByTestId("content");
+    expect(stub.load).toHaveBeenCalledOnce();
+  });
+
+  it("disables the gate when largeFilePolicy=\"off\"", async () => {
+    const stub = stubPlugin("pdf");
+    const registry = createPreviewPluginRegistry([stub.plugin]);
+
+    await act(async () => {
+      render(
+        <PluginPreviewRenderer
+          file={largeFile("pdf", BLOCK)}
+          registry={registry}
+          largeFilePolicy="off"
+        />,
+      );
+    });
+
+    // No block UI — the preview loads straight through.
+    await screen.findByTestId("content");
+    expect(screen.queryByText(/too large to preview/i)).not.toBeInTheDocument();
+  });
+});
+

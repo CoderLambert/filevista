@@ -25,7 +25,6 @@ import {
   type FileType,
   detectFileType,
   PluginPreviewRenderer,
-  LargeFileGate,
   setAssetBasePath,
   processRemoteUrl,
   RemoteUrlError,
@@ -80,9 +79,6 @@ export default function Home() {
   const [loadingRemoteUrl, setLoadingRemoteUrl] = useState(false);
   const [remoteProgress, setRemoteProgress] = useState<RemoteLoadProgress | null>(null);
   const remoteAbortRef = useRef<AbortController | null>(null);
-  const [previewConfirmedFileIds, setPreviewConfirmedFileIds] = useState<Set<string>>(
-    () => new Set()
-  );
 
   const activeFile = files.find((f) => f.id === activeFileId) || null;
 
@@ -581,24 +577,13 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Preview content — wrapped with LargeFileGate */}
+              {/* Preview content — PluginPreviewRenderer applies its own
+                  built-in LargeFileGate (20 MB warn / 50 MB confirm / 100 MB block). */}
               <div className="flex-1 min-h-0">
-                <LargeFileGate
+                <PluginPreviewRenderer
                   file={activeFile}
-                  confirmed={previewConfirmedFileIds.has(activeFile.id)}
-                  onConfirm={() => {
-                    setPreviewConfirmedFileIds((prev) => {
-                      const next = new Set(prev);
-                      next.add(activeFile.id);
-                      return next;
-                    });
-                  }}
-                >
-                  <PluginPreviewRenderer
-                    file={activeFile}
-                    showPluginDebug={process.env.NODE_ENV === "development"}
-                  />
-                </LargeFileGate>
+                  showPluginDebug={process.env.NODE_ENV === "development"}
+                />
               </div>
             </>
           ) : (
