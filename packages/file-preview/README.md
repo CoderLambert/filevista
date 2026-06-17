@@ -145,4 +145,6 @@ PDF · DOCX · PPTX · XLSX · EPUB · RTF · Markdown · HTML · code (Shiki-hi
 
 ## License
 
-MIT
+LGPL-3.0-or-later — see `LICENSE` (LGPL-3.0) and `COPYING` (GPL-3.0, which LGPL-3.0 extends).
+
+You can use this package in proprietary applications without making your application LGPL — that's exactly what the L (Lesser) in LGPL is for. The obligation only applies if you ship a modified version of this library itself.
