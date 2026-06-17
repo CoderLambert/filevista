@@ -309,7 +309,7 @@ type PreviewErrorCode =
 | 2 | 大文件保护默认内置 | ✅ | `957a2fa` |
 | 3 | 远程 URL maxBytes | ✅ | `31e65f1` |
 | 4 | 本地 magic bytes 检测 | ✅ | `8beacbd` |
-| 5 | PreviewError 标准化 | ⏳ | — |
+| 5 | PreviewError 标准化 | ✅ | `412006d` |
 | 6 | supported-formats.md | ✅ | `ee4ffc9` |
 
 发版条件：6 项全部完成 → 写 changeset minor → merge Version Packages PR → CI 自动 publish。
