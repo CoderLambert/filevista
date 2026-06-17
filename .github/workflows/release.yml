@@ -79,3 +79,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          # Force the OFFICIAL npm registry for publish. The repo's .npmrc
+          # points install at registry.npmmirror.com (read-only mirror for
+          # faster installs in CN), and without this override `changeset
+          # publish` inherits that registry → E401 against the mirror.
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
