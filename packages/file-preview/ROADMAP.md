@@ -229,17 +229,29 @@ A 是较大架构改动，建议 0.2 版本再做。
 
 **测试**（+12）：覆盖预检 / 流式中断 / 默认值生效 / Infinity 跳过 / `RemoteUrlError instanceof` 契约。
 
-### [ ] 4. 本地文件 magic bytes 检测
+### [x] 4. 本地文件 magic bytes 检测
 
-**目标**：`detectFileMeta(source)` 返回 `{ fileType, mimeType, confidence: "high"|"medium"|"low", detectBy: "magic"|"container"|"extension"|"mime" }`。
+**完成**：新增统一检测 API：
+
+```ts
+const meta = await detectFileMeta(source);
+// { fileType, mimeType, fileName, confidence, detectBy }
+```
+
+**改动**：
+- `core/magic-bytes.ts`：从 `remote-url.ts` 抽出 `sniffMagic` / `sniffZipContainer`，成为本地文件与远程 URL 共用的 byte-level 检测源
+- `core/detect-meta.ts`：新增 `detectFileMeta(source)`，返回 `{ fileType, mimeType, fileName, confidence, detectBy }`
+- `remote-url.ts`：复用 `core/magic-bytes.ts`，避免两套 magic 逻辑漂移
+- Playground 本地上传：`processFile()` 改用 `detectFileMeta({ kind: "file", file })`，所以 `.pdf` 改名 `.txt` / 空 MIME DOCX 等场景能按真实内容识别
+- `index.ts`：导出 `detectFileMeta`、`sniffMagic`、`sniffZipContainer` 及相关类型
 
 **覆盖范围**：
 - PDF / PNG / JPG / GIF / WebP magic
 - ZIP container → docx / pptx / xlsx / epub
-- OLE → 旧版 doc / xls / ppt
+- OLE magic → legacy Office（doc/xls/ppt 仍按扩展名区分具体类型）
 - fallback：扩展名 → MIME → unknown
 
-**注意**：`remote-url.ts` 已有 `sniffMagic` / `sniffZipContainer`——把它们提到 `core/magic-bytes.ts` 复用。
+**测试**：`detect-meta.test.ts` 覆盖 magic 优先于错误扩展名、ZIP container、OLE、extension fallback、MIME fallback。
 
 ### [ ] 5. PreviewError 标准化错误码
 

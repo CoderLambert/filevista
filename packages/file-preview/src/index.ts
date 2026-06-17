@@ -67,6 +67,19 @@ export {
 
 // ─── File detection ───────────────────────────────────────────────────────
 export { detectFileType } from "./utils";
+export {
+  detectFileMeta,
+  type FileMeta,
+  type FileMetaConfidence,
+  type FileMetaDetectBy,
+  type DetectFileMetaOptions,
+} from "./core/detect-meta";
+export {
+  sniffMagic,
+  sniffZipContainer,
+  type MagicSniffResult,
+  type ContainerSniffResult,
+} from "./core/magic-bytes";
 
 // Support matrix — which renderers cover which file types.
 export {

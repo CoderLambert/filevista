@@ -1,5 +1,6 @@
 import { detectFileType, generateId } from "./utils";
 import type { FileInfo } from "./utils";
+import { sniffMagic, sniffZipContainer } from "./core/magic-bytes";
 
 export type RemoteUrlErrorCode =
   | "INVALID_URL"
@@ -68,16 +69,6 @@ interface FileNameResult {
 interface MimeResult {
   mimeType: string;
   source: MimeDetectionSource;
-}
-
-interface MagicSniffResult {
-  ext: string | null;
-  mimeType: string | null;
-}
-
-interface ContainerSniffResult {
-  ext: string;
-  mimeType: string;
 }
 
 const REMOTE_MIME_BY_EXTENSION: Record<string, string> = {
@@ -307,150 +298,6 @@ function getRemoteFileName(
   }
 }
 
-function startsWithBytes(bytes: Uint8Array, signature: number[]): boolean {
-  if (bytes.length < signature.length) return false;
-
-  return signature.every((value, index) => bytes[index] === value);
-}
-
-function readAscii(bytes: Uint8Array, start: number, length: number): string {
-  return String.fromCharCode(...bytes.subarray(start, start + length));
-}
-
-function sniffMagic(buffer: ArrayBuffer): MagicSniffResult {
-  const bytes = new Uint8Array(buffer.slice(0, 32));
-
-  if (readAscii(bytes, 0, 5) === "%PDF-") {
-    return {
-      ext: "pdf",
-      mimeType: "application/pdf",
-    };
-  }
-
-  if (
-    startsWithBytes(bytes, [0x50, 0x4b, 0x03, 0x04]) ||
-    startsWithBytes(bytes, [0x50, 0x4b, 0x05, 0x06]) ||
-    startsWithBytes(bytes, [0x50, 0x4b, 0x07, 0x08])
-  ) {
-    return {
-      ext: "zip",
-      mimeType: "application/zip",
-    };
-  }
-
-  if (
-    startsWithBytes(bytes, [
-      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-    ])
-  ) {
-    return {
-      ext: "png",
-      mimeType: "image/png",
-    };
-  }
-
-  if (startsWithBytes(bytes, [0xff, 0xd8, 0xff])) {
-    return {
-      ext: "jpg",
-      mimeType: "image/jpeg",
-    };
-  }
-
-  const gifHeader = readAscii(bytes, 0, 6);
-
-  if (gifHeader === "GIF87a" || gifHeader === "GIF89a") {
-    return {
-      ext: "gif",
-      mimeType: "image/gif",
-    };
-  }
-
-  if (readAscii(bytes, 0, 4) === "RIFF" && readAscii(bytes, 8, 4) === "WEBP") {
-    return {
-      ext: "webp",
-      mimeType: "image/webp",
-    };
-  }
-
-  if (bytes.length >= 12 && readAscii(bytes, 4, 4) === "ftyp") {
-    return {
-      ext: "mp4",
-      mimeType: "video/mp4",
-    };
-  }
-
-  if (
-    startsWithBytes(bytes, [
-      0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1,
-    ])
-  ) {
-    return {
-      ext: "ole",
-      mimeType: "application/x-ole-storage",
-    };
-  }
-
-  return {
-    ext: null,
-    mimeType: null,
-  };
-}
-
-async function sniffZipContainer(
-  buffer: ArrayBuffer
-): Promise<ContainerSniffResult | null> {
-  try {
-    const { default: JSZip } = await import("jszip");
-    const zip = await JSZip.loadAsync(buffer);
-
-    const fileNames = Object.keys(zip.files).map((name) =>
-      name.replace(/\\/g, "/").toLowerCase()
-    );
-
-    const hasFile = (target: string) => fileNames.includes(target);
-
-    if (hasFile("word/document.xml")) {
-      return {
-        ext: "docx",
-        mimeType:
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      };
-    }
-
-    if (hasFile("ppt/presentation.xml")) {
-      return {
-        ext: "pptx",
-        mimeType:
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      };
-    }
-
-    if (hasFile("xl/workbook.xml")) {
-      return {
-        ext: "xlsx",
-        mimeType:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      };
-    }
-
-    const mimetypeFile = zip.file("mimetype");
-
-    if (mimetypeFile) {
-      const mimetype = (await mimetypeFile.async("string")).trim();
-
-      if (mimetype === "application/epub+zip") {
-        return {
-          ext: "epub",
-          mimeType: "application/epub+zip",
-        };
-      }
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 function resolveRemoteMimeType(input: {
   fileName: string;

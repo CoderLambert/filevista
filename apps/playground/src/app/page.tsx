@@ -24,6 +24,7 @@ import {
   type FileInfo,
   type FileType,
   detectFileType,
+  detectFileMeta,
   PluginPreviewRenderer,
   setAssetBasePath,
   processRemoteUrl,
@@ -83,14 +84,14 @@ export default function Home() {
   const activeFile = files.find((f) => f.id === activeFileId) || null;
 
   const processFile = useCallback(async (file: File): Promise<FileInfo> => {
-    const fileType = detectFileType(file.name, file.type);
+    const meta = await detectFileMeta({ kind: "file", file });
 
     return {
       id: generateId(),
       name: file.name,
       size: file.size,
-      type: file.type,
-      fileType,
+      type: meta.mimeType || file.type,
+      fileType: meta.fileType,
       source: {
         kind: "file",
         file,
