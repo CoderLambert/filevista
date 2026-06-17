@@ -20,6 +20,16 @@
   "sideEffects": [
     "**/*.css"
   ],
+  "author": "CoderLambert",
+  "homepage": "https://github.com/CoderLambert/filevista/tree/main/packages/file-preview#readme",
+  "bugs": {
+    "url": "https://github.com/CoderLambert/filevista/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CoderLambert/filevista.git",
+    "directory": "packages/file-preview"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -37,7 +47,8 @@
   "files": [
     "dist",
     "scripts",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
