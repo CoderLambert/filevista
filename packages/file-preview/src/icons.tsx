@@ -76,7 +76,7 @@ export function CheckIcon(props: IconProps) {
 }
 
 export function SearchIcon(props: IconProps) {
-  return icon(props, <><circle cx="11" cy="11" r="8" />, <path d="m21 21-4.3-4.3" /></>);
+  return icon(props, <circle cx="11" cy="11" r="8" />, <path d="m21 21-4.3-4.3" />);
 }
 
 export function WrapTextIcon(props: IconProps) {
@@ -150,27 +150,27 @@ export function Minimize2Icon(props: IconProps) {
 /* ── View modes ── */
 
 export function EyeIcon(props: IconProps) {
-  return icon(props, <><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />, <circle cx="12" cy="12" r="3" /></>);
+  return icon(props, <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />, <circle cx="12" cy="12" r="3" />);
 }
 
 export function Code2Icon(props: IconProps) {
-  return icon(props, <><path d="m18 16 4-4-4-4" />, <path d="m6 8-4 4 4 4" />, <path d="m14.5 4-5 16" /></>);
+  return icon(props, <path d="m18 16 4-4-4-4" />, <path d="m6 8-4 4 4 4" />, <path d="m14.5 4-5 16" />);
 }
 
 export function Columns2Icon(props: IconProps) {
-  return icon(props, <><rect width="18" height="18" x="3" y="3" rx="2" />, <line x1="12" y1="3" x2="12" y2="21" /></>);
+  return icon(props, <rect width="18" height="18" x="3" y="3" rx="2" />, <line x1="12" y1="3" x2="12" y2="21" />);
 }
 
 export function Grid3X3Icon(props: IconProps) {
-  return icon(props, <><rect width="18" height="18" x="3" y="3" rx="2" />, <line x1="3" y1="9" x2="21" y2="9" />, <line x1="3" y1="15" x2="21" y2="15" />, <line x1="9" y1="3" x2="9" y2="21" />, <line x1="15" y1="3" x2="15" y2="21" /></>);
+  return icon(props, <rect width="18" height="18" x="3" y="3" rx="2" />, <line x1="3" y1="9" x2="21" y2="9" />, <line x1="3" y1="15" x2="21" y2="15" />, <line x1="9" y1="3" x2="9" y2="21" />, <line x1="15" y1="3" x2="15" y2="21" />);
 }
 
 export function ListIcon(props: IconProps) {
-  return icon(props, <><line x1="8" y1="6" x2="21" y2="6" />, <line x1="8" y1="12" x2="21" y2="12" />, <line x1="8" y1="18" x2="21" y2="18" />, <line x1="3" y1="6" x2="3.01" y2="6" />, <line x1="3" y1="12" x2="3.01" y2="12" />, <line x1="3" y1="18" x2="3.01" y2="18" /></>);
+  return icon(props, <line x1="8" y1="6" x2="21" y2="6" />, <line x1="8" y1="12" x2="21" y2="12" />, <line x1="8" y1="18" x2="21" y2="18" />, <line x1="3" y1="6" x2="3.01" y2="6" />, <line x1="3" y1="12" x2="3.01" y2="12" />, <line x1="3" y1="18" x2="3.01" y2="18" />);
 }
 
 export function Table2Icon(props: IconProps) {
-  return icon(props, <><rect width="18" height="18" x="3" y="3" rx="2" />, <line x1="3" y1="9" x2="21" y2="9" />, <line x1="3" y1="15" x2="21" y2="15" />, <line x1="9" y1="3" x2="9" y2="21" />, <line x1="15" y1="3" x2="15" y2="21" /></>);
+  return icon(props, <rect width="18" height="18" x="3" y="3" rx="2" />, <line x1="3" y1="9" x2="21" y2="9" />, <line x1="3" y1="15" x2="21" y2="15" />, <line x1="9" y1="3" x2="9" y2="21" />, <line x1="15" y1="3" x2="15" y2="21" />);
 }
 
 export function MonitorIcon(props: IconProps) {

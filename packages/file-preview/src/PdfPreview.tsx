@@ -9,6 +9,7 @@ import {
   AlertCircleIcon,
 } from "./icons";
 import { readBinaryPreviewAsUint8Array } from "./core/binary";
+import { resolveAssetPath } from "./core/config";
 import type { PreviewSource } from "./core/types";
 import "./styles/PdfPreview.css";
 
@@ -112,7 +113,9 @@ export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
 
         const pdfjsLib = await import("pdfjs-dist");
 
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.mjs";
+        pdfjsLib.GlobalWorkerOptions.workerSrc = resolveAssetPath(
+          "/vendor/pdfjs/pdf.worker.min.mjs",
+        );
 
         const bytes = await readBinaryPreviewAsUint8Array({ source, content });
 

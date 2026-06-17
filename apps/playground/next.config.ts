@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
 
+  // Workspace package ships uncompiled TS — let Next transpile it.
+  transpilePackages: ["@filevista/file-preview"],
+
   typescript: {
     ignoreBuildErrors: true,
   },

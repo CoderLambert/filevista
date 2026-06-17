@@ -21,24 +21,24 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  FileInfo,
+  type FileInfo,
+  type FileType,
   detectFileType,
   getFileTypeColor,
   getFileTypeLabel,
   formatFileSize,
   generateId,
-  FileType,
   base64ToUint8Array,
-} from "@/components/file-preview/utils";
-import { PluginPreviewRenderer } from "@/components/file-preview/PluginPreviewRenderer";
-import { LargeFileGate } from "@/components/file-preview/LargeFileGate";
-import { DEMO_FILES, fetchBinaryDemoFiles } from "@/components/file-preview/demos";
-import { setAssetBasePath } from "@/components/file-preview/core/config";
-import {
+  PluginPreviewRenderer,
+  LargeFileGate,
+  DEMO_FILES,
+  fetchBinaryDemoFiles,
+  setAssetBasePath,
   processRemoteUrl,
   RemoteUrlError,
   type RemoteLoadProgress,
-} from "@/components/file-preview/remote-url";
+} from "@filevista/file-preview";
+import "@filevista/file-preview/styles/index.css";
 
 // Initialize asset base path from Next.js env (used by PDF.js worker, RTF.js bundles, demo files)
 setAssetBasePath(process.env.NEXT_PUBLIC_BASE_PATH || "");

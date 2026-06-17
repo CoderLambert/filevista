@@ -1,0 +1,86 @@
+{
+  "name": "@filevista/file-preview",
+  "version": "0.1.0",
+  "description": "Browser-side file preview toolkit for React — 20+ formats (PDF, DOCX, PPTX, XLSX, EPUB, RTF, code, images, video, audio …) with zero server processing.",
+  "keywords": [
+    "react",
+    "file-preview",
+    "pdf",
+    "docx",
+    "pptx",
+    "xlsx",
+    "epub",
+    "rtf",
+    "markdown",
+    "code-preview",
+    "office",
+    "browser"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles/index.css": "./dist/styles/index.css",
+    "./styles/*.css": "./dist/styles/*.css",
+    "./scripts/copy-pdf-worker.mjs": "./scripts/copy-pdf-worker.mjs",
+    "./scripts/copy-rtfjs-bundles.mjs": "./scripts/copy-rtfjs-bundles.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "scripts",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "copy:pdf-worker": "node scripts/copy-pdf-worker.mjs",
+    "copy:rtfjs-bundles": "node scripts/copy-rtfjs-bundles.mjs"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "docx-preview": "^0.3.7",
+    "dompurify": "^3.4.8",
+    "exceljs": "^4.4.0",
+    "jszip": "^3.10.1",
+    "pdfjs-dist": "4.4.168",
+    "pptx-preview": "^1.0.7",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "rtf.js": "^3.0.9",
+    "shiki": "^4.1.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "jsdom": "^29.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5",
+    "vitest": "^4.1.8"
+  },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
