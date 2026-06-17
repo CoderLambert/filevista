@@ -110,17 +110,19 @@ cd packages/file-preview && pnpm pack --dry-run
 
 - `src/CodePreview.tsx`（pure render） + `src/preview-adapters/SourceCodePreviewAdapter.tsx`（I/O glue）—— 这是有意的分层模式，其他 adapter 同样架构。
 
-### [ ] 7. 补核心渲染路径的测试
+### [x] 7. 补核心渲染路径的测试
 
-现有：工具函数 + 状态机 + LargeFileHint + UnsupportedPluginPreview。
-**缺**：
+**新增 3 个文件、+47 个测试用例**（6→41→88）：
 
-- `PluginPreviewRenderer` 的 plugin 解析 / 缓存 / 错误边界
-- `core/source.ts` 的 4 种 source 读取
-- `processRemoteUrl` 的 magic-byte sniffing
-- 至少 1-2 个 preview adapter（mock 底层 lib，断言调用契约）
+- `src/__tests__/source.test.ts`（+31 用例）—— 覆盖 `readSourceAsArrayBuffer` / `readSourceAsText` / `readSourceAsBase64` / `createObjectUrlFromSource` / `getSourceName` / `getSourceMimeType` / `getSourceSize` 全部 4 种 source 变体（file / blob / arrayBuffer / url），包括 abort signal / fetch 错误 / base64 分块边界
+- `src/__tests__/plugin-load.test.ts`（+11 用例）—— 覆盖 `loadWithOptionalDep` 成功路径、5 种 bundler/runtime 的 module-not-found 格式（Webpack / Turbopack / 原生 ESM / Vite / Metro）、无关错误透传、非 Error 拒绝
+- `src/__tests__/PluginPreviewRenderer.test.tsx`（+5 用例）—— 覆盖 plugin 匹配路由 + 无匹配 fallback + debug bar 切换 + load 错误回退 + promise 缓存去重（使用 `act` 包装 React 19 `use()` + Suspense）
+- 删掉 `src/__tests__/LargeFileHint.test.tsx`（#6 清理的 5 个 orphan 之一）
 
-不要求 e2e 真实渲染，单测覆盖契约即可。
+**仍缺暂不补**（P2）：
+
+- `processRemoteUrl` magic-byte sniffing（需要 mock fetch + file magic sniff）
+- preview adapter 集成测试（mock 底层 lib 并断言调用契约）
 
 ### [x] 8. 解锁 `pdfjs-dist` 版本
 

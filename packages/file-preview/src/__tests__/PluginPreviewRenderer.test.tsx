@@ -1,0 +1,188 @@
+// @vitest-environment jsdom
+
+import { act, cleanup, render, screen } from "@testing-library/react";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
+import type { ComponentType } from "react";
+import { PluginPreviewRenderer } from "../PluginPreviewRenderer";
+import { createPreviewPluginRegistry } from "../core/registry";
+import type { PreviewPlugin } from "../core/plugin";
+import type { FileInfo, FileType } from "../core/types";
+
+// ─── helpers ──────────────────────────────────────────────────────────────
+
+function mockFile(fileType: FileType = "pdf"): FileInfo {
+  return {
+    id: `mock-${fileType}-${Math.random().toString(36).slice(2)}`,
+    name: `mock.${fileType}`,
+    size: 1,
+    type: "",
+    fileType,
+    source: { kind: "blob", blob: new Blob(["mock"]) },
+  };
+}
+
+interface StubPlugin {
+  plugin: PreviewPlugin;
+  load: Mock;
+  Component: ComponentType<{ file: FileInfo }>;
+}
+
+function stubPlugin(
+  fileType: FileType,
+  opts: {
+    id?: string;
+    name?: string;
+    component?: ComponentType<{ file: FileInfo }>;
+    loadError?: Error;
+  } = {},
+): StubPlugin {
+  const Component =
+    opts.component ??
+    (({ file }: { file: FileInfo }) => <div data-testid="content">{file.name}</div>);
+
+  const load = vi.fn(async () => {
+    if (opts.loadError) throw opts.loadError;
+    return { default: Component };
+  });
+
+  return {
+    Component,
+    load,
+    plugin: {
+      id: opts.id ?? `stub.${fileType}`,
+      name: opts.name ?? `Stub ${fileType}`,
+      priority: 100,
+      match: (file) => file.fileType === fileType,
+      load,
+    },
+  };
+}
+
+afterEach(() => {
+  cleanup();
+});
+
+// ─── routing ──────────────────────────────────────────────────────────────
+
+describe("PluginPreviewRenderer routing", () => {
+  it("renders the matched plugin's component with the given file", async () => {
+    const stub = stubPlugin("pdf");
+    const registry = createPreviewPluginRegistry([stub.plugin]);
+    const file = mockFile("pdf");
+
+    await act(async () => {
+      render(<PluginPreviewRenderer file={file} registry={registry} />);
+    });
+
+    expect(await screen.findByTestId("content")).toHaveTextContent(file.name);
+    expect(stub.load).toHaveBeenCalledOnce();
+  });
+
+  it("falls back to UnsupportedPluginPreview when no plugin matches", () => {
+    const registry = createPreviewPluginRegistry([stubPlugin("pdf").plugin]);
+    const file = mockFile("docx"); // not registered
+
+    render(<PluginPreviewRenderer file={file} registry={registry} />);
+
+    // UnsupportedPluginPreview shows the file name in its meta line
+    expect(screen.getByText(/mock\.docx/)).toBeInTheDocument();
+    // and offers a download button — by label text from the default zhCN locale
+    expect(screen.getByRole("button", { name: /下载/ })).toBeInTheDocument();
+  });
+
+  it("shows the plugin debug bar only when showPluginDebug=true", async () => {
+    const stub = stubPlugin("pdf", { id: "stub.x", name: "Debug Stub" });
+    const registry = createPreviewPluginRegistry([stub.plugin]);
+    const fileA = mockFile("pdf");
+    const fileB = mockFile("pdf");
+
+    let utils: ReturnType<typeof render>;
+    await act(async () => {
+      utils = render(
+        <PluginPreviewRenderer file={fileA} registry={registry} />,
+      );
+    });
+    await screen.findByTestId("content");
+    expect(screen.queryByText("Plugin Renderer")).not.toBeInTheDocument();
+
+    await act(async () => {
+      utils!.rerender(
+        <PluginPreviewRenderer
+          file={fileB}
+          registry={registry}
+          showPluginDebug
+        />,
+      );
+    });
+    await screen.findByTestId("content");
+    expect(screen.getByText("Plugin Renderer")).toBeInTheDocument();
+    expect(screen.getByText("Debug Stub")).toBeInTheDocument();
+    expect(screen.getByText("stub.x")).toBeInTheDocument();
+  });
+});
+
+// ─── error path ───────────────────────────────────────────────────────────
+
+describe("PluginPreviewRenderer load failures", () => {
+  // Silence the deliberate componentDidCatch console.warn so a failing
+  // load doesn't pollute the test output. Restored after each test.
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+  afterEach(() => warnSpy.mockRestore());
+
+  it("renders the error fallback when plugin.load() rejects", async () => {
+    const stub = stubPlugin("pdf", {
+      loadError: new Error("boom-load-error"),
+    });
+    const registry = createPreviewPluginRegistry([stub.plugin]);
+
+    await act(async () => {
+      render(<PluginPreviewRenderer file={mockFile("pdf")} registry={registry} />);
+    });
+
+    // PreviewFallback shows the failedToLoadPreview title from zhCN
+    expect(await screen.findByText(/预览加载失败/)).toBeInTheDocument();
+    // and a Retry button
+    expect(screen.getByRole("button", { name: /Retry/i })).toBeInTheDocument();
+  });
+});
+
+// ─── load caching ─────────────────────────────────────────────────────────
+
+describe("PluginPreviewRenderer load caching", () => {
+  it("calls plugin.load only once across re-renders of the same plugin", async () => {
+    const stub = stubPlugin("pdf");
+    const registry = createPreviewPluginRegistry([stub.plugin]);
+    const fileA = mockFile("pdf");
+    const fileB = mockFile("pdf");
+
+    let utils: ReturnType<typeof render>;
+    await act(async () => {
+      utils = render(
+        <PluginPreviewRenderer file={fileA} registry={registry} />,
+      );
+    });
+    await screen.findByTestId("content");
+
+    await act(async () => {
+      utils!.rerender(
+        <PluginPreviewRenderer file={fileB} registry={registry} />,
+      );
+    });
+    await screen.findByTestId("content");
+
+    // promiseCache is keyed by plugin identity, so a second render with the
+    // same plugin reuses the resolved module.
+    expect(stub.load).toHaveBeenCalledOnce();
+  });
+});
