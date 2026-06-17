@@ -1,7 +1,7 @@
 /**
  * Copy PDF.js worker into public/vendor/pdfjs/.
  *
- * `pdfjs-dist` is an *optional* peer dependency of @filevista/file-preview.
+ * `pdfjs-dist` is an *optional* peer dependency of @lamberl-lee/file-preview.
  * If it's not installed (e.g. the consumer doesn't preview PDF files), this
  * script is a no-op so the postinstall hook stays safe to run unconditionally.
  */
@@ -16,7 +16,7 @@ try {
   workerPath = require.resolve("pdfjs-dist/build/pdf.worker.min.mjs");
 } catch {
   console.log(
-    "[@filevista/file-preview] pdfjs-dist not installed — skipping PDF.js worker copy. " +
+    "[@lamberl-lee/file-preview] pdfjs-dist not installed — skipping PDF.js worker copy. " +
       "Add pdfjs-dist to your dependencies to enable PDF preview.",
   );
   process.exit(0);

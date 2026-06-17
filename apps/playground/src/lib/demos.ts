@@ -412,7 +412,7 @@ RATE_LIMIT_MAX=100`,
 };
 
 // ── Binary demo files (fetched from public/demo/ at runtime) ──
-import { resolveAssetPath } from "@filevista/file-preview";
+import { resolveAssetPath } from "@lamberl-lee/file-preview";
 
 function withBase(url: string) {
   return resolveAssetPath(url);

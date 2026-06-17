@@ -30,7 +30,7 @@ import {
   processRemoteUrl,
   RemoteUrlError,
   type RemoteLoadProgress,
-} from "@filevista/file-preview";
+} from "@lamberl-lee/file-preview";
 import {
   getFileTypeColor,
   getFileTypeLabel,
@@ -39,7 +39,7 @@ import {
   base64ToUint8Array,
 } from "@/lib/file-helpers";
 import { DEMO_FILES, fetchBinaryDemoFiles } from "@/lib/demos";
-import "@filevista/file-preview/styles/index.css";
+import "@lamberl-lee/file-preview/styles/index.css";
 
 // Initialize asset base path from Next.js env (used by PDF.js worker, RTF.js bundles, demo files)
 setAssetBasePath(process.env.NEXT_PUBLIC_BASE_PATH || "");

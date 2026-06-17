@@ -1,10 +1,10 @@
 /**
- * @filevista/file-preview — public API
+ * @lamberl-lee/file-preview — public API
  *
  * Quick start:
  *
- *   import { PluginPreviewRenderer, setAssetBasePath } from "@filevista/file-preview";
- *   import "@filevista/file-preview/styles/index.css";
+ *   import { PluginPreviewRenderer, setAssetBasePath } from "@lamberl-lee/file-preview";
+ *   import "@lamberl-lee/file-preview/styles/index.css";
  *
  *   setAssetBasePath("/static"); // where you serve PDF.js worker + RTF.js bundles
  *   <PluginPreviewRenderer file={fileInfo} />

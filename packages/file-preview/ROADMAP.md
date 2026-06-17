@@ -1,4 +1,4 @@
-# `@filevista/file-preview` Roadmap
+# `@lamberl-lee/file-preview` Roadmap
 
 > Optimization plan for the library after the pnpm monorepo split (2026-06).
 > Status snapshots and follow-ups go in this file; tick items as they land.
@@ -138,7 +138,7 @@ cd packages/file-preview && pnpm pack --dry-run
 
 可选方向（互斥）：
 
-- **A**：主入口 `bundle: true` 单文件，配合 subpath exports `@filevista/file-preview/plugins/pdf`
+- **A**：主入口 `bundle: true` 单文件，配合 subpath exports `@lamberl-lee/file-preview/plugins/pdf`
 - **B**：保持现状，但启用 `experimentalDts` 合并 d.ts
 
 A 是较大架构改动，建议 0.2 版本再做。
@@ -157,7 +157,7 @@ A 是较大架构改动，建议 0.2 版本再做。
 }
 ```
 
-需要配合 `next.config.ts` 的 `transpilePackages: ["@filevista/file-preview"]`。
+需要配合 `next.config.ts` 的 `transpilePackages: ["@lamberl-lee/file-preview"]`。
 
 可选——保持当前"build → typecheck"工作流也合理，更确定性。
 
@@ -170,7 +170,7 @@ A 是较大架构改动，建议 0.2 版本再做。
 ### [x] 12. 版本管理工具
 
 - 安装 `@changesets/cli`（root devDep）
-- `.changeset/config.json`：`access: public`、`ignore: ["@filevista/playground"]`（private 包不发版）
+- `.changeset/config.json`：`access: public`、`ignore: ["@lamberl-lee/playground"]`（private 包不发版）
 - root package.json 加 `changeset` / `version` / `release` 脚本
 - 首发 changeset：`.changeset/initial-release.md`（minor bump 0.1.0 → 0.2.0）
 

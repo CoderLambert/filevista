@@ -1,10 +1,10 @@
-# @filevista/file-preview
+# @lamberl-lee/file-preview
 
 ## 0.2.0
 
 ### Minor Changes
 
-- 0f5622d: Initial public release of `@filevista/file-preview`.
+- 0f5622d: Initial public release of `@lamberl-lee/file-preview`.
 
   A browser-side file preview toolkit for React supporting 20+ formats (PDF, DOCX, PPTX, XLSX, EPUB, RTF, Markdown, code, images, video, audio, ZIP, CSV, SVG, HTML, plain text) with zero server processing — files never leave the user's device.
 

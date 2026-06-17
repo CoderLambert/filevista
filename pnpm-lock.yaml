@@ -17,7 +17,7 @@ importers:
 
   apps/playground:
     dependencies:
-      '@filevista/file-preview':
+      '@lamberl-lee/file-preview':
         specifier: workspace:*
         version: link:../../packages/file-preview
       '@radix-ui/react-accordion':

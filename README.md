@@ -72,7 +72,7 @@ pnpm run check
 ## GitHub Pages 构建
 
 ```bash
-pnpm --filter @filevista/playground run build:pages
+pnpm --filter @lamberl-lee/playground run build:pages
 ```
 
 ## GitHub Actions

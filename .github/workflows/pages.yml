@@ -52,7 +52,7 @@ jobs:
       - name: Build GitHub Pages static export
         run: |
           pnpm run build:lib
-          pnpm --filter @filevista/playground run build:pages
+          pnpm --filter @lamberl-lee/playground run build:pages
 
       # Output directory moved with the pnpm monorepo split — playground's
       # `next export` now writes to apps/playground/out/.

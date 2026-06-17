@@ -1,5 +1,5 @@
 {
-  "name": "@filevista/file-preview",
+  "name": "@lamberl-lee/file-preview",
   "version": "0.2.0",
   "description": "Browser-side file preview toolkit for React — 20+ formats (PDF, DOCX, PPTX, XLSX, EPUB, RTF, code, images, video, audio …) with zero server processing.",
   "keywords": [

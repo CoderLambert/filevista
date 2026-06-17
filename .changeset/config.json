@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@filevista/playground"]
+  "ignore": ["@lamberl-lee/playground"]
 }

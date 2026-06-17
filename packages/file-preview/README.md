@@ -1,8 +1,8 @@
-# @filevista/file-preview
+# @lamberl-lee/file-preview
 
-[![npm version](https://img.shields.io/npm/v/@filevista/file-preview.svg?style=flat-square)](https://www.npmjs.com/package/@filevista/file-preview)
-[![npm bundle size](https://img.shields.io/bundlephobia/minzip/@filevista/file-preview?style=flat-square&label=gzip)](https://bundlephobia.com/package/@filevista/file-preview)
-[![license](https://img.shields.io/npm/l/@filevista/file-preview?style=flat-square)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/@lamberl-lee/file-preview.svg?style=flat-square)](https://www.npmjs.com/package/@lamberl-lee/file-preview)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/@lamberl-lee/file-preview?style=flat-square&label=gzip)](https://bundlephobia.com/package/@lamberl-lee/file-preview)
+[![license](https://img.shields.io/npm/l/@lamberl-lee/file-preview?style=flat-square)](./LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/CoderLambert/filevista/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/CoderLambert/filevista/actions/workflows/ci.yml)
 
 > Browser-side file preview toolkit for React — 20+ formats with zero server processing.
@@ -12,7 +12,7 @@ Render PDF, DOCX, PPTX, XLSX, EPUB, RTF, Markdown, code, images, video, audio, Z
 ## Install
 
 ```bash
-npm install @filevista/file-preview
+npm install @lamberl-lee/file-preview
 # or pnpm add / yarn add
 ```
 
@@ -31,7 +31,7 @@ To preview the heavier formats, install **only the optional peer dependencies fo
 
 ```bash
 # Example: only PDF + Markdown previews
-pnpm add @filevista/file-preview pdfjs-dist
+pnpm add @lamberl-lee/file-preview pdfjs-dist
 ```
 
 If a user uploads a format whose peer dep is missing, the preview falls back to a clear "install `<package>`" message instead of a cryptic bundler error. So you can ship safely with just the formats you need.
@@ -46,8 +46,8 @@ import {
   detectFileType,
   setAssetBasePath,
   type FileInfo,
-} from "@filevista/file-preview";
-import "@filevista/file-preview/styles/index.css";
+} from "@lamberl-lee/file-preview";
+import "@lamberl-lee/file-preview/styles/index.css";
 
 // Tell the library where PDF.js worker / RTF.js bundles are served from.
 // (See "Static assets" below.) Empty string means same origin / "/".
@@ -70,7 +70,7 @@ function Demo({ file }: { file: File }) {
 ### Remote URL
 
 ```tsx
-import { processRemoteUrl } from "@filevista/file-preview";
+import { processRemoteUrl } from "@lamberl-lee/file-preview";
 
 const info = await processRemoteUrl("https://example.com/foo.pdf", {
   onProgress: (p) => console.log(p),
@@ -85,7 +85,7 @@ PDF and RTF previews need extra runtime assets that must be served from a static
 // package.json
 {
   "scripts": {
-    "postinstall": "node node_modules/@filevista/file-preview/scripts/copy-pdf-worker.mjs && node node_modules/@filevista/file-preview/scripts/copy-rtfjs-bundles.mjs"
+    "postinstall": "node node_modules/@lamberl-lee/file-preview/scripts/copy-pdf-worker.mjs && node node_modules/@lamberl-lee/file-preview/scripts/copy-rtfjs-bundles.mjs"
   }
 }
 ```
@@ -116,7 +116,7 @@ Override CSS variables on the document root:
 ## i18n
 
 ```tsx
-import { LocaleProvider, enUS } from "@filevista/file-preview";
+import { LocaleProvider, enUS } from "@lamberl-lee/file-preview";
 
 <LocaleProvider value={enUS}>
   <PluginPreviewRenderer file={info} />
@@ -135,7 +135,7 @@ import {
   pdfPlugin,
   markdownPlugin,
   imagePlugin,
-} from "@filevista/file-preview";
+} from "@lamberl-lee/file-preview";
 
 const registry = createPreviewPluginRegistry([pdfPlugin, markdownPlugin, imagePlugin]);
 

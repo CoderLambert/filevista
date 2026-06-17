@@ -1,5 +1,5 @@
 {
-  "name": "@filevista/playground",
+  "name": "@lamberl-lee/playground",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,7 @@
     "postinstall": "pnpm run copy:vendor-assets"
   },
   "dependencies": {
-    "@filevista/file-preview": "workspace:*",
+    "@lamberl-lee/file-preview": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",

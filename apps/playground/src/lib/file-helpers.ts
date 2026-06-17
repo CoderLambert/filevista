@@ -1,14 +1,14 @@
 /**
  * Local helpers for the playground demo app.
  *
- * These small utilities used to live in `@filevista/file-preview`'s public
+ * These small utilities used to live in `@lamberl-lee/file-preview`'s public
  * surface, but were demoted to internals in the 0.1 API tightening — they
  * encode app-level UI conventions (Tailwind palette, label casing) rather
  * than library logic. The library still owns `detectFileType` and the
  * `FileType` union; everything below is local glue.
  */
 
-import type { FileType } from "@filevista/file-preview";
+import type { FileType } from "@lamberl-lee/file-preview";
 
 /** Format byte count as "1.23 MB" / "456 KB" / etc. */
 export function formatFileSize(bytes: number): string {

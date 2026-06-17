@@ -8,7 +8,7 @@
  * Run from `postinstall` so the bundles are present before the dev
  * server or production build can request them.
  *
- * `rtf.js` is an *optional* peer dependency of @filevista/file-preview.
+ * `rtf.js` is an *optional* peer dependency of @lamberl-lee/file-preview.
  * If it's not installed (consumer doesn't preview RTF files), this
  * script is a no-op so the postinstall hook stays safe to run
  * unconditionally.
@@ -31,7 +31,7 @@ try {
   require.resolve(bundles[0]);
 } catch {
   console.log(
-    "[@filevista/file-preview] rtf.js not installed — skipping RTF.js bundles copy. " +
+    "[@lamberl-lee/file-preview] rtf.js not installed — skipping RTF.js bundles copy. " +
       "Add rtf.js to your dependencies to enable RTF preview.",
   );
   process.exit(0);
