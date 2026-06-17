@@ -189,6 +189,114 @@ A 是较大架构改动，建议 0.2 版本再做。
 
 ---
 
+## 0.3.0 — 生产可接入版本
+
+> **核心**：把库从"功能多"打磨成"接入不踩坑"——默认安全 / 默认防大文件 / 错误可兜底 / 依赖可解释 / 格式边界清楚。
+> 0.2.0 已发 npm（`@lamberl-lee/file-preview@0.2.0`），0.3.0 为下一个版本。
+
+### [x] 1. React 18 兼容修正
+
+**问题**：`peerDependencies` 写了 `react ^18.2 || ^19`，但 `PluginPreviewRenderer.tsx:48` 用了 React 19-only 的 `use(promise)`——React 18 一进预览就崩，"支持 18" 是空话。
+
+**改动**（`a5fb84d`）：
+- `PluginContent` 从 `use()` + `Suspense` 改为显式状态机（`loading` / `error` / `ready`），只用 `useEffect`/`useState` 等 16.8+ API
+- 不用 `React.lazy`：它内部缓存 promise 会破坏 `invalidatePluginPromise` 的 retry 机制
+- Suspense 包裹移除（PluginContent 自己渲染 loading）
+
+**CI 矩阵**（`fa3b770`）：新增 `react18-compat` job，pnpm-workspace.yaml overrides 强行装 React 18.3.1，跑库测试套件。`require('react').version === 18.3.1` 实际验证过，不是"代码里没 use() 就算"。
+
+### [x] 2. 大文件保护默认内置
+
+**问题**：`LargeFileGate` 之前要业务方手动包，一忘就裸奔。
+
+**改动**（`957a2fa`）：
+- `<PluginPreviewRenderer file={file} />` 默认套 `LargeFileGate`；新增 `largeFilePolicy: "default" | "off"` 切换
+- `LargeFileGate` 重构为自包含：内部管 confirm 状态，`file.id` 变化自动 reset
+- 修复一个 latent bug：原 warning 分支只显示警告条 + 不渲染预览（warning-tier 文件根本看不到）
+- Playground 删掉手动 `LargeFileGate` 包裹 + `previewConfirmedFileIds` Set + onConfirm
+
+**阈值**（`PREVIEW_SIZE_LIMITS`，未变）：20MB warn / 50MB confirm / 100MB block。
+
+### [x] 3. 远程 URL 限制 maxBytes
+
+**问题**：`processRemoteUrl` 之前先 fetch 完再让 LargeFileGate 决定——那时浏览器内存已经爆了。
+
+**改动**（`31e65f1`）：
+- `ProcessRemoteUrlOptions.maxBytes`，默认 `DEFAULT_REMOTE_MAX_BYTES = 100 * 1024 * 1024`
+- 双路径：`Content-Length` 头超限 → 预检拒绝，零字节传输；无 `Content-Length` → 流读到 `received > maxBytes` 时 `reader.cancel()`
+- 命中限制抛 `RemoteUrlError(code: "FILE_TOO_LARGE")`
+- `maxBytes: Infinity` 关闭限制
+
+**测试**（+12）：覆盖预检 / 流式中断 / 默认值生效 / Infinity 跳过 / `RemoteUrlError instanceof` 契约。
+
+### [ ] 4. 本地文件 magic bytes 检测
+
+**目标**：`detectFileMeta(source)` 返回 `{ fileType, mimeType, confidence: "high"|"medium"|"low", detectBy: "magic"|"container"|"extension"|"mime" }`。
+
+**覆盖范围**：
+- PDF / PNG / JPG / GIF / WebP magic
+- ZIP container → docx / pptx / xlsx / epub
+- OLE → 旧版 doc / xls / ppt
+- fallback：扩展名 → MIME → unknown
+
+**注意**：`remote-url.ts` 已有 `sniffMagic` / `sniffZipContainer`——把它们提到 `core/magic-bytes.ts` 复用。
+
+### [ ] 5. PreviewError 标准化错误码
+
+**目标**：业务方能 `error.code === "MISSING_PEER_DEPENDENCY"` 做兜底。
+
+```ts
+type PreviewErrorCode =
+  | "MISSING_PEER_DEPENDENCY"
+  | "UNSUPPORTED_FILE_TYPE"
+  | "FILE_TOO_LARGE"
+  | "REMOTE_CORS_ERROR"
+  | "REMOTE_HTTP_ERROR"
+  | "PARSE_FAILED"
+  | "RENDER_FAILED"
+  | "SECURITY_BLOCKED";
+```
+
+**改动**：
+- 新建 `core/preview-error.ts`：`PreviewError` 类 + 联合类型
+- 把现有 `MissingPeerDependencyError` / `RemoteUrlError` / `PreviewPluginLoadError` 都收编进 `PreviewError`（保留旧类作为子类，向后兼容)
+- `PluginPreviewRenderer` 加 `onError(error: PreviewError)` 回调
+- 测试覆盖每个 code 的契约稳定性（未来重构 message 不会破坏 code）
+
+### [x] 6. supported-formats.md
+
+**问题**：README 头部"20+ formats"暗示了 Word/Excel 级别的还原度——这是产品侧最大的预期错位源。
+
+**改动**（`ee4ffc9`）：新文件 `docs/supported-formats.md`，三栏表（底层渲染器 / 我们能渲染什么 / 我们**明确不保证**什么）。Office 系明示：不像素级、不重算公式、不放动画、不播嵌入媒体。配套：安全策略、性能阈值、optional peer 表、浏览器矩阵。`package.json` `files` 加 `docs`，README 顶部加引导链接。
+
+### [ ] 7. ★ 高阶组件 `<FilePreview />`（0.4.0 候选 — 暂列在此处提醒）
+
+```tsx
+<FilePreview file={file} />
+<FilePreview url={url} />
+```
+
+内部自动构造 `FileInfo` + 调用 `processRemoteUrl` + 套 `LargeFileGate` + 兜底缺依赖提示 + 暴露 `onError` / `onLoad` / `onUnsupported`。底层 `<PluginPreviewRenderer file={fileInfo} />` 保留给高级用户。
+
+> 这条放 0.4.0；0.3.0 先把 #4 / #5 完成。
+
+---
+
+## 0.3.0 进度
+
+| # | 项 | 状态 | commit |
+| --- | --- | --- | --- |
+| 1 | React 18 兼容 | ✅ + CI 矩阵 | `a5fb84d` + `fa3b770` |
+| 2 | 大文件保护默认内置 | ✅ | `957a2fa` |
+| 3 | 远程 URL maxBytes | ✅ | `31e65f1` |
+| 4 | 本地 magic bytes 检测 | ⏳ | — |
+| 5 | PreviewError 标准化 | ⏳ | — |
+| 6 | supported-formats.md | ✅ | `ee4ffc9` |
+
+发版条件：6 项全部完成 → 写 changeset minor → merge Version Packages PR → CI 自动 publish。
+
+---
+
 ## 推荐执行顺序
 
 | 时间 | 任务 |
@@ -204,6 +312,7 @@ A 是较大架构改动，建议 0.2 版本再做。
 
 ## 备注
 
-- 所有版本号、文件路径以 commit `4fe769d`（pnpm monorepo 重构）为基线
-- 完成一项就在本文件勾选 `[x]` 并提交
-- 大改动（如 #4、#9A）建议单独开 PR，便于回滚
+- 基线 commit：`4fe769d`（pnpm monorepo 重构）+ `ab7d0bc`（@filevista → @lamberl-lee scope 改名 + 0.2.0 准备）
+- 0.2.0 已发到 npm：https://www.npmjs.com/package/@lamberl-lee/file-preview
+- 完成一项就在本文件勾选 `[x]` 并把 commit hash 填进对应表格
+- 大改动（如 #4 magic bytes、#5 错误码体系）建议单独 commit，便于回滚
