@@ -100,6 +100,11 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Print resolved React version
+        # Diagnostic only — runs from inside the lib package where pnpm
+        # actually links 'react' (not the root, which has no top-level
+        # react node_modules). Don't fail the job on this.
+        continue-on-error: true
+        working-directory: packages/file-preview
         run: node -e "console.log('react', require('react').version)"
 
       - name: Build library
