@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const isGithubPages = process.env.NEXT_PUBLIC_DEPLOY_TARGET === "github-pages";
@@ -7,6 +8,11 @@ const basePath = isGithubPages ? `/${repoName}` : "";
 
 const nextConfig: NextConfig = {
   output: isGithubPages ? "export" : "standalone",
+
+  // Trace files from the monorepo root so standalone bundles @filevista/file-preview
+  // (and the rest of the workspace) correctly. Without this, Next defaults to the
+  // app directory and silently drops cross-package symlinks.
+  outputFileTracingRoot: path.resolve(__dirname, "../.."),
 
   basePath,
   assetPrefix: basePath,

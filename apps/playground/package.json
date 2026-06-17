@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
-    "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "build": "next build && cp -r .next/static .next/standalone/apps/playground/.next/ && cp -r public .next/standalone/apps/playground/",
     "build:pages": "NEXT_PUBLIC_DEPLOY_TARGET=github-pages next build",
-    "start": "NODE_ENV=production node .next/standalone/server.js 2>&1 | tee server.log",
+    "start": "NODE_ENV=production node .next/standalone/apps/playground/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "copy:vendor-assets": "node ../../packages/file-preview/scripts/copy-pdf-worker.mjs && node ../../packages/file-preview/scripts/copy-rtfjs-bundles.mjs",
