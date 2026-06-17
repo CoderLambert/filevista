@@ -107,6 +107,15 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      docx-preview:
+        specifier: ^0.3.7
+        version: 0.3.7
+      exceljs:
+        specifier: ^4.4.0
+        version: 4.4.0
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
       lucide-react:
         specifier: ^0.525.0
         version: 0.525.0(react@19.2.7)
@@ -116,12 +125,21 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      pdfjs-dist:
+        specifier: 4.4.168
+        version: 4.4.168
+      pptx-preview:
+        specifier: ^1.0.7
+        version: 1.0.7
       react:
         specifier: ^19.0.0
         version: 19.2.7
       react-dom:
         specifier: ^19.0.0
         version: 19.2.7(react@19.2.7)
+      rtf.js:
+        specifier: ^3.0.9
+        version: 3.0.9
       sharp:
         specifier: ^0.34.3
         version: 0.34.3
@@ -162,33 +180,15 @@ importers:
 
   packages/file-preview:
     dependencies:
-      docx-preview:
-        specifier: ^0.3.7
-        version: 0.3.7
       dompurify:
         specifier: ^3.4.8
         version: 3.4.10
-      exceljs:
-        specifier: ^4.4.0
-        version: 4.4.0
-      jszip:
-        specifier: ^3.10.1
-        version: 3.10.1
-      pdfjs-dist:
-        specifier: 4.4.168
-        version: 4.4.168
-      pptx-preview:
-        specifier: ^1.0.7
-        version: 1.0.7
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.17)(react@19.2.7)
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
-      rtf.js:
-        specifier: ^3.0.9
-        version: 3.0.9
       shiki:
         specifier: ^4.1.0
         version: 4.2.0
@@ -205,15 +205,33 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.3(@types/react@19.2.17)
+      docx-preview:
+        specifier: ^0.3.7
+        version: 0.3.7
+      exceljs:
+        specifier: ^4.4.0
+        version: 4.4.0
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
+      pdfjs-dist:
+        specifier: 4.4.168
+        version: 4.4.168
+      pptx-preview:
+        specifier: ^1.0.7
+        version: 1.0.7
       react:
         specifier: ^19.0.0
         version: 19.2.7
       react-dom:
         specifier: ^19.0.0
         version: 19.2.7(react@19.2.7)
+      rtf.js:
+        specifier: ^3.0.9
+        version: 3.0.9
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.15)(typescript@5.7.2)

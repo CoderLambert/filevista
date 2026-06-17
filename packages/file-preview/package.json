@@ -61,18 +61,26 @@
   },
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0",
-    "react-dom": "^18.2.0 || ^19.0.0"
-  },
-  "dependencies": {
+    "react-dom": "^18.2.0 || ^19.0.0",
     "docx-preview": "^0.3.7",
-    "dompurify": "^3.4.8",
     "exceljs": "^4.4.0",
     "jszip": "^3.10.1",
-    "pdfjs-dist": "4.4.168",
+    "pdfjs-dist": "^4.4.0",
     "pptx-preview": "^1.0.7",
+    "rtf.js": "^3.0.9"
+  },
+  "peerDependenciesMeta": {
+    "docx-preview": { "optional": true },
+    "exceljs": { "optional": true },
+    "jszip": { "optional": true },
+    "pdfjs-dist": { "optional": true },
+    "pptx-preview": { "optional": true },
+    "rtf.js": { "optional": true }
+  },
+  "dependencies": {
+    "dompurify": "^3.4.8",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "rtf.js": "^3.0.9",
     "shiki": "^4.1.0"
   },
   "devDependencies": {
@@ -80,9 +88,15 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "docx-preview": "^0.3.7",
+    "exceljs": "^4.4.0",
     "jsdom": "^29.1.1",
+    "jszip": "^3.10.1",
+    "pdfjs-dist": "4.4.168",
+    "pptx-preview": "^1.0.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "rtf.js": "^3.0.9",
     "tsup": "^8.3.0",
     "typescript": "^5",
     "vitest": "^4.1.8"

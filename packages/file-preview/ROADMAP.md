@@ -50,47 +50,32 @@ cd packages/file-preview && pnpm pack --dry-run
 
 ## P1 — 高价值优化
 
-### [ ] 4. 重依赖改 optional peer ★（最大价值）
+### [x] 4. 重依赖改 optional peer ★（最大价值）
 
-**问题**：用户只想用 markdown 预览，也得装 80MB 的 `pdfjs-dist`/`exceljs`/`pptx-preview`/...
+**改动**：6 个重 deps 从 `dependencies` 转入 `peerDependencies` + `peerDependenciesMeta.optional: true`。
 
-**方案**：
+| Format | Peer dep |
+| --- | --- |
+| PDF | `pdfjs-dist` (^4.4.0) |
+| DOCX | `docx-preview` (^0.3.7) |
+| XLSX | `exceljs` (^4.4.0) |
+| PPTX | `pptx-preview` (^1.0.7) |
+| RTF | `rtf.js` (^3.0.9) |
+| ZIP / EPUB | `jszip` (^3.10.1) |
 
-```jsonc
-"peerDependencies": {
-  "react": "^18.2.0 || ^19.0.0",
-  "react-dom": "^18.2.0 || ^19.0.0",
-  "pdfjs-dist": "^4.4.0",
-  "exceljs": "^4.4.0",
-  "docx-preview": "^0.3.7",
-  "pptx-preview": "^1.0.7",
-  "rtf.js": "^3.0.9",
-  "jszip": "^3.10.1"
-},
-"peerDependenciesMeta": {
-  "pdfjs-dist": { "optional": true },
-  "exceljs": { "optional": true },
-  "docx-preview": { "optional": true },
-  "pptx-preview": { "optional": true },
-  "rtf.js": { "optional": true },
-  "jszip": { "optional": true }
-},
-"dependencies": {
-  // 仅保留所有插件都用得上的：
-  "dompurify": "^3.4.8",
-  "react-markdown": "^10.1.0",
-  "remark-gfm": "^4.0.1",
-  "shiki": "^4.1.0"
-}
-```
+`dependencies` 收敛到 4 个所有插件共用的轻量包：`dompurify` / `react-markdown` / `remark-gfm` / `shiki`。
 
 **配套修改**：
 
-- 各 plugin 的 `load()` 已经 dynamic import → 运行时按需加载，不缺什么报错信息
-- 但需要包装 import 失败的提示，告诉用户"想用 PDF 预览请 `pnpm add pdfjs-dist`"
-- README 加"按需安装"章节
+- `core/plugin.ts` 加 `loadWithOptionalDep(loader, { package, featureLabel })` + `MissingPeerDependencyError` 类。检测 5 种 bundler/runtime 的"模块未找到"错误形态（Webpack / Turbopack / 原生 ESM / Vite / Metro），失败时改写成"装这个包"的提示
+- 6 个重 plugin (`pdf`/`docx`/`xlsx`/`pptx`/`rtf`/`zip`+`epub`) 用 `loadWithOptionalDep` 包装 `load()`
+- `scripts/copy-pdf-worker.mjs` / `copy-rtfjs-bundles.mjs`：改成 graceful skip——找不到包时输出友好提示并 `exit 0`，不再抛 `require.resolve` 堆栈
+- `apps/playground/package.json` 同步把 6 个 deps 显式声明为 dependencies（playground 是消费方，不能依赖 hoisting）
+- README 大改：新增"按需安装"表格、解释 fallback 机制、说明 postinstall 脚本是按需的
 
-**参考**：`react-pdf`、`@uiw/react-md-editor` 都是这个模式。
+#### [x] 8. 解锁 `pdfjs-dist` 版本
+
+随 #4 自动完成：`"pdfjs-dist": "4.4.168"` → `"^4.4.0"`（在 peer 上），消费方自行控制具体版本。
 
 ### [x] 5. 收紧公共 API 边界
 
@@ -137,14 +122,9 @@ cd packages/file-preview && pnpm pack --dry-run
 
 不要求 e2e 真实渲染，单测覆盖契约即可。
 
-### [ ] 8. 解锁 `pdfjs-dist` 版本
+### [x] 8. 解锁 `pdfjs-dist` 版本
 
-```diff
-- "pdfjs-dist": "4.4.168"
-+ "pdfjs-dist": "^4.4.0"
-```
-
-完成 #4 后这个会自动从 `dependencies` 移到 `peerDependencies`，让用户控制版本。
+随 #4 完成（见上）。
 
 ---
 

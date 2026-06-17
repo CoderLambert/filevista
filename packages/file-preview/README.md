@@ -8,10 +8,30 @@ Render PDF, DOCX, PPTX, XLSX, EPUB, RTF, Markdown, code, images, video, audio, Z
 
 ```bash
 npm install @filevista/file-preview
-# or pnpm / yarn
+# or pnpm add / yarn add
 ```
 
-`react` and `react-dom` (>=18.2) are peer dependencies.
+The base install only ships what every consumer needs: Markdown, code highlighting (Shiki), HTML sanitization (DOMPurify), and the always-included image / video / audio / SVG / CSV / plain-text / JSON renderers.
+
+To preview the heavier formats, install **only the optional peer dependencies for the formats you actually use**:
+
+| Format | Add this peer dep | Approx size (gzipped) |
+| --- | --- | --- |
+| PDF | `pdfjs-dist` (^4.4.0) | ~280 KB worker, lazy-loaded |
+| DOCX | `docx-preview` (^0.3.7) | ~45 KB |
+| XLSX | `exceljs` (^4.4.0) | ~250 KB |
+| PPTX | `pptx-preview` (^1.0.7) | ~80 KB |
+| RTF | `rtf.js` (^3.0.9) | ~120 KB worker, lazy-loaded |
+| ZIP / EPUB | `jszip` (^3.10.1) | ~30 KB |
+
+```bash
+# Example: only PDF + Markdown previews
+pnpm add @filevista/file-preview pdfjs-dist
+```
+
+If a user uploads a format whose peer dep is missing, the preview falls back to a clear "install `<package>`" message instead of a cryptic bundler error. So you can ship safely with just the formats you need.
+
+`react` and `react-dom` (>=18.2) are also peer dependencies.
 
 ## Quick start
 
@@ -19,7 +39,6 @@ npm install @filevista/file-preview
 import {
   PluginPreviewRenderer,
   detectFileType,
-  generateId,
   setAssetBasePath,
   type FileInfo,
 } from "@filevista/file-preview";
@@ -31,7 +50,7 @@ setAssetBasePath("");
 
 function Demo({ file }: { file: File }) {
   const info: FileInfo = {
-    id: generateId(),
+    id: crypto.randomUUID(),
     name: file.name,
     size: file.size,
     type: file.type,
@@ -70,6 +89,8 @@ These copy:
 
 - `pdfjs-dist/build/pdf.worker.min.mjs` → `public/vendor/pdfjs/pdf.worker.min.mjs`
 - `rtf.js/dist/{WMFJS,EMFJS,RTFJS}.bundle.min.js` → `public/vendor/rtfjs/`
+
+Skip the `copy-pdf-worker.mjs` line if you don't install `pdfjs-dist`, and the `copy-rtfjs-bundles.mjs` line if you don't install `rtf.js` — both scripts are no-ops when the source package is missing.
 
 Then call `setAssetBasePath()` once at app startup to match the public path you serve them from (e.g. `""` for root, `"/static"` for a CDN prefix, or `"/myapp"` for a Next.js `basePath`).
 
@@ -115,6 +136,8 @@ const registry = createPreviewPluginRegistry([pdfPlugin, markdownPlugin, imagePl
 
 <PluginPreviewRenderer file={info} registry={registry} />;
 ```
+
+A registry built from a subset of plugins also means the bundler will tree-shake away the formats you don't include.
 
 ## Supported formats
 
