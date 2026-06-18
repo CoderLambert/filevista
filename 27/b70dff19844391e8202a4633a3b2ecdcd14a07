@@ -1,0 +1,19 @@
+docs/records/chore-demo-reorganization-and-preview-design.md
+  s_9b1c1b963a2c0e::t_324fa9f01c60d1 1-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "27b70dff19844391e8202a4633a3b2ecdcd14a07",
+  "prompts": {},
+  "sessions": {
+    "s_9b1c1b963a2c0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cc9eba1f-c5a9-47e5-aeda-9210cea020d7",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
