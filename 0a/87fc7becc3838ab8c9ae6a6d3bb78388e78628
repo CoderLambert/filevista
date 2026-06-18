@@ -1,0 +1,19 @@
+packages/file-preview/src/icons.tsx
+  s_d24a9531ce411c::t_246758d3c0a19f 6-8,24,39,63-67,74-77,86-92,98-103,110-114,123-128,135-139,146-149,156-161,168-173,180-186,190-197,201-207,211-220,224-234,238-247,253-257,266-270,277-281,288-296,309-312,327-330,339-344,353-356
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "0a87fc7becc3838ab8c9ae6a6d3bb78388e78628",
+  "prompts": {},
+  "sessions": {
+    "s_d24a9531ce411c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6577e94-a764-4523-92e4-9c580438cee9",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
