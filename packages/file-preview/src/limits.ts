@@ -7,9 +7,9 @@ export const XLSX_PREVIEW_LIMITS = {
   /** Fast mode renders at most this many rows */
   FAST_MODE_ROW_LIMIT: 1000,
   /** Files larger than this default to fast mode */
-  LARGE_FILE_SIZE: 10 * 1024 * 1024, // 10 MB
+  LARGE_FILE_SIZE: 45 * 1024 * 1024, // 45 MB
   /** Files larger than this are not recommended for fidelity mode */
-  MAX_FIDELITY_FILE_SIZE: 30 * 1024 * 1024, // 30 MB
+  MAX_FIDELITY_FILE_SIZE: 50 * 1024 * 1024, // 50 MB
   /** Enhanced spreadsheet renderer is not used for files larger than this */
   ENHANCED_RENDERER_MAX_FILE_SIZE: 10 * 1024 * 1024, // 10 MB
   /** Enhanced spreadsheet renderer gives up if total cells exceed this */

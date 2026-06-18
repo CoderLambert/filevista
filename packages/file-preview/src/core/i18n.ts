@@ -71,6 +71,22 @@ export interface LocaleMessages {
   largeFileFidelityBanner: string;
   largeFileFidelityConfirm: string;
   truncatedRows: string;
+  modeSelectionTitle: string;
+  modeSelectionDesc: string;
+  modeSelectionFastMode: string;
+  modeSelectionFastModeDesc: string;
+  modeSelectionFidelityMode: string;
+  modeSelectionFidelityModeDesc: string;
+  modeSelectionContinue: string;
+
+  // Pagination
+  paginationInfo: string;
+  paginationFirst: string;
+  paginationPrevious: string;
+  paginationPage: string;
+  paginationNext: string;
+  paginationLast: string;
+  paginationPageSize: string;
 
   // Spreadsheet
   sheetNotFound: string;
@@ -182,6 +198,22 @@ export const zhCN: LocaleMessages = {
   largeFileFidelityBanner: "当前正在使用高保真模式预览大文件，可能导致浏览器卡顿。",
   largeFileFidelityConfirm: "当前 Excel 文件大小为 {fileSize}，高保真模式可能导致浏览器卡顿甚至无响应。是否继续？",
   truncatedRows: "数据量较大，仅显示前 {shown} 行（共 {total} 行）",
+  modeSelectionTitle: "选择预览模式",
+  modeSelectionDesc: "当前文件大小为 {fileSize}，请选择预览模式：",
+  modeSelectionFastMode: "快速模式",
+  modeSelectionFastModeDesc: "仅渲染前 1000 行，跳过图片和复杂样式，加载更快",
+  modeSelectionFidelityMode: "高保真模式",
+  modeSelectionFidelityModeDesc: "保留样式、图片、批注，但大文件可能导致卡顿",
+  modeSelectionContinue: "继续",
+
+  // Pagination
+  paginationInfo: "显示 {start}-{end}，共 {total} 行",
+  paginationFirst: "第一页",
+  paginationPrevious: "上一页",
+  paginationPage: "第 {current} / {total} 页",
+  paginationNext: "下一页",
+  paginationLast: "最后一页",
+  paginationPageSize: "每页显示：",
 
   // Spreadsheet
   sheetNotFound: "未找到工作表",
@@ -293,6 +325,22 @@ export const enUS: LocaleMessages = {
   largeFileFidelityBanner: "You are using fidelity mode to preview a large file. This may cause the browser to freeze.",
   largeFileFidelityConfirm: "This Excel file is {fileSize}. Fidelity mode may cause the browser to freeze or become unresponsive. Continue?",
   truncatedRows: "Data is large. Showing first {shown} of {total} rows",
+  modeSelectionTitle: "Select Preview Mode",
+  modeSelectionDesc: "This file is {fileSize}. Please select a preview mode:",
+  modeSelectionFastMode: "Fast Mode",
+  modeSelectionFastModeDesc: "Renders only the first 1000 rows, skips images and complex styles for faster loading",
+  modeSelectionFidelityMode: "Fidelity Mode",
+  modeSelectionFidelityModeDesc: "Preserves styles, images, and comments, but large files may cause lag",
+  modeSelectionContinue: "Continue",
+
+  // Pagination
+  paginationInfo: "Showing {start}-{end} of {total} rows",
+  paginationFirst: "First Page",
+  paginationPrevious: "Previous Page",
+  paginationPage: "Page {current} / {total}",
+  paginationNext: "Next Page",
+  paginationLast: "Last Page",
+  paginationPageSize: "Page size:",
 
   // Spreadsheet
   sheetNotFound: "No Sheets Found",

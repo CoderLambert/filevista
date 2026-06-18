@@ -35,6 +35,7 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
   const [renderer, setRenderer] = useState<RendererMode>("table");
   const [spreadsheetInitFailed, setSpreadsheetInitFailed] = useState(false);
   const [spreadsheetAvailable, setSpreadsheetAvailable] = useState<boolean | null>(null);
+  const [showModeDialog, setShowModeDialog] = useState(false);
   const t = useLocale();
 
   const [mode, setMode] = useState<XlsxPreviewMode>(() => {
@@ -43,6 +44,14 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
 
   const isLargeFile = fileSize > XLSX_PREVIEW_LIMITS.LARGE_FILE_SIZE;
   const isTooLargeForFidelity = fileSize > XLSX_PREVIEW_LIMITS.MAX_FIDELITY_FILE_SIZE;
+
+  // Show mode selection dialog for large files on first load
+  useEffect(() => {
+    if (isLargeFile && loading && !showModeDialog) {
+      setShowModeDialog(true);
+      setLoading(false); // Pause loading until user selects mode
+    }
+  }, [isLargeFile, loading, showModeDialog]);
 
   // ─── Renderer selection logic ───
   const canUseSpreadsheet =
@@ -81,12 +90,15 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
         // 2. Always derive table data (fallback is always available)
         const tableResult = transformWorkbookToTableSheets(workbook, { mode, isLegacyXls, themeColors });
         if (cancelled) return;
+
+        const totalImages = tableResult.reduce((sum, s) => sum + s.imageCount, 0);
         setTableSheets(tableResult);
         setActiveSheet(0);
 
         // 3. Attempt spreadsheet data if conditions allow
+        // But if file has images, force table renderer (spreadsheet doesn't support images)
         const shouldTrySpreadsheet =
-          mode === "fidelity" && !isLargeFile;
+          mode === "fidelity" && !isLargeFile && totalImages === 0;
 
         if (shouldTrySpreadsheet) {
           // Check if x-data-spreadsheet is available (cached after first check)
@@ -159,6 +171,56 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
     setSpreadsheetInitFailed(true);
     setRenderer("table");
   }, []);
+
+  // ─── Mode selection handlers ───
+  const handleSelectFastMode = useCallback(() => {
+    setMode("fast");
+    setShowModeDialog(false);
+    setLoading(true);
+  }, []);
+
+  const handleSelectFidelityMode = useCallback(() => {
+    if (isTooLargeForFidelity) {
+      const confirmed = window.confirm(
+        t.largeFileFidelityConfirm.replace("{fileSize}", formatFileSize(fileSize))
+      );
+      if (!confirmed) return;
+    }
+    setMode("fidelity");
+    setShowModeDialog(false);
+    setLoading(true);
+  }, [isTooLargeForFidelity, fileSize, t]);
+
+  // ─── Mode selection dialog ───
+  if (showModeDialog) {
+    return (
+      <div className="fv-xlsx__state">
+        <div className="fv-xlsx__mode-dialog">
+          <AlertTriangleIcon size={36} className="fv-xlsx__mode-dialog-icon" />
+          <h3 className="fv-xlsx__mode-dialog-title">{t.modeSelectionTitle}</h3>
+          <p className="fv-xlsx__mode-dialog-desc">
+            {t.modeSelectionDesc.replace("{fileSize}", formatFileSize(fileSize))}
+          </p>
+          <div className="fv-xlsx__mode-dialog-options">
+            <button
+              onClick={handleSelectFastMode}
+              className="fv-xlsx__mode-dialog-option fv-xlsx__mode-dialog-option--fast"
+            >
+              <div className="fv-xlsx__mode-dialog-option-title">{t.modeSelectionFastMode}</div>
+              <div className="fv-xlsx__mode-dialog-option-desc">{t.modeSelectionFastModeDesc}</div>
+            </button>
+            <button
+              onClick={handleSelectFidelityMode}
+              className="fv-xlsx__mode-dialog-option fv-xlsx__mode-dialog-option--fidelity"
+            >
+              <div className="fv-xlsx__mode-dialog-option-title">{t.modeSelectionFidelityMode}</div>
+              <div className="fv-xlsx__mode-dialog-option-desc">{t.modeSelectionFidelityModeDesc}</div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── Loading state ───
   if (loading) {
