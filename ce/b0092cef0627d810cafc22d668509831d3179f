@@ -1,0 +1,19 @@
+docs/records/feat-xlsx-pagination-mode-dialog-and-icon-refactor.md
+  s_e6e0711c337202::t_48564eac4120fa 1-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "ceb0092cef0627d810cafc22d668509831d3179f",
+  "prompts": {},
+  "sessions": {
+    "s_e6e0711c337202": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e3d78325-20c1-4741-80b1-bc611b25264c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
