@@ -57,6 +57,8 @@ export function XlsxTablePreview({
 }: XlsxTablePreviewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [zoom, setZoom] = useState(100);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(100); // 每页显示 100 行
   const scrollRef = useRef<HTMLDivElement>(null);
   const [hoveredComment, setHoveredComment] = useState<{ row: number; col: number; text: string; x: number; y: number } | null>(null);
   const t = useLocale();
@@ -79,7 +81,12 @@ export function XlsxTablePreview({
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    setCurrentPage(1); // Reset to first page when switching sheets
   }, [activeSheet]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to first page when search changes
+  }, [searchTerm]);
 
   const currentSheet = sheets[activeSheet];
 
@@ -110,8 +117,14 @@ export function XlsxTablePreview({
     ? filteredRowIndices!.map((idx) => ({ row: rows[idx], originalIdx: idx }))
     : rows.map((row, idx) => ({ row, originalIdx: idx }));
 
-  const isTruncated = !isSearch && allDisplayRows.length > MAX_RENDER_ROWS;
-  const displayRows = isTruncated ? allDisplayRows.slice(0, MAX_RENDER_ROWS) : allDisplayRows;
+  // 分页逻辑
+  const totalRows = allDisplayRows.length;
+  const totalPages = Math.ceil(totalRows / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalRows);
+  const displayRows = allDisplayRows.slice(startIndex, endIndex);
+
+  const isTruncated = !isSearch && totalRows > MAX_RENDER_ROWS;
 
   const totalCols = currentSheet?.totalCols || 0;
   const allColWidths = currentSheet?.colWidths || [];
@@ -253,33 +266,55 @@ export function XlsxTablePreview({
 
                       return (
                         <td key={colIdx} style={fs} rowSpan={cell.rowspan || undefined} colSpan={cell.colspan || undefined}>
-                          {hasImages ? (
-                            <div className="fv-xlsx__cell-images" style={{ minHeight: 30 }}>
-                              {cell.images!.map((img, imgIdx) => (
-                                img.unsupported ? (
-                                  <div key={imgIdx}
-                                    className="fv-xlsx__cell-image-placeholder"
-                                    style={{ width: 60, height: 40 }}
-                                    title={`${t.unsupportedImageFormat}: ${img.formatName || t.unknown}`}
-                                  >
-                                    <ImageOffIcon size={14} />
-                                    <span style={{ fontSize: 8, color: "#9ca3af" }}>{img.formatName}</span>
+                          {hasImages && cell.images ? (
+                            <div className="fv-xlsx__cell-images">
+                              {cell.images.map((img, imgIdx) => {
+                                // 计算显示尺寸（限制最大尺寸，保持比例）
+                                const maxSize = 200;
+                                const minSize = 40;
+                                let displayWidth = img.naturalWidth || minSize;
+                                let displayHeight = img.naturalHeight || minSize;
+
+                                if (displayWidth > maxSize || displayHeight > maxSize) {
+                                  const ratio = Math.min(maxSize / displayWidth, maxSize / displayHeight);
+                                  displayWidth = Math.round(displayWidth * ratio);
+                                  displayHeight = Math.round(displayHeight * ratio);
+                                }
+
+                                return img.unsupported ? (
+                                  <div key={imgIdx} className="fv-xlsx__cell-image-wrapper">
+                                    <div className="fv-xlsx__cell-image-placeholder"
+                                      title={`${t.unsupportedImageFormat}: ${img.formatName || t.unknown}`}
+                                    >
+                                      <ImageOffIcon size={20} />
+                                      <span style={{ fontSize: 10, color: "#9ca3af", marginTop: 4 }}>
+                                        {img.formatName || t.unknown}
+                                      </span>
+                                    </div>
                                   </div>
                                 ) : (
-                                  <img key={imgIdx} src={img.dataUrl!} alt=""
-                                    style={{
-                                      width: img.naturalWidth || "auto",
-                                      height: img.naturalHeight || "auto",
-                                      maxWidth: "100%",
-                                      objectFit: "contain",
-                                      display: "block",
-                                    }}
-                                    loading="lazy"
-                                  />
-                                )
-                              ))}
+                                  <div key={imgIdx} className="fv-xlsx__cell-image-wrapper">
+                                    <img
+                                      src={img.dataUrl!}
+                                      alt=""
+                                      style={{
+                                        width: displayWidth,
+                                        height: displayHeight,
+                                        objectFit: "contain",
+                                      }}
+                                      loading="lazy"
+                                      onError={(e) => console.error('[XlsxTablePreview] Image load error:', { row: originalIdx, col: colIdx, imgIdx, src: img.dataUrl?.substring(0, 50) })}
+                                    />
+                                    <div className="fv-xlsx__cell-image-info">
+                                      {img.naturalWidth}×{img.naturalHeight}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                               {cell.value?.trim() && (
-                                <span className="fv-xlsx__cell-image-label">{cell.value}</span>
+                                <div className="fv-xlsx__cell-image-label" style={{ gridColumn: '1 / -1' }}>
+                                  {cell.value}
+                                </div>
                               )}
                             </div>
                           ) : hasHyperlink ? (
@@ -330,6 +365,68 @@ export function XlsxTablePreview({
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="fv-xlsx__pagination">
+          <div className="fv-xlsx__pagination-info">
+            <span>{t.paginationInfo.replace("{start}", String(startIndex + 1)).replace("{end}", String(endIndex)).replace("{total}", String(totalRows))}</span>
+          </div>
+          <div className="fv-xlsx__pagination-controls">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="fv-xlsx__pagination-btn"
+              title={t.paginationFirst}
+            >
+              ⟪
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="fv-xlsx__pagination-btn"
+              title={t.paginationPrevious}
+            >
+              ⟨
+            </button>
+            <span className="fv-xlsx__pagination-current">
+              {t.paginationPage.replace("{current}", String(currentPage)).replace("{total}", String(totalPages))}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="fv-xlsx__pagination-btn"
+              title={t.paginationNext}
+            >
+              ⟩
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="fv-xlsx__pagination-btn"
+              title={t.paginationLast}
+            >
+              ⟫
+            </button>
+          </div>
+          <div className="fv-xlsx__pagination-size">
+            <label>{t.paginationPageSize}</label>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="fv-xlsx__pagination-select"
+            >
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {/* Comment tooltip */}
       {hoveredComment && (
