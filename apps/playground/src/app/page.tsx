@@ -41,7 +41,7 @@ import {
   generateId,
   base64ToUint8Array,
 } from "@/lib/file-helpers";
-import { DEMO_FILES, fetchBinaryDemoFiles } from "@/lib/demos";
+import { fetchBinaryDemoFiles } from "@/lib/demos";
 import { nutrientPptxPlugin } from "@/lib/nutrient-pptx-plugin";
 import "@lamberl-lee/file-preview/styles/index.css";
 
@@ -158,28 +158,9 @@ export default function Home() {
   const loadDemoFiles = useCallback(async () => {
     setLoadingDemo(true);
     try {
-      // Load text-based demos
-      const textDemos: FileInfo[] = Object.entries(DEMO_FILES).map(([, demo]) => {
-        const blob = new Blob([demo.content], { type: demo.type });
-
-        return {
-          id: generateId(),
-          name: demo.name,
-          size: blob.size,
-          type: demo.type,
-          fileType: detectFileType(demo.name, demo.type),
-          source: {
-            kind: "blob",
-            blob,
-            name: demo.name,
-            mimeType: demo.type,
-          },
-        };
-      });
-
-      // Load binary demos (EPUB, XLSX, DOCX) from public directory
+      // Load binary demos from public/demo/ directory
       const binaryDemos = await fetchBinaryDemoFiles();
-      const binaryInfos: FileInfo[] = binaryDemos.map((demo) => {
+      const allDemos: FileInfo[] = binaryDemos.map((demo) => {
         const bytes = base64ToUint8Array(demo.content);
         const buffer = bytes.buffer.slice(
           bytes.byteOffset,
@@ -201,9 +182,8 @@ export default function Home() {
         };
       });
 
-      const allDemos = [...textDemos, ...binaryInfos];
       setFiles(allDemos);
-      setActiveFileId(allDemos[0].id);
+      setActiveFileId(allDemos[0]?.id ?? null);
       toast.success(`Loaded ${allDemos.length} demo files!`);
     } catch (err) {
       console.error("Failed to load demo files:", err);
