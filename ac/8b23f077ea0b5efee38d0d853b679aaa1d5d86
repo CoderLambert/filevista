@@ -1,0 +1,26 @@
+apps/playground/package.json
+  s_8a5e53a1f06ba3::t_f78d845d073085 6-9,14
+apps/playground/src/lib/demos.ts
+  s_8a5e53a1f06ba3::t_bd010c33b4caf1 1-6,9,14-23,34
+apps/playground/src/app/page.tsx
+  s_8a5e53a1f06ba3::t_3dd0cab0a03d62 161,163,186
+  s_8a5e53a1f06ba3::t_528c5fce34a867 44
+apps/playground/scripts/sync-demos.mjs
+  s_8a5e53a1f06ba3::t_09041c0b41d516 1-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "ac8b23f077ea0b5efee38d0d853b679aaa1d5d86",
+  "prompts": {},
+  "sessions": {
+    "s_8a5e53a1f06ba3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2d936a34-c30d-4182-b74d-62db17e2f5ac",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
