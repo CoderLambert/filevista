@@ -1,0 +1,45 @@
+.gitattributes
+  s_8a5e53a1f06ba3::t_b8ca52e6aa5aed 1-29
+apps/playground/public/demo/pasted_image_1780304293675.png
+  s_9b1c1b963a2c0e::t_1a7a68b8d1f4aa 1-3
+apps/playground/public/demo/pasted_image_1780302535633.png
+  s_9b1c1b963a2c0e::t_1a7a68b8d1f4aa 1-3
+apps/playground/public/demo/禁寄限寄物品清单V2.1.xlsx
+  s_9b1c1b963a2c0e::t_1a7a68b8d1f4aa 1-3
+apps/playground/public/demo/前端实现数字人的技术方案深度研究报告.pdf
+  s_9b1c1b963a2c0e::t_1a7a68b8d1f4aa 1-3
+apps/playground/public/demo/近年来新奇科技产品一览.pptx
+  s_9b1c1b963a2c0e::t_1a7a68b8d1f4aa 1-3
+.gitignore
+  s_8a5e53a1f06ba3::t_aae6eef269520c 29-31
+apps/playground/public/demo/39471142-2dae-4c27-9fb0-4b943d5a6b09.png
+  s_9b1c1b963a2c0e::t_1a7a68b8d1f4aa 1-3
+apps/playground/public/demo/PPTer吧-小可爱文艺学术报告PPT免费模板.pptx
+  s_9b1c1b963a2c0e::t_1a7a68b8d1f4aa 1-3
+apps/playground/public/demo/pasted_image_1780371706220.png
+  s_9b1c1b963a2c0e::t_1a7a68b8d1f4aa 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "724cd780445edb7f3a0d1940ac00dc093851b189",
+  "prompts": {},
+  "sessions": {
+    "s_8a5e53a1f06ba3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2d936a34-c30d-4182-b74d-62db17e2f5ac",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    },
+    "s_9b1c1b963a2c0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cc9eba1f-c5a9-47e5-aeda-9210cea020d7",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
