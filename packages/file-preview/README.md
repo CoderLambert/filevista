@@ -25,7 +25,7 @@ To preview the heavier formats, install **only the optional peer dependencies fo
 | PDF | `pdfjs-dist` (^4.4.0) | ~280 KB worker, lazy-loaded |
 | DOCX | `docx-preview` (^0.3.7) | ~45 KB |
 | XLSX | `exceljs` (^4.4.0) | ~250 KB |
-| PPTX | `pptx-preview` (^1.0.7) | ~80 KB |
+| PPTX | `@aiden0z/pptx-renderer` (^1.2.0) | Large dependency, dynamically loaded on demand |
 | RTF | `rtf.js` (^3.0.9) | ~120 KB worker, lazy-loaded |
 | ZIP / EPUB | `jszip` (^3.10.1) | ~30 KB |
 

@@ -24,7 +24,6 @@ import { PptxSummaryFallback } from "./PptxSummaryFallback";
 import { PptxSemanticFallback } from "./PptxSemanticFallback";
 import {
   openPptxViewer,
-  type PptxRenderMode,
   type PptxViewerController,
 } from "./engines/pptx/pptx-renderer-engine";
 import type {
@@ -51,12 +50,7 @@ function getErrorMessage(error: unknown): string {
   return "Failed to parse this PPTX file";
 }
 
-function viewModeToRenderMode(mode: PptxViewMode): PptxRenderMode {
-  return mode === "grid" ? "list" : "slide";
-}
-
 export function PptxPreview({
-  content,
   source,
   fileName,
   initialZoom = 100,
@@ -80,6 +74,11 @@ export function PptxPreview({
   const [insight, setInsight] = useState<PptxInsight | null>(null);
   const [semanticDeck, setSemanticDeck] = useState<PptxSemanticDeck | null>(null);
 
+  const callbacksRef = useRef({ onReady, onError, onSlideChange });
+  useEffect(() => {
+    callbacksRef.current = { onReady, onError, onSlideChange };
+  }, [onReady, onError, onSlideChange]);
+
   const ext = fileName.toLowerCase().split(".").pop() || "";
 
   useEffect(() => {
@@ -101,15 +100,18 @@ export function PptxPreview({
 
       try {
         const viewer = await openPptxViewer({
-          source: source!,
+          source,
           container,
           scrollContainer,
-          renderMode: viewModeToRenderMode(viewMode),
+          renderMode: viewMode === "grid" ? "list" : "slide",
           signal: abortController.signal,
           initialZoom,
 
           onSlideChange(index: number) {
-            if (!disposed) setCurrentSlide(index);
+            if (!disposed) {
+              setCurrentSlide(index);
+              callbacksRef.current.onSlideChange?.(index);
+            }
           },
 
           onSlideError(index: number, error: unknown) {
@@ -137,7 +139,7 @@ export function PptxPreview({
         setCurrentSlide(viewer.currentSlideIndex);
         setInsight(null);
         setSemanticDeck(null);
-        onReady?.(readyInfo);
+        callbacksRef.current.onReady?.(readyInfo);
       } catch (error: unknown) {
         if (
           disposed ||
@@ -149,10 +151,10 @@ export function PptxPreview({
 
         const message = getErrorMessage(error);
         setState({ status: "error", message });
-        onError?.(error instanceof Error ? error : new Error(message));
+        callbacksRef.current.onError?.(error instanceof Error ? error : new Error(message));
 
         try {
-          const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
+          const buffer = await readBinaryPreviewAsArrayBuffer({ source });
           try {
             const semantic = await readPptxSemanticDeck(buffer);
             if (semantic.slides.length > 0 && !disposed) {
@@ -177,7 +179,32 @@ export function PptxPreview({
       viewerRef.current = null;
       contentRef.current?.replaceChildren();
     };
-  }, [source, content, viewMode]);
+  }, [source]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || state.status !== "ready") return;
+
+    const previousIndex = currentSlide;
+
+    async function changeMode() {
+      if (!viewer) return;
+
+      if (viewMode === "grid") {
+        await viewer.renderList({
+          windowed: true,
+          initialSlides: 4,
+          batchSize: 4,
+          overscanViewport: 1.5,
+        });
+        await viewer.goToSlide(previousIndex, { block: "center" });
+      } else {
+        await viewer.renderSlide(previousIndex);
+      }
+    }
+
+    void changeMode();
+  }, [viewMode]);
 
   const goToSlide = useCallback(
     async (index: number) => {
@@ -186,10 +213,8 @@ export function PptxPreview({
 
       const nextIndex = Math.min(state.slideCount - 1, Math.max(0, index));
       await viewer.goToSlide(nextIndex, { behavior: "smooth", block: "center" });
-      setCurrentSlide(nextIndex);
-      onSlideChange?.(nextIndex);
     },
-    [state, onSlideChange],
+    [state],
   );
 
   const nextSlide = useCallback(() => {
@@ -225,7 +250,6 @@ export function PptxPreview({
 
   const switchViewMode = useCallback((mode: PptxViewMode) => {
     setViewMode(mode);
-    setState({ status: "loading" });
   }, []);
 
   const toggleFullscreen = useCallback(() => {
@@ -253,20 +277,29 @@ export function PptxPreview({
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
       if (viewMode !== "slide" || state.status !== "ready") return;
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-        e.preventDefault();
+
+      const target = event.target as HTMLElement;
+      if (
+        target.matches(
+          "input, textarea, select, button, [contenteditable='true']",
+        )
+      ) {
+        return;
+      }
+
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        event.preventDefault();
         prevSlide();
-      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-        e.preventDefault();
+      } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        event.preventDefault();
         nextSlide();
       }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [viewMode, state.status, prevSlide, nextSlide]);
+    },
+    [viewMode, state.status, prevSlide, nextSlide],
+  );
 
   if (ext === "ppt") {
     return (
@@ -297,7 +330,12 @@ export function PptxPreview({
   const slideCount = state.status === "ready" ? state.slideCount : 0;
 
   return (
-    <div className="fv-pptx" data-preview-container>
+    <div
+      className="fv-pptx"
+      data-preview-container
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       {/* Toolbar */}
       <div className="fv-pptx__toolbar">
         <div className="fv-pptx__toolbar-left">
@@ -318,6 +356,7 @@ export function PptxPreview({
 
         <div className="fv-pptx__toolbar-right">
           <button
+            type="button"
             onClick={() => switchViewMode("slide")}
             className={`fv-pptx__mode-btn ${viewMode === "slide" ? "fv-pptx__mode-btn--active" : ""}`}
             title={t.slideView}
@@ -325,6 +364,7 @@ export function PptxPreview({
             <MonitorIcon size={16} />
           </button>
           <button
+            type="button"
             onClick={() => switchViewMode("grid")}
             className={`fv-pptx__mode-btn ${viewMode === "grid" ? "fv-pptx__mode-btn--active" : ""}`}
             title={t.gridView}
@@ -335,18 +375,18 @@ export function PptxPreview({
           <div className="fv-toolbar__separator" />
 
           <div className="fv-pptx__zoom-group">
-            <button onClick={zoomOut} className="fv-pptx__zoom-btn" title={t.zoomOut}>
+            <button type="button" onClick={zoomOut} className="fv-pptx__zoom-btn" title={t.zoomOut}>
               <ZoomOutIcon size={14} />
             </button>
-            <button onClick={resetZoom} className="fv-pptx__zoom-label" title="Reset zoom">
+            <button type="button" onClick={resetZoom} className="fv-pptx__zoom-label" title="Reset zoom">
               {zoom}%
             </button>
-            <button onClick={zoomIn} className="fv-pptx__zoom-btn" title={t.zoomIn}>
+            <button type="button" onClick={zoomIn} className="fv-pptx__zoom-btn" title={t.zoomIn}>
               <ZoomInIcon size={14} />
             </button>
           </div>
 
-          <button onClick={toggleFullscreen} className="fv-pptx__fullscreen-btn" title={t.fullscreen}>
+          <button type="button" onClick={toggleFullscreen} className="fv-pptx__fullscreen-btn" title={t.fullscreen}>
             {isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
           </button>
         </div>
@@ -354,6 +394,7 @@ export function PptxPreview({
         {viewMode === "slide" && (
           <div className="fv-pptx__nav">
             <button
+              type="button"
               onClick={prevSlide}
               disabled={state.status !== "ready" || currentSlide === 0}
               className="fv-pptx__nav-btn"
@@ -362,6 +403,7 @@ export function PptxPreview({
               <ChevronLeftIcon size={16} />
             </button>
             <button
+              type="button"
               onClick={nextSlide}
               disabled={state.status !== "ready" || currentSlide >= slideCount - 1}
               className="fv-pptx__nav-btn"

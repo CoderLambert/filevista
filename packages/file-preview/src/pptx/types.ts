@@ -3,8 +3,7 @@ import type { PreviewSource } from "../core/types";
 export type PptxViewMode = "slide" | "grid";
 
 export interface PptxPreviewProps {
-  content?: string | null;
-  source?: PreviewSource;
+  source: PreviewSource;
   fileName: string;
 
   initialZoom?: number;

@@ -11,6 +11,13 @@ export interface PptxViewerController {
   readonly zoomPercent: number;
   readonly fitMode: PptxFitMode;
 
+  renderSlide(index?: number): Promise<void>;
+  renderList(options?: {
+    windowed?: boolean;
+    initialSlides?: number;
+    batchSize?: number;
+    overscanViewport?: number;
+  }): Promise<void>;
   goToSlide(index: number, scrollOptions?: ScrollIntoViewOptions): Promise<void>;
   setZoom(percent: number): Promise<void>;
   setFitMode(mode: PptxFitMode): Promise<void>;
