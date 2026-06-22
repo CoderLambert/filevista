@@ -15,7 +15,7 @@ import {
   Maximize2Icon,
   Minimize2Icon,
 } from "./icons";
-import { readBinaryPreviewAsArrayBuffer } from "./core/binary";
+import { readSourceAsArrayBuffer } from "./core/source";
 import type { PreviewSource } from "./core/types";
 import { useLocale } from "./core/i18n";
 import { readPptxInsight } from "./pptx/read-pptx-insight";
@@ -24,6 +24,7 @@ import { PptxSummaryFallback } from "./PptxSummaryFallback";
 import { PptxSemanticFallback } from "./PptxSemanticFallback";
 import {
   openPptxViewer,
+  parsePptxZip,
   type PptxViewerController,
 } from "./engines/pptx/pptx-renderer-engine";
 import type {
@@ -45,9 +46,30 @@ type PptxPreviewState =
   | { status: "ready"; slideCount: number }
   | { status: "error"; message: string };
 
+function normalizeZoom(
+  value: number,
+  min: number,
+  max: number,
+): number {
+  const lo = Math.min(min, max);
+  const hi = Math.max(min, max);
+  return Math.min(Math.max(value, lo), hi);
+}
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return "Failed to parse this PPTX file";
+}
+
+function sortSlides(slides: Map<string, string>): string[] {
+  return [...slides.entries()]
+    .filter(([name]) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+    .sort((a, b) => {
+      const ai = Number(a[0].match(/slide(\d+)\.xml/)?.[1] || 0);
+      const bi = Number(b[0].match(/slide(\d+)\.xml/)?.[1] || 0);
+      return ai - bi;
+    })
+    .map(([, xml]) => xml);
 }
 
 export function PptxPreview({
@@ -65,12 +87,16 @@ export function PptxPreview({
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<PptxViewerController | null>(null);
+  const modeOperationRef = useRef(0);
 
   const [viewMode, setViewMode] = useState<PptxViewMode>("slide");
   const [state, setState] = useState<PptxPreviewState>({ status: "loading" });
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [zoom, setZoomState] = useState(initialZoom);
+  const [zoom, setZoomState] = useState(
+    normalizeZoom(initialZoom, minZoom, maxZoom),
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isModeSwitching, setIsModeSwitching] = useState(false);
   const [insight, setInsight] = useState<PptxInsight | null>(null);
   const [semanticDeck, setSemanticDeck] = useState<PptxSemanticDeck | null>(null);
 
@@ -84,6 +110,7 @@ export function PptxPreview({
   useEffect(() => {
     const abortController = new AbortController();
     let disposed = false;
+    const currentViewMode = viewMode;
 
     async function mountViewer() {
       const container = contentRef.current;
@@ -96,14 +123,14 @@ export function PptxPreview({
 
       setState({ status: "loading" });
       setCurrentSlide(0);
-      setZoomState(initialZoom);
+      setZoomState(normalizeZoom(initialZoom, minZoom, maxZoom));
 
       try {
         const viewer = await openPptxViewer({
           source,
           container,
           scrollContainer,
-          renderMode: viewMode === "grid" ? "list" : "slide",
+          renderMode: currentViewMode === "grid" ? "list" : "slide",
           signal: abortController.signal,
           initialZoom,
 
@@ -140,6 +167,16 @@ export function PptxPreview({
         setInsight(null);
         setSemanticDeck(null);
         callbacksRef.current.onReady?.(readyInfo);
+
+        // If user switched modes while loading, apply now
+        if (currentViewMode !== viewMode && viewMode === "grid") {
+          await viewer.renderList({
+            windowed: true,
+            initialSlides: 4,
+            batchSize: 4,
+            overscanViewport: 1.5,
+          });
+        }
       } catch (error: unknown) {
         if (
           disposed ||
@@ -153,20 +190,34 @@ export function PptxPreview({
         setState({ status: "error", message });
         callbacksRef.current.onError?.(error instanceof Error ? error : new Error(message));
 
+        // Fallback: parse PPTX through safe zip parsing (enforces security limits)
+        // This must not bypass the limits that PptxViewer.open enforces.
         try {
-          const buffer = await readBinaryPreviewAsArrayBuffer({ source });
+          const buffer = await readSourceAsArrayBuffer(source, {
+            signal: abortController.signal,
+          });
+          abortController.signal.throwIfAborted();
+
+          const archive = await parsePptxZip(buffer, abortController.signal);
+          const slideXmls = sortSlides(archive.slides);
+
           try {
-            const semantic = await readPptxSemanticDeck(buffer);
+            const semantic = await readPptxSemanticDeck(
+              archive.presentation,
+              slideXmls,
+            );
             if (semantic.slides.length > 0 && !disposed) {
               setSemanticDeck(semantic);
             }
           } catch { /* best-effort */ }
 
-          const pptxInsight = await readPptxInsight(buffer);
+          const pptxInsight = await readPptxInsight(slideXmls);
           if (pptxInsight.slideCount > 0 && !disposed) {
             setInsight(pptxInsight);
           }
-        } catch { /* bare error state is fine */ }
+        } catch {
+          // bare error state is fine
+        }
       }
     }
 
@@ -179,42 +230,66 @@ export function PptxPreview({
       viewerRef.current = null;
       contentRef.current?.replaceChildren();
     };
-  }, [source]);
+  }, [source, viewMode, initialZoom, minZoom, maxZoom]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer || state.status !== "ready") return;
 
-    const previousIndex = currentSlide;
+    const operationId = ++modeOperationRef.current;
+    const targetIndex = viewer.currentSlideIndex;
 
-    async function changeMode() {
-      if (!viewer) return;
+    setIsModeSwitching(true);
 
-      if (viewMode === "grid") {
-        await viewer.renderList({
-          windowed: true,
-          initialSlides: 4,
-          batchSize: 4,
-          overscanViewport: 1.5,
-        });
-        await viewer.goToSlide(previousIndex, { block: "center" });
-      } else {
-        await viewer.renderSlide(previousIndex);
+    void (async () => {
+      try {
+        if (viewMode === "grid") {
+          await viewer.renderList({
+            windowed: true,
+            initialSlides: 4,
+            batchSize: 4,
+            overscanViewport: 1.5,
+          });
+
+          if (operationId !== modeOperationRef.current) return;
+
+          await viewer.goToSlide(targetIndex, { block: "center" });
+        } else {
+          await viewer.renderSlide(targetIndex);
+        }
+      } catch (error) {
+        if (operationId === modeOperationRef.current) {
+          callbacksRef.current.onError?.(
+            error instanceof Error
+              ? error
+              : new Error("Failed to switch PPTX view mode"),
+          );
+        }
+      } finally {
+        if (operationId === modeOperationRef.current) {
+          setIsModeSwitching(false);
+        }
       }
-    }
+    })();
 
-    void changeMode();
-  }, [viewMode]);
+    return () => {
+      modeOperationRef.current += 1;
+    };
+  }, [viewMode, state.status]);
+
+  const defaultZoom = normalizeZoom(initialZoom, minZoom, maxZoom);
+
+  const slideCount = state.status === "ready" ? state.slideCount : 0;
 
   const goToSlide = useCallback(
     async (index: number) => {
       const viewer = viewerRef.current;
       if (!viewer || state.status !== "ready") return;
 
-      const nextIndex = Math.min(state.slideCount - 1, Math.max(0, index));
+      const nextIndex = Math.min(slideCount - 1, Math.max(0, index));
       await viewer.goToSlide(nextIndex, { behavior: "smooth", block: "center" });
     },
-    [state],
+    [state.status, slideCount],
   );
 
   const nextSlide = useCallback(() => {
@@ -244,9 +319,9 @@ export function PptxPreview({
   const resetZoom = useCallback(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
-    setZoomState(100);
-    void viewer.setZoom(100);
-  }, []);
+    setZoomState(defaultZoom);
+    void viewer.setZoom(defaultZoom);
+  }, [defaultZoom]);
 
   const switchViewMode = useCallback((mode: PptxViewMode) => {
     setViewMode(mode);
@@ -279,7 +354,7 @@ export function PptxPreview({
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (viewMode !== "slide" || state.status !== "ready") return;
+      if (viewMode !== "slide" || state.status !== "ready" || isModeSwitching) return;
 
       const target = event.target as HTMLElement;
       if (
@@ -327,8 +402,6 @@ export function PptxPreview({
     );
   }
 
-  const slideCount = state.status === "ready" ? state.slideCount : 0;
-
   return (
     <div
       className="fv-pptx"
@@ -357,6 +430,7 @@ export function PptxPreview({
         <div className="fv-pptx__toolbar-right">
           <button
             type="button"
+            disabled={state.status !== "ready" || isModeSwitching}
             onClick={() => switchViewMode("slide")}
             className={`fv-pptx__mode-btn ${viewMode === "slide" ? "fv-pptx__mode-btn--active" : ""}`}
             title={t.slideView}
@@ -365,6 +439,7 @@ export function PptxPreview({
           </button>
           <button
             type="button"
+            disabled={state.status !== "ready" || isModeSwitching}
             onClick={() => switchViewMode("grid")}
             className={`fv-pptx__mode-btn ${viewMode === "grid" ? "fv-pptx__mode-btn--active" : ""}`}
             title={t.gridView}

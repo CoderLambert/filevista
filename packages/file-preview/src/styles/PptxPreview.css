@@ -137,6 +137,11 @@
   transform: translateY(-1px);
 }
 
+.fv-pptx__mode-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
 .fv-pptx__mode-btn:active,
 .fv-pptx__zoom-btn:active,
 .fv-pptx__fullscreen-btn:active,

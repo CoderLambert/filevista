@@ -1,6 +1,15 @@
 import type { PreviewSource } from "../../core/types";
 import { readSourceAsArrayBuffer } from "../../core/source";
 
+/**
+ * Categorized PPTX zip contents returned by parsePptxZip.
+ * Mirrors the relevant subset of @aiden0z/pptx-renderer's PptxFiles type.
+ */
+export interface SafePptxArchive {
+  presentation: string;
+  slides: Map<string, string>;
+}
+
 export type PptxRenderMode = "list" | "slide";
 
 export type PptxFitMode = "contain" | "none";
@@ -89,4 +98,40 @@ export async function openPptxViewer({
   });
 
   return viewer;
+}
+
+/**
+ * Safely parse a PPTX zip archive using @aiden0z/pptx-renderer's
+ * parseZip with RECOMMENDED_ZIP_LIMITS enforced.
+ *
+ * PPTX files are zip archives that can contain arbitrary entries.
+ * Upstream PPTX parsing (PptxViewer.open) already applies these limits,
+ * but fallback code paths must not bypass them with direct JSZip usage.
+ * This function is the single safe entry point for fallback PPTX parsing.
+ */
+export async function parsePptxZip(
+  buffer: ArrayBuffer,
+  signal?: AbortSignal
+): Promise<SafePptxArchive> {
+  signal?.throwIfAborted();
+
+  const {
+    parseZip: doParse,
+    RECOMMENDED_ZIP_LIMITS,
+  }: {
+    parseZip: (
+      buffer: ArrayBuffer,
+      limits?: Record<string, number>
+    ) => Promise<{ presentation: string; slides: Map<string, string> }>;
+    RECOMMENDED_ZIP_LIMITS: Record<string, number>;
+  } = await import("@aiden0z/pptx-renderer");
+
+  signal?.throwIfAborted();
+
+  const files = await doParse(buffer, RECOMMENDED_ZIP_LIMITS);
+
+  return {
+    presentation: files.presentation,
+    slides: files.slides,
+  };
 }

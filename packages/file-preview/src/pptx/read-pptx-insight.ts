@@ -1,4 +1,3 @@
-import JSZip from "jszip";
 import type { PptxInsight, PptxSlideInsight } from "./types";
 
 function extractTextFromSlideXml(xml: string): string[] {
@@ -20,30 +19,20 @@ function countMatches(xml: string, pattern: RegExp): number {
 }
 
 /**
- * Extract a lightweight structural summary from a PPTX ArrayBuffer.
+ * Extract a lightweight structural summary from PPTX slide XML strings.
  * Used as a fallback when high-fidelity rendering fails — shows slide
  * titles, text snippets, and image counts instead of a bare error.
+ *
+ * Accepts already-parsed slide XMLs (from safe zip parsing) so that
+ * ZIP security limits are enforced upstream, not bypassed here.
  */
 export async function readPptxInsight(
-  arrayBuffer: ArrayBuffer
+  slideXmls: string[]
 ): Promise<PptxInsight> {
-  const zip = await JSZip.loadAsync(arrayBuffer);
-
-  const slideFiles = Object.keys(zip.files)
-    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-    .sort((a, b) => {
-      const ai = Number(a.match(/slide(\d+)\.xml/)?.[1] || 0);
-      const bi = Number(b.match(/slide(\d+)\.xml/)?.[1] || 0);
-      return ai - bi;
-    });
-
   const slides: PptxSlideInsight[] = [];
   let totalImages = 0;
 
-  for (const slideFile of slideFiles) {
-    const xml = await zip.file(slideFile)?.async("text");
-    if (!xml) continue;
-
+  for (const xml of slideXmls) {
     const texts = extractTextFromSlideXml(xml);
     const imageCount = countMatches(xml, /<a:blip\b/g);
 

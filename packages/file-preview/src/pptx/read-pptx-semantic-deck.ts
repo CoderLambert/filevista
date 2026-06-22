@@ -1,4 +1,3 @@
-import JSZip from "jszip";
 import type {
   PptxSemanticDeck,
   PptxSemanticElement,
@@ -156,57 +155,43 @@ function parseSlide(xml: string, index: number): PptxSemanticSlide {
   };
 }
 
+function parseSlideSize(presentationXml: string): {
+  width: number;
+  height: number;
+} {
+  const doc = parseXml(presentationXml);
+  const sizeEl = firstTag(doc, "p:sldSz");
+  return {
+    width: emuToPx(getAttr(sizeEl, "cx")) || 960,
+    height: emuToPx(getAttr(sizeEl, "cy")) || 540,
+  };
+}
+
+/**
+ * Build a semantic slide deck from pre-parsed PPTX XML strings.
+ *
+ * Accepts already-parsed XML so ZIP security limits are enforced
+ * upstream (via @aiden0z/pptx-renderer's parseZip), not bypassed
+ * with a direct JSZip.loadAsync() call.
+ */
 export async function readPptxSemanticDeck(
-  arrayBuffer: ArrayBuffer
+  presentationXml: string,
+  slideXmls: string[]
 ): Promise<PptxSemanticDeck> {
-  const zip = await JSZip.loadAsync(arrayBuffer);
-  const presentationXml = await zip.file("ppt/presentation.xml")?.async("text");
-
-  if (!presentationXml) {
-    throw new Error("Missing ppt/presentation.xml");
-  }
-
-  const presentationDoc = parseXml(presentationXml);
-  const sizeEl = firstTag(presentationDoc, "p:sldSz");
-  const slideWidth = emuToPx(getAttr(sizeEl, "cx")) || 960;
-  const slideHeight = emuToPx(getAttr(sizeEl, "cy")) || 540;
-
-  const slideFiles = Object.keys(zip.files)
-    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-    .sort((a, b) => {
-      const ai = Number(a.match(/slide(\d+)\.xml/)?.[1] || 0);
-      const bi = Number(b.match(/slide(\d+)\.xml/)?.[1] || 0);
-      return ai - bi;
-    });
+  const { width, height } = parseSlideSize(presentationXml);
 
   const slides: PptxSemanticSlide[] = [];
-  for (const [index, slideFile] of slideFiles.entries()) {
-    const xml = await zip.file(slideFile)?.async("text");
+  for (const [index, xml] of slideXmls.entries()) {
     if (!xml) continue;
     slides.push(parseSlide(xml, index));
   }
 
-  const coreXml = await zip.file("docProps/core.xml")?.async("text");
-  let title = "Presentation";
-  if (coreXml) {
-    const coreDoc = parseXml(coreXml);
-    const titleEl =
-      coreDoc.getElementsByTagNameNS("http://purl.org/dc/elements/1.1/", "title")[0] ||
-      coreDoc.getElementsByTagName("dc:title")[0];
-    const rawTitle = titleEl?.textContent?.trim();
-    if (rawTitle) {
-      title = rawTitle;
-    } else if (slides[0]?.title) {
-      title = slides[0].title;
-    }
-  } else if (slides[0]?.title) {
-    title = slides[0].title;
-  }
+  const title = slides[0]?.title || "Presentation";
 
   return {
     title,
-    width: slideWidth,
-    height: slideHeight,
+    width,
+    height,
     slides,
   };
 }
