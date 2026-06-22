@@ -1,3 +1,5 @@
+"use client";
+
 import { AlertTriangleIcon } from "./icons";
 import { useLocale } from "./core/i18n";
 import type { PptxSemanticDeck, PptxSemanticElement } from "./pptx/types";
@@ -77,9 +79,9 @@ export function PptxSemanticFallback({
       <div className="fv-pptx-semantic__notice">
         <AlertTriangleIcon size={20} className="fv-pptx-semantic__notice-icon" />
         <div>
-          <strong>{t.previewFailed}</strong>
+          <strong>{t.pptxFallbackTitle}</strong>
           <span className="fv-pptx-semantic__notice-desc">
-            {error?.message || "High-fidelity preview unavailable. Showing slide fallback."}
+            {error?.message || t.pptxFallbackSemanticDesc}
           </span>
         </div>
       </div>
@@ -103,7 +105,10 @@ export function PptxSemanticFallback({
 
             <div
               className="fv-pptx-semantic__slide-canvas"
-              style={{ background: slide.background }}
+              style={{
+                background: slide.background,
+                aspectRatio: `${deck.width} / ${deck.height}`,
+              }}
             >
               {slide.elements.map((element, elementIndex) =>
                 renderElement(element, elementIndex, deck.width, deck.height)

@@ -86,8 +86,11 @@
 .fv-pptx-semantic__slide-canvas {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  /* aspect-ratio is set inline based on the parsed slide width/height, so
+     4:3, portrait, and custom-size PPTX files render at their correct ratio. */
   overflow: hidden;
+  /* color-mix fallback */
+  border: 1px solid rgba(var(--fv-border-rgb), 0.8);
   border: 1px solid color-mix(in srgb, var(--fv-border) 80%, transparent);
   border-radius: calc(var(--fv-radius) + 2px);
   box-shadow:
