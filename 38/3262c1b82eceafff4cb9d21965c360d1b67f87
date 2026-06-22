@@ -1,0 +1,20 @@
+packages/file-preview/docs/supported-formats.md
+  s_10eeb741069674::t_658b34b03ba869 122
+  s_10eeb741069674::t_a688ed06dadd11 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "383262c1b82eceafff4cb9d21965c360d1b67f87",
+  "prompts": {},
+  "sessions": {
+    "s_10eeb741069674": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88f729c6-ead2-4c3f-add7-9b9e8fbc1026",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
