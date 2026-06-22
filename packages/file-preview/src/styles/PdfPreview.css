@@ -9,6 +9,8 @@
   justify-content: space-between;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.3);
   background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
   gap: 0.5rem;
   flex-wrap: wrap;

@@ -11,6 +11,8 @@
   justify-content: space-between;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.3);
   background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
 }
 .fv-source__toolbar-left {
@@ -28,6 +30,8 @@
   font-family: var(--fv-font-mono);
   padding: 0.125rem 0.5rem;
   border-radius: var(--fv-radius);
+  /* color-mix fallback */
+  background: rgba(var(--fv-primary-rgb), 0.1);
   background: color-mix(in srgb, var(--fv-primary) 10%, transparent);
   color: var(--fv-primary);
 }
@@ -36,6 +40,8 @@
   color: var(--fv-muted-foreground);
 }
 .fv-source__btn-active {
+  /* color-mix fallback */
+  background: rgba(var(--fv-primary-rgb), 0.1);
   background: color-mix(in srgb, var(--fv-primary) 10%, transparent);
   color: var(--fv-primary);
 }

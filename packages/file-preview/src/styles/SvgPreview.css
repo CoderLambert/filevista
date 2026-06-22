@@ -7,6 +7,8 @@
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.2);
   background: color-mix(in srgb, var(--fv-muted) 20%, transparent);
 }
 .fv-svg__mode-group {
@@ -31,6 +33,8 @@
 }
 .fv-svg__mode-btn:hover {
   color: var(--fv-primary);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.5);
   background: color-mix(in srgb, var(--fv-muted) 50%, transparent);
 }
 .fv-svg__mode-btn--active {
@@ -64,6 +68,8 @@
   gap: 0.5rem;
   padding: 0.5rem;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.3);
   background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
 }
 .fv-svg__zoom-label {

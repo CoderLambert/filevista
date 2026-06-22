@@ -9,6 +9,8 @@
   gap: 0.75rem;
   padding: 0.75rem;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.3);
   background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
 }
 .fv-csv__search-wrap {
@@ -35,6 +37,8 @@
   color: var(--fv-primary);
 }
 .fv-csv__search-input:focus {
+  /* color-mix fallback */
+  box-shadow: 0 0 0 2px rgba(var(--fv-primary-rgb), 0.2);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--fv-primary) 20%, transparent);
 }
 .fv-csv__row-count {
@@ -53,6 +57,8 @@
 .fv-csv__thead {
   position: sticky;
   top: 0;
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.8);
   background: color-mix(in srgb, var(--fv-muted) 80%, transparent);
   backdrop-filter: blur(4px);
   z-index: 10;
@@ -92,6 +98,8 @@
   white-space: nowrap;
 }
 .fv-csv__td:hover {
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.5);
   background: color-mix(in srgb, var(--fv-muted) 50%, transparent);
 }
 .fv-csv__td-num {

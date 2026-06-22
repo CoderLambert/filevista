@@ -135,6 +135,13 @@ export interface LocaleMessages {
   failedToReadFile: string;
   loadingCancelled: string;
   copyCode: string;
+
+  // PPTX fallback
+  pptxFallbackTitle: string;
+  pptxFallbackSemanticDesc: string;
+  pptxFallbackSummaryDesc: string;
+  pptxFallbackImages: string;
+  pptxFallbackTextBlocks: string;
 }
 
 // ─── zh-CN (default) ───
@@ -262,6 +269,11 @@ export const zhCN: LocaleMessages = {
   failedToReadFile: "文件读取失败",
   loadingCancelled: "加载已取消",
   copyCode: "复制代码",
+  pptxFallbackTitle: "无法以高保真模式预览",
+  pptxFallbackSemanticDesc: "高保真渲染失败，已切换到结构化预览。",
+  pptxFallbackSummaryDesc: "高保真渲染失败，已切换到内容摘要。",
+  pptxFallbackImages: "图片",
+  pptxFallbackTextBlocks: "文本块",
 };
 
 // ─── en-US ───
@@ -389,6 +401,13 @@ export const enUS: LocaleMessages = {
   failedToReadFile: "Failed to Read File",
   loadingCancelled: "Loading Cancelled",
   copyCode: "Copy code",
+  pptxFallbackTitle: "High-fidelity preview unavailable",
+  pptxFallbackSemanticDesc:
+    "High-fidelity rendering failed. Showing approximate slide layout.",
+  pptxFallbackSummaryDesc:
+    "High-fidelity rendering failed. Showing content summary.",
+  pptxFallbackImages: "images",
+  pptxFallbackTextBlocks: "text blocks",
 };
 
 // ─── Context ───

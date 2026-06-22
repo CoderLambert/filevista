@@ -1,3 +1,5 @@
+"use client";
+
 import { AlertTriangleIcon } from "./icons";
 import { useLocale } from "./core/i18n";
 import type { PptxInsight } from "./pptx/types";
@@ -23,9 +25,9 @@ export function PptxSummaryFallback({
       <div className="fv-pptx-summary__notice">
         <AlertTriangleIcon size={20} className="fv-pptx-summary__notice-icon" />
         <div>
-          <strong>{t.previewFailed}</strong>
+          <strong>{t.pptxFallbackTitle}</strong>
           <span className="fv-pptx-summary__notice-desc">
-            {error?.message || "High-fidelity preview unavailable. Showing content summary."}
+            {error?.message || t.pptxFallbackSummaryDesc}
           </span>
         </div>
       </div>
@@ -40,7 +42,7 @@ export function PptxSummaryFallback({
         </span>
         <span className="fv-pptx-summary__meta-sep">·</span>
         <span className="fv-pptx-summary__meta-item">
-          {insight.imageCount} images
+          {insight.imageCount} {t.pptxFallbackImages}
         </span>
       </div>
 
@@ -51,7 +53,7 @@ export function PptxSummaryFallback({
               {index + 1}. {slide.title}
             </h3>
             <p className="fv-pptx-summary__slide-stats">
-              {slide.textCount} text blocks, {slide.imageCount} images
+              {slide.textCount} {t.pptxFallbackTextBlocks}, {slide.imageCount} {t.pptxFallbackImages}
             </p>
             {slide.sampleTexts.length > 0 && (
               <ul className="fv-pptx-summary__slide-texts">

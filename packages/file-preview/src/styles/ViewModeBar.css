@@ -4,6 +4,8 @@
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.2);
   background: color-mix(in srgb, var(--fv-muted) 20%, transparent);
 }
 .fv-view-mode-group {
@@ -28,6 +30,8 @@
 }
 .fv-view-mode-btn:hover {
   color: var(--fv-primary);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.5);
   background: color-mix(in srgb, var(--fv-muted) 50%, transparent);
 }
 .fv-view-mode-btn--active {

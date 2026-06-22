@@ -84,5 +84,7 @@
   cursor: pointer;
 }
 .fv-fallback__details-copy:hover {
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-foreground-rgb), 0.2);
   background: color-mix(in srgb, var(--fv-muted-foreground) 20%, transparent);
 }

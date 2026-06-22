@@ -3,6 +3,8 @@
   align-items: center;
   gap: 0.5rem;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.2);
   background: color-mix(in srgb, var(--fv-muted) 20%, transparent);
   padding: 0.375rem 0.75rem;
   font-size: 11px;

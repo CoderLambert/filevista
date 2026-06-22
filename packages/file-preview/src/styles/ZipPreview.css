@@ -9,6 +9,8 @@
   gap: 1rem;
   padding: 0.625rem 1rem;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.3);
   background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
   font-size: var(--fv-font-size-xs);
   color: var(--fv-muted-foreground);
@@ -32,6 +34,8 @@
   transition: background 0.15s;
 }
 .fv-zip__entry:hover {
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.6);
   background: color-mix(in srgb, var(--fv-muted) 60%, transparent);
 }
 .fv-zip__entry-icon {

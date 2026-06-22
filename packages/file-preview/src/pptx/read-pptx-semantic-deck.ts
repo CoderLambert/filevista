@@ -5,6 +5,8 @@ import type {
   PptxSemanticSlide,
   PptxSemanticText,
 } from "./types";
+import { throwIfAbortedCompat } from "../core/abort-compat";
+import { PPTX_FALLBACK_LIMITS } from "./constants";
 
 const FALLBACK_BG = "#0D1117";
 type XmlRoot = Document | Element;
@@ -181,10 +183,21 @@ export async function readPptxSemanticDeck(
 ): Promise<PptxSemanticDeck> {
   const { width, height } = parseSlideSize(presentationXml);
 
+  const maxSlides = Math.min(slideXmls.length, PPTX_FALLBACK_LIMITS.maxSlides);
   const slides: PptxSemanticSlide[] = [];
-  for (const [index, xml] of slideXmls.entries()) {
-    signal?.throwIfAborted();
+
+  for (let index = 0; index < maxSlides; index++) {
+    throwIfAbortedCompat(signal);
+    const xml = slideXmls[index];
     if (!xml) continue;
+
+    // Yield to the main thread periodically so that a presentation with
+    // hundreds of slides does not freeze the tab during fallback parsing.
+    if (index > 0 && index % PPTX_FALLBACK_LIMITS.yieldEverySlides === 0) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      throwIfAbortedCompat(signal);
+    }
+
     slides.push(parseSlide(xml, index));
   }
 

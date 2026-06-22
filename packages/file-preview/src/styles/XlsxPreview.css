@@ -11,6 +11,8 @@
   justify-content: space-between;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.3);
   background: color-mix(in srgb, var(--fv-muted) 30%, transparent);
   gap: 0.75rem;
   flex-wrap: wrap;
@@ -42,6 +44,8 @@
   transition: background 0.15s, color 0.15s;
 }
 .fv-xlsx__sheet-tab--active {
+  /* color-mix fallback */
+  background: rgba(var(--fv-primary-rgb), 0.1);
   background: color-mix(in srgb, var(--fv-primary) 10%, transparent);
   color: var(--fv-primary);
   font-weight: 500;
@@ -109,6 +113,8 @@
   color: var(--fv-primary);
 }
 .fv-xlsx__search-input:focus {
+  /* color-mix fallback */
+  box-shadow: 0 0 0 2px rgba(var(--fv-primary-rgb), 0.2);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--fv-primary) 20%, transparent);
 }
 
@@ -456,6 +462,8 @@
   justify-content: space-between;
   padding: 0.5rem 1rem;
   border-top: 1px solid var(--fv-border);
+  /* color-mix fallback */
+  background: rgba(var(--fv-muted-rgb), 0.2);
   background: color-mix(in srgb, var(--fv-muted) 20%, transparent);
   font-size: var(--fv-font-size-sm);
   gap: 1rem;
@@ -569,6 +577,8 @@
 
 .fv-xlsx__mode-dialog-option:hover {
   border-color: var(--fv-primary);
+  /* color-mix fallback */
+  background: rgba(var(--fv-primary-rgb), 0.05);
   background: color-mix(in srgb, var(--fv-primary) 5%, transparent);
 }
 
@@ -579,6 +589,8 @@
 
 .fv-xlsx__mode-dialog-option--fidelity:hover {
   border-color: var(--fv-primary);
+  /* color-mix fallback */
+  background: rgba(var(--fv-primary-rgb), 0.05);
   background: color-mix(in srgb, var(--fv-primary) 5%, transparent);
 }
 
