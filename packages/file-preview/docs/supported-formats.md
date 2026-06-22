@@ -18,7 +18,7 @@
 | **PDF** | ✅ supported | [`pdfjs-dist`](https://www.npmjs.com/package/pdfjs-dist) | Pages, text selection, basic forms | Form submission, annotations editing, embedded JavaScript |
 | **DOCX** | ✅ supported | [`docx-preview`](https://www.npmjs.com/package/docx-preview) | Body text, lists, tables, inline images | Pixel-identical Word rendering, comments, tracked changes, complex section breaks |
 | **XLSX** | ✅ supported | [`exceljs`](https://www.npmjs.com/package/exceljs) | Sheets, cells, basic formatting, **stored** formula results | Formula recalculation, charts, pivot tables, conditional-format rendering, macros |
-| **PPTX** | ✅ supported | [`pptx-preview`](https://www.npmjs.com/package/pptx-preview) | Slide thumbnails, text, layouts | Animations, transitions, embedded video, complex masters, EMF/WMF images |
+| **PPTX** | ✅ supported | [`@aiden0z/pptx-renderer`](https://www.npmjs.com/package/@aiden0z/pptx-renderer) | HTML/SVG slide rendering, basic charts and tables, slide + grid views, lazy slides/media | Animations, transitions, embedded video playback, complex slide masters, `pdfjs: false` disables PDF/EMF fallback. Fallback path is an approximate semantic/summary render — version-exact layout is not guaranteed |
 | **EPUB** | ✅ supported | [`jszip`](https://www.npmjs.com/package/jszip) + custom | Chapters, table of contents, embedded images | DRM-protected EPUBs, fixed-layout EPUBs, audio/video embeds |
 | **RTF** | ✅ supported | [`rtf.js`](https://www.npmjs.com/package/rtf.js) | Rich text, WMF/EMF vectors via embedded engine | Anything `rtf.js` itself can't parse — falls back to plain-text view automatically |
 | **Markdown** | ✅ supported | `react-markdown` + `remark-gfm` + Shiki | GFM (tables, task lists, fenced code with syntax highlighting), HTML in MD is sanitized | Custom MDX components, raw `<script>` (stripped) |
@@ -119,7 +119,7 @@ bundler error:
 | PDF | `pdfjs-dist` (^4.4.0) |
 | DOCX | `docx-preview` (^0.3.7) |
 | XLSX | `exceljs` (^4.4.0) |
-| PPTX | `pptx-preview` (^1.0.7) |
+| PPTX | `@aiden0z/pptx-renderer` (^1.2.0) |
 | RTF | `rtf.js` (^3.0.9) |
 | ZIP / EPUB | `jszip` (^3.10.1) |
 
