@@ -1,0 +1,21 @@
+apps/playground/src/lib/demos.ts
+  s_595a155b93c02d::t_99fbae34f87fce 32-39,43-51,62-63
+.github/workflows/pages.yml
+  s_595a155b93c02d::t_14bb04e6ac5c0b 25,27-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "4f486b1004e031ff8abcca138405a2ef936797bb",
+  "prompts": {},
+  "sessions": {
+    "s_595a155b93c02d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1114bd4c2ffeVhGcWfCFnHcFel",
+        "model": "deepseek-v4-flash-free"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
