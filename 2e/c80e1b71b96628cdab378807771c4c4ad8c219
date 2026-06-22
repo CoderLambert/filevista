@@ -1,0 +1,19 @@
+docs/records/fix-pptx-review-stage-19-issues.md
+  s_10eeb741069674::t_05da89237daf7a 1-105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "2ec80e1b71b96628cdab378807771c4c4ad8c219",
+  "prompts": {},
+  "sessions": {
+    "s_10eeb741069674": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88f729c6-ead2-4c3f-add7-9b9e8fbc1026",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
