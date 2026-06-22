@@ -40,6 +40,12 @@ If a user uploads a format whose peer dep is missing, the preview falls back to 
 
 ## Quick start
 
+The root entry ships only the **base** formats — Markdown, code, HTML, JSON,
+CSV, SVG, plain text, images, audio, video. None of the heavy optional peer
+dependencies (PDF.js, JSZip, etc.) are reachable from this entry, so
+`import { PluginPreviewRenderer } from "@lamberl-lee/file-preview"` stays small
+by default.
+
 ```tsx
 import {
   PluginPreviewRenderer,
@@ -63,9 +69,74 @@ function Demo({ file }: { file: File }) {
     source: { kind: "file", file },
   };
 
+  // Renders base formats only — PDF/DOCX/PPTX/XLSX/RTF/ZIP/EPUB will be
+  // reported as unsupported until you wire up the /full registry (below).
   return <PluginPreviewRenderer file={info} />;
 }
 ```
+
+### Heavy formats (PDF / DOCX / PPTX / XLSX / RTF / ZIP / EPUB)
+
+Install the relevant optional peer dependencies, then opt into the heavy
+formats via the `/full` subpath export:
+
+```tsx
+import {
+  PluginPreviewRenderer,
+  detectFileType,
+  setAssetBasePath,
+  type FileInfo,
+} from "@lamberl-lee/file-preview";
+import { createFullPreviewRegistry } from "@lamberl-lee/file-preview/full";
+import "@lamberl-lee/file-preview/styles/index.css";
+
+setAssetBasePath("");
+
+const registry = createFullPreviewRegistry();
+
+function Demo({ file }: { file: File }) {
+  const info: FileInfo = {
+    id: crypto.randomUUID(),
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    fileType: detectFileType(file.name, file.type),
+    source: { kind: "file", file },
+  };
+
+  return <PluginPreviewRenderer file={info} registry={registry} />;
+}
+```
+
+Need only a subset of heavy formats? Import the individual plugins from their
+own subpath so the bundler never touches the rest:
+
+```tsx
+import {
+  PluginPreviewRenderer,
+  createPreviewPluginRegistry,
+  createBasePreviewRegistry,
+} from "@lamberl-lee/file-preview";
+import { pdfPlugin } from "@lamberl-lee/file-preview/plugins/pdf";
+import { pptxPlugin } from "@lamberl-lee/file-preview/plugins/pptx";
+
+// Base formats + just PDF and PPTX.
+const registry = createPreviewPluginRegistry([
+  ...createBasePreviewRegistry().list(), // or build your own list
+  pdfPlugin,
+  pptxPlugin,
+]);
+
+<PluginPreviewRenderer file={info} registry={registry} />;
+```
+
+> **0.4.0 migration:** In 0.3.x the root entry exported every plugin
+> (`pdfPlugin`, `pptxPlugin`, …) and `<PluginPreviewRenderer>` defaulted to
+> the full registry. In 0.4.0 those heavy exports moved to `/full` and
+> `/plugins/*`, and the default registry is now base-only. If you previously
+> relied on heavy formats from the root entry, add the `registry={createFullPreviewRegistry()}`
+> prop (and the `import { createFullPreviewRegistry } from "@lamberl-lee/file-preview/full"`
+> line).
 
 ### Remote URL
 
@@ -127,15 +198,16 @@ Built-in locales: `zhCN` (default), `enUS`. Pass a fully custom `LocaleMessages`
 
 ## Custom plugin registry
 
-Drop or replace formats:
+Drop or replace formats. Heavy plugins come from their own `/plugins/*`
+subpath; base plugins live on the root entry:
 
 ```tsx
 import {
   createPreviewPluginRegistry,
-  pdfPlugin,
   markdownPlugin,
   imagePlugin,
 } from "@lamberl-lee/file-preview";
+import { pdfPlugin } from "@lamberl-lee/file-preview/plugins/pdf";
 
 const registry = createPreviewPluginRegistry([pdfPlugin, markdownPlugin, imagePlugin]);
 

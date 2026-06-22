@@ -4,6 +4,7 @@ import React from "react";
 import type { FileInfo } from "./utils";
 import { PreviewFallback, type PreviewFallbackKind } from "./PreviewFallback";
 import { normalizePreviewError, isPreviewError, type PreviewError } from "./core/preview-error";
+import { safelyInvoke } from "./core/safely-invoke";
 
 interface PreviewErrorBoundaryProps {
   file: FileInfo;
@@ -63,7 +64,7 @@ export class PreviewErrorBoundary extends React.Component<
       pluginId: this.props.pluginId,
     });
 
-    this.props.onError?.(previewError);
+    safelyInvoke(this.props.onError, previewError);
   }
 
   render() {

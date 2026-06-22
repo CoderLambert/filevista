@@ -16,13 +16,17 @@ const SLIDE_PATH_PATTERN = /^ppt\/slides\/slide\d+\.xml$/;
 
 /**
  * Parse an XML attribute value out of an element tag. Robust to attribute
- * order and surrounding whitespace.
+ * order, surrounding whitespace, and either double- or single-quoted values
+ * (both are valid per the XML 1.0 spec).
  */
 function readAttribute(tag: string, attrName: string): string | null {
   const escaped = attrName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp(`(?:\\s|^)${escaped}\\s*=\\s*"([^"]*)"`);
+  const re = new RegExp(
+    `(?:\\s|^)${escaped}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`,
+  );
   const match = re.exec(tag);
-  return match ? match[1] : null;
+  if (!match) return null;
+  return match[1] ?? match[2] ?? null;
 }
 
 /**
@@ -86,14 +90,24 @@ function normaliseTarget(target: string): string {
  * authoring.
  */
 function sortByFilename(slides: Map<string, string>): string[] {
+  return sortedSlideEntries(slides).map(([, xml]) => xml);
+}
+
+/**
+ * Return slide entries sorted by the numeric suffix in `slideN.xml`. Both
+ * the path and the XML are kept so callers can use the path as a key for
+ * de-duplication.
+ */
+function sortedSlideEntries(
+  slides: Map<string, string>,
+): Array<[string, string]> {
   return [...slides.entries()]
     .filter(([name]) => SLIDE_PATH_PATTERN.test(name))
     .sort((a, b) => {
       const ai = Number(a[0].match(/slide(\d+)\.xml/)?.[1] || 0);
       const bi = Number(b[0].match(/slide(\d+)\.xml/)?.[1] || 0);
       return ai - bi;
-    })
-    .map(([, xml]) => xml);
+    });
 }
 
 export function orderSlidesByPresentation(
@@ -109,12 +123,17 @@ export function orderSlidesByPresentation(
   }
 
   const ordered: string[] = [];
+  const resolvedPaths = new Set<string>();
+
   for (const rid of rids) {
     const target = relMap.get(rid);
     if (!target) continue;
     const fullPath = normaliseTarget(target);
     const xml = slides.get(fullPath);
-    if (xml) ordered.push(xml);
+    if (xml) {
+      ordered.push(xml);
+      resolvedPaths.add(fullPath);
+    }
   }
 
   // If the rels-driven resolution produced nothing (mismatched paths,
@@ -122,5 +141,13 @@ export function orderSlidesByPresentation(
   // fallback UI still has content.
   if (ordered.length === 0) return sortByFilename(slides);
 
-  return ordered;
+  // Append slides that weren't matched by the rels walk — they would
+  // otherwise be silently dropped. Common causes: malformed Target
+  // attribute, exotic rels schema, partial archive corruption. Appending
+  // (rather than dropping) keeps the user's content visible.
+  const remaining = sortedSlideEntries(slides)
+    .filter(([path]) => !resolvedPaths.has(path))
+    .map(([, xml]) => xml);
+
+  return [...ordered, ...remaining];
 }

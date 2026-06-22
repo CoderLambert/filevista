@@ -34,7 +34,7 @@ export async function readPptxInsight(
 ): Promise<PptxInsight> {
   const slides: PptxSlideInsight[] = [];
   let totalImages = 0;
-  let totalXmlBytes = 0;
+  let totalXmlCodeUnits = 0;
 
   const maxSlides = Math.min(slideXmls.length, PPTX_FALLBACK_LIMITS.maxSlides);
 
@@ -42,8 +42,15 @@ export async function readPptxInsight(
     throwIfAbortedCompat(signal);
 
     const xml = slideXmls[index];
-    const xmlSize = xml.length;
-    totalXmlBytes += xmlSize;
+    const xmlLength = xml.length;
+
+    // Enforce total XML code-units limit with a hard break — exceeding this
+    // means the presentation is large enough to stall the main thread during
+    // the synchronous regex scan.
+    if (totalXmlCodeUnits + xmlLength > PPTX_FALLBACK_LIMITS.maxTotalXmlCodeUnits) {
+      break;
+    }
+    totalXmlCodeUnits += xmlLength;
 
     // Yield to the main thread periodically so that a presentation with
     // hundreds of slides does not freeze the tab during fallback parsing.
@@ -52,9 +59,9 @@ export async function readPptxInsight(
       throwIfAbortedCompat(signal);
     }
 
-    // Skip slides whose XML exceeds the per-slide byte limit — the
-    // structure would be too expensive to parse synchronously.
-    if (xmlSize > PPTX_FALLBACK_LIMITS.maxXmlBytesPerSlide) {
+    // Skip slides whose XML exceeds the per-slide limit — the structure
+    // would be too expensive to parse synchronously.
+    if (xmlLength > PPTX_FALLBACK_LIMITS.maxXmlCodeUnitsPerSlide) {
       slides.push({
         title: `Slide ${index + 1}`,
         textCount: 0,
@@ -75,13 +82,6 @@ export async function readPptxInsight(
       imageCount,
       sampleTexts: texts.slice(0, 8),
     });
-  }
-
-  if (totalXmlBytes > PPTX_FALLBACK_LIMITS.maxTotalXmlBytes) {
-    console.warn(
-      `[FileVista] PPTX insight fallback parsed ${totalXmlBytes} bytes of slide XML, ` +
-      `exceeding limit of ${PPTX_FALLBACK_LIMITS.maxTotalXmlBytes}. Some slides may be missing.`,
-    );
   }
 
   return {

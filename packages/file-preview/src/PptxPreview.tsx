@@ -23,7 +23,7 @@ import { useLocale } from "./core/i18n";
 import { readPptxInsight } from "./pptx/read-pptx-insight";
 import { readPptxSemanticDeck } from "./pptx/read-pptx-semantic-deck";
 import { orderSlidesByPresentation } from "./pptx/order-slides";
-import { safelyInvoke } from "./pptx/safely-invoke";
+import { safelyInvoke } from "./core/safely-invoke";
 import { PptxSummaryFallback } from "./PptxSummaryFallback";
 import { PptxSemanticFallback } from "./PptxSemanticFallback";
 import {
@@ -118,6 +118,7 @@ export function PptxPreview({
   // They diverge only briefly while a switch is in flight, and they always
   // converge after the switch resolves (or rolls back).
   const [activeViewMode, setActiveViewMode] = useState<PptxViewMode>("slide");
+  const activeViewModeRef = useRef<PptxViewMode>("slide");
   const [state, setState] = useState<PptxPreviewState>({ status: "loading" });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [zoom, setZoomState] = useState(defaultZoom);
@@ -166,6 +167,17 @@ export function PptxPreview({
       setState({ status: "loading" });
       setCurrentSlide(0);
       setZoomState(startInitialZoom);
+      // Reset all source-bound state at the START of mounting a new source.
+      // Previously these were only cleared on successful viewer open, which
+      // meant a failed B preview could surface A's fallback data. Resetting
+      // here makes the UI always show data tied to the *current* source.
+      setIsModeSwitching(false);
+      setInsight(null);
+      setSemanticDeck(null);
+      // The new viewer hasn't reported its mode yet — null-ish it via the
+      // ref so the mode effect won't compare new `viewMode` against the
+      // previous source's mode and skip the actual switch.
+      activeViewModeRef.current = startViewMode;
 
       // Read the source ONCE into an ArrayBuffer. The buffer is shared
       // between the high-fidelity viewer and the fallback paths — this
@@ -219,6 +231,26 @@ export function PptxPreview({
 
         viewerRef.current = viewer;
 
+        // If the parent updated `initialZoom` while the viewer was loading,
+        // `initialZoomRef.current` is now newer than `startInitialZoom`. The
+        // zoom effect won't re-run (its dep `defaultZoom` already fired
+        // *before* the viewer existed and we bailed), so apply the latest
+        // zoom now while we know the viewer is alive.
+        const latestZoom = initialZoomRef.current;
+        if (latestZoom !== startInitialZoom) {
+          try {
+            await viewer.setZoom(latestZoom);
+            if (disposed || abortController.signal.aborted) {
+              viewer.destroy();
+              return;
+            }
+            setZoomState(latestZoom);
+          } catch {
+            // Non-fatal — viewer stays at its open-time zoom; the next
+            // user-driven zoom change still works.
+          }
+        }
+
         const readyInfo: PptxReadyInfo = {
           slideCount: viewer.slideCount,
           currentIndex: viewer.currentSlideIndex,
@@ -226,8 +258,7 @@ export function PptxPreview({
 
         setState({ status: "ready", slideCount: viewer.slideCount });
         setCurrentSlide(viewer.currentSlideIndex);
-        setInsight(null);
-        setSemanticDeck(null);
+        activeViewModeRef.current = startViewMode;
         setActiveViewMode(startViewMode);
         // Note: onReady is invoked via safelyInvoke so a consumer-thrown
         // error never trips the catch below and never triggers fallback.
@@ -258,6 +289,7 @@ export function PptxPreview({
           archive.presentationRels,
         );
 
+        let semanticSuccess = false;
         try {
           const semantic = await readPptxSemanticDeck(
             archive.presentation,
@@ -267,16 +299,22 @@ export function PptxPreview({
           if (semantic.slides.length > 0 && !disposed) {
             setSemanticDeck(semantic);
             fallbackSuccess = true;
+            semanticSuccess = true;
           }
         } catch { /* best-effort */ }
 
-        const pptxInsight = await readPptxInsight(
-          slideXmls,
-          abortController.signal,
-        );
-        if (pptxInsight.slideCount > 0 && !disposed) {
-          setInsight(pptxInsight);
-          fallbackSuccess = true;
+        // Only run the cheaper insight fallback when the semantic deck is
+        // unavailable. The renderer prefers `semanticDeck` over `insight`,
+        // so running both wastes time and doubles peak memory for nothing.
+        if (!semanticSuccess) {
+          const pptxInsight = await readPptxInsight(
+            slideXmls,
+            abortController.signal,
+          );
+          if (pptxInsight.slideCount > 0 && !disposed) {
+            setInsight(pptxInsight);
+            fallbackSuccess = true;
+          }
         }
       } catch {
         // Fallback parsing failed (corrupted PPTX, abort, etc.). The error
@@ -331,18 +369,25 @@ export function PptxPreview({
     });
   }, [defaultZoom]);
 
-  // View mode switching — never depends on state.status. Mode buttons are
-  // disabled while not ready, so this effect is only triggered by real user
-  // intent after the viewer is mounted.
+  // View mode switching — depends only on the user-intent `viewMode`.
   //
-  // On failure we roll back `viewMode` to the last known `activeViewMode`,
+  // We compare against `activeViewModeRef.current` (the viewer's actual mode)
+  // rather than the `activeViewMode` state. Using the state in deps would
+  // cause the effect to re-run after a successful switch (state changes
+  // → effect fires → mode is the same → bail), which still does work the
+  // bail guard cannot fully eliminate. The ref keeps mode-state lookups out
+  // of the deps array entirely.
+  //
+  // On failure we roll back `viewMode` to the last known active mode,
   // keeping the UI in sync with the viewer's actual rendering state.
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
+    if (viewMode === activeViewModeRef.current) return;
 
     const operationId = ++modeOperationRef.current;
     const targetIndex = viewer.currentSlideIndex;
+    const previousMode = activeViewModeRef.current;
 
     setIsModeSwitching(true);
 
@@ -365,12 +410,13 @@ export function PptxPreview({
 
         // Commit — the viewer has confirmed the new mode.
         if (operationId === modeOperationRef.current) {
+          activeViewModeRef.current = viewMode;
           setActiveViewMode(viewMode);
         }
       } catch (error) {
         if (operationId === modeOperationRef.current) {
           // Roll back the requested mode to the last known active mode.
-          setViewMode(activeViewMode);
+          setViewMode(previousMode);
 
           safelyInvoke(callbacksRef.current.onError,
             error instanceof Error
@@ -387,7 +433,7 @@ export function PptxPreview({
     return () => {
       modeOperationRef.current += 1;
     };
-  }, [viewMode, activeViewMode]);
+  }, [viewMode]);
 
   const slideCount = state.status === "ready" ? state.slideCount : 0;
 

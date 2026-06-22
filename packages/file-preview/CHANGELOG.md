@@ -1,5 +1,34 @@
 # @lamberl-lee/file-preview
 
+## 0.4.0
+
+### Minor Changes
+
+Subpath exports, safer PPTX fallback, and consumer-callback isolation.
+
+#### Breaking
+
+- **Root entry no longer exports heavy plugins.** `import { pdfPlugin, pptxPlugin, docxPlugin, xlsxPlugin, rtfPlugin, zipPlugin, epubPlugin, builtinPreviewPlugins, createBuiltinPreviewRegistry } from "@lamberl-lee/file-preview"` no longer resolves. The root entry is now a clean base-only entry whose module graph never touches optional peer dependencies. Migrate:
+  - Full registry: `import { createFullPreviewRegistry } from "@lamberl-lee/file-preview/full"`
+  - Individual heavy plugins: `import { pptxPlugin } from "@lamberl-lee/file-preview/plugins/pptx"` (and `pdf`, `docx`, `xlsx`, `rtf`, `zip`, `epub`)
+- **`<PluginPreviewRenderer>` defaults to the base registry.** Heavy formats (PDF/DOCX/PPTX/XLSX/RTF/ZIP/EPUB) are reported as `UNSUPPORTED_FILE_TYPE` unless you pass `registry={createFullPreviewRegistry()}`. This is the visible side of the root-entry cleanup above.
+
+#### PPTX fallback (degraded view) hardening
+
+- **No more cross-file state bleed.** `semanticDeck` and `insight` are now reset at the *start* of each source mount, not only on successful viewer open. Previously a failed file B could surface file A's fallback content.
+- **`isModeSwitching` is reset on source change.** Switching sources while a mode switch was in flight no longer leaves mode buttons / keyboard nav permanently disabled.
+- **Per-slide and total XML limits are now enforced**, not just warned. `readPptxInsight` and `readPptxSemanticDeck` `break` once the cumulative XML code-unit ceiling is reached. Constants renamed to `maxXmlCodeUnitsPerSlide` / `maxTotalXmlCodeUnits` to reflect that they count UTF-16 code units, not bytes.
+- **Insight is skipped when the semantic deck succeeds.** Avoids double-parsing the same slide XML through both `DOMParser` and the regex insight path.
+- **Unresolved slides are no longer dropped.** `orderSlidesByPresentation` appends slides not matched by the presentation rels walk (instead of silently discarding them), and `readAttribute` now accepts single-quoted XML attributes.
+- **No duplicate mode render.** The view-mode effect now depends only on `viewMode` and compares against an `activeViewModeRef`, eliminating the re-render that fired when `activeViewMode` state caught up.
+- **`initialZoom` changes during load are applied.** After the viewer opens, the latest `initialZoomRef.current` is synced onto the viewer so a parent prop update that landed mid-load is no longer lost.
+- **Localized fallback descriptions by default.** The semantic/summary fallback notices now show the localized description as the primary text and tuck the raw upstream `error.message` into an expandable "Error details" block.
+- **`color-mix()` fallback.** Semantic/summary notice backgrounds now declare an `rgba()` fallback before the `color-mix()` rule for older browsers.
+
+#### Consumer-callback isolation
+
+- **`safelyInvoke` promoted to `core/safely-invoke.ts`** and applied to every consumer callback site: `PluginPreviewRenderer.onError` (unsupported path), `PreviewErrorBoundary.onError`, the PPTX adapter's `reportError`, and all PPTX callbacks. A throwing consumer callback can no longer escape a React effect/event handler. `pptx/safely-invoke.ts` remains as a deprecated re-export shim.
+
 ## 0.3.0
 
 ### Minor Changes

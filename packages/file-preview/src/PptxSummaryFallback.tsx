@@ -27,8 +27,14 @@ export function PptxSummaryFallback({
         <div>
           <strong>{t.pptxFallbackTitle}</strong>
           <span className="fv-pptx-summary__notice-desc">
-            {error?.message || t.pptxFallbackSummaryDesc}
+            {t.pptxFallbackSummaryDesc}
           </span>
+          {error?.message && (
+            <details className="fv-pptx-summary__notice-details">
+              <summary>{t.fallbackErrorDetails}</summary>
+              <code>{error.message}</code>
+            </details>
+          )}
         </div>
       </div>
 

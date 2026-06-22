@@ -185,11 +185,33 @@ export async function readPptxSemanticDeck(
 
   const maxSlides = Math.min(slideXmls.length, PPTX_FALLBACK_LIMITS.maxSlides);
   const slides: PptxSemanticSlide[] = [];
+  let totalXmlCodeUnits = 0;
 
   for (let index = 0; index < maxSlides; index++) {
     throwIfAbortedCompat(signal);
     const xml = slideXmls[index];
     if (!xml) continue;
+
+    const xmlLength = xml.length;
+
+    // Enforce total XML code-units limit — break before processing a slide
+    // that would exceed the cumulative ceiling. This keeps the main thread
+    // safe from synchronous DOMParser on enormous presentations.
+    if (totalXmlCodeUnits + xmlLength > PPTX_FALLBACK_LIMITS.maxTotalXmlCodeUnits) {
+      break;
+    }
+    totalXmlCodeUnits += xmlLength;
+
+    // Skip slides that exceed the per-slide limit — their structure is too
+    // expensive for synchronous DOMParser.
+    if (xmlLength > PPTX_FALLBACK_LIMITS.maxXmlCodeUnitsPerSlide) {
+      slides.push({
+        title: `Slide ${index + 1}`,
+        background: FALLBACK_BG,
+        elements: [],
+      });
+      continue;
+    }
 
     // Yield to the main thread periodically so that a presentation with
     // hundreds of slides does not freeze the tab during fallback parsing.

@@ -13,6 +13,7 @@ import { PreviewLoading } from "./PreviewLoading";
 import { LargeFileGate } from "./LargeFileGate";
 import { PreviewError, isPreviewError } from "./core/preview-error";
 import type { PreviewErrorCode } from "./core/preview-error";
+import { safelyInvoke } from "./core/safely-invoke";
 import "./styles/PluginDebugBar.css";
 
 class PreviewPluginLoadError extends PreviewError {
@@ -149,7 +150,8 @@ export function PluginPreviewRenderer({
 
   useEffect(() => {
     if (plugin) return;
-    onError?.(
+    safelyInvoke(
+      onError,
       new PreviewError(
         "UNSUPPORTED_FILE_TYPE",
         `Unsupported file type: ${file.fileType}`,

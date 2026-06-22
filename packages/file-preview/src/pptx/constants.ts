@@ -12,12 +12,18 @@ export const PPTX_ZOOM_STEP = 10;
  * is a zip-bomb, but both of which would freeze the tab if the fallback
  * parses every slide synchronously.
  *
+ * NOTE on units: `maxXmlCodeUnitsPerSlide` and `maxTotalXmlCodeUnits` count
+ * JavaScript string length (UTF-16 code units), NOT bytes. For typical PPTX
+ * XML (mostly ASCII tag names + attribute values), one code unit ≈ one byte.
+ * Multi-byte content (CJK, emoji) is roughly half the byte count; the limits
+ * are intentionally generous so the visible ceiling matches user expectations.
+ *
  * The viewer path is unaffected — only fallback (degraded) parsing uses these.
  */
 export const PPTX_FALLBACK_LIMITS = {
   maxSlides: 200,
-  maxXmlBytesPerSlide: 4 * 1024 * 1024,
-  maxTotalXmlBytes: 32 * 1024 * 1024,
+  maxXmlCodeUnitsPerSlide: 4 * 1024 * 1024,
+  maxTotalXmlCodeUnits: 32 * 1024 * 1024,
   maxTextItemsPerSlide: 1_000,
   yieldEverySlides: 8,
 } as const;

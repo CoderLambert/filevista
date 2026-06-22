@@ -81,8 +81,14 @@ export function PptxSemanticFallback({
         <div>
           <strong>{t.pptxFallbackTitle}</strong>
           <span className="fv-pptx-semantic__notice-desc">
-            {error?.message || t.pptxFallbackSemanticDesc}
+            {t.pptxFallbackSemanticDesc}
           </span>
+          {error?.message && (
+            <details className="fv-pptx-semantic__notice-details">
+              <summary>{t.fallbackErrorDetails}</summary>
+              <code>{error.message}</code>
+            </details>
+          )}
         </div>
       </div>
 

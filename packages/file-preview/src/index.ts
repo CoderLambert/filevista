@@ -1,13 +1,31 @@
 /**
  * @lamberl-lee/file-preview — public API
  *
- * Quick start:
+ * Quick start (base formats only — no heavy peer dependencies):
  *
  *   import { PluginPreviewRenderer, setAssetBasePath } from "@lamberl-lee/file-preview";
  *   import "@lamberl-lee/file-preview/styles/index.css";
  *
- *   setAssetBasePath("/static"); // where you serve PDF.js worker + RTF.js bundles
+ *   setAssetBasePath("/static");
  *   <PluginPreviewRenderer file={fileInfo} />
+ *
+ * For heavy formats (PDF / DOCX / PPTX / XLSX / RTF / ZIP / EPUB) — install
+ * the relevant peer dependencies and use the /full entry:
+ *
+ *   import {
+ *     PluginPreviewRenderer,
+ *   } from "@lamberl-lee/file-preview";
+ *   import {
+ *     createFullPreviewRegistry,
+ *   } from "@lamberl-lee/file-preview/full";
+ *
+ *   const registry = createFullPreviewRegistry();
+ *   <PluginPreviewRenderer file={fileInfo} registry={registry} />
+ *
+ * Or pick individual heavy plugins:
+ *
+ *   import { pptxPlugin } from "@lamberl-lee/file-preview/plugins/pptx";
+ *   import { pdfPlugin }  from "@lamberl-lee/file-preview/plugins/pdf";
  */
 
 // ─── Top-level renderer ───────────────────────────────────────────────────
@@ -116,40 +134,35 @@ export {
 } from "./limits";
 export { LargeFileGate } from "./LargeFileGate";
 
-// ─── Built-in plugins (full registry) ─────────────────────────────────────
+// ─── Built-in plugins (base only) ──────────────────────────────────────────
 //
-// The root entry continues to export every plugin so existing consumers
-// (`import { pptxPlugin } from "@lamberl-lee/file-preview"`) keep working.
-// As of 0.4.0, `<PluginPreviewRenderer>` defaults to `createBasePreviewRegistry()`
-// instead of `createBuiltinPreviewRegistry()` — apps that need heavy formats
-// (PDF/DOCX/PPTX/XLSX/RTF/ZIP/EPUB) must either pass a custom `registry` or
-// import from `@lamberl-lee/file-preview/full`.
-export {
-  builtinPreviewPlugins,
-  createBuiltinPreviewRegistry,
-} from "./plugins/builtin-plugins";
+// The root entry only exports base (zero-optional-dependency) plugins so that
+// `import { PluginPreviewRenderer } from "@lamberl-lee/file-preview"` never
+// resolves heavy optional dependencies (PDF.js, JSZip, etc.) in the bundle
+// graph.
+//
+// Heavy formats (PDF / DOCX / PPTX / XLSX / RTF / ZIP / EPUB) are available
+// from sub-path exports:
+//
+//   import { createFullPreviewRegistry } from "@lamberl-lee/file-preview/full";
+//   import { pptxPlugin }              from "@lamberl-lee/file-preview/plugins/pptx";
+//   import { pdfPlugin }               from "@lamberl-lee/file-preview/plugins/pdf";
+//   // …
 export {
   basePreviewPlugins,
   createBasePreviewRegistry,
 } from "./plugins/base-plugins";
 
-// Individual plugins — for custom registries that drop or replace formats.
+// Individual base plugins — for custom registries that add or replace formats.
 export { audioPlugin } from "./plugins/audio-plugin";
 export { csvPlugin } from "./plugins/csv-plugin";
-export { docxPlugin } from "./plugins/docx-plugin";
-export { epubPlugin } from "./plugins/epub-plugin";
 export { htmlPlugin } from "./plugins/html-plugin";
 export { imagePlugin } from "./plugins/image-plugin";
 export { markdownPlugin } from "./plugins/markdown-plugin";
-export { pdfPlugin } from "./plugins/pdf-plugin";
-export { pptxPlugin } from "./plugins/pptx-plugin";
-export { rtfPlugin } from "./plugins/rtf-plugin";
 export { sourceCodePlugin } from "./plugins/source-code-plugin";
 export { svgPlugin } from "./plugins/svg-plugin";
 export { textPlugin } from "./plugins/text-plugin";
 export { videoPlugin } from "./plugins/video-plugin";
-export { xlsxPlugin } from "./plugins/xlsx-plugin";
-export { zipPlugin } from "./plugins/zip-plugin";
 
 // ─── Remote URL loader ────────────────────────────────────────────────────
 export {

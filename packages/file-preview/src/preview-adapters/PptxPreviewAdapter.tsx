@@ -3,6 +3,7 @@
 import { PptxPreview } from "../PptxPreview";
 import type { FileInfo } from "../utils";
 import { PreviewError, type PreviewErrorCode } from "../core/preview-error";
+import { safelyInvoke } from "../core/safely-invoke";
 
 export default function PptxPreviewAdapter({
   file,
@@ -21,7 +22,8 @@ export default function PptxPreviewAdapter({
           error instanceof DOMException && error.name === "AbortError"
             ? "ABORTED"
             : "RENDER_FAILED";
-        reportError(
+        safelyInvoke(
+          reportError,
           new PreviewError(code, error.message || "PPTX preview failed", {
             cause: error,
             pluginId: "builtin.pptx",

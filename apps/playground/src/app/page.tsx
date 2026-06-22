@@ -27,12 +27,12 @@ import {
   detectFileType,
   detectFileMeta,
   PluginPreviewRenderer,
-  createBuiltinPreviewRegistry,
   setAssetBasePath,
   processRemoteUrl,
   RemoteUrlError,
   type RemoteLoadProgress,
 } from "@lamberl-lee/file-preview";
+import { createFullPreviewRegistry } from "@lamberl-lee/file-preview/full";
 import {
   getFileTypeColor,
   getFileTypeLabel,
@@ -48,7 +48,7 @@ setAssetBasePath(process.env.NEXT_PUBLIC_BASE_PATH || "");
 
 // Playground previews every supported file type, so use the full registry
 // (PDF, DOCX, PPTX, XLSX, RTF, ZIP, EPUB and base formats).
-const previewRegistry = createBuiltinPreviewRegistry();
+const previewRegistry = createFullPreviewRegistry();
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
   pdf: "📄",

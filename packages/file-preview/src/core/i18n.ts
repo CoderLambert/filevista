@@ -142,6 +142,7 @@ export interface LocaleMessages {
   pptxFallbackSummaryDesc: string;
   pptxFallbackImages: string;
   pptxFallbackTextBlocks: string;
+  fallbackErrorDetails: string;
 }
 
 // ─── zh-CN (default) ───
@@ -274,6 +275,7 @@ export const zhCN: LocaleMessages = {
   pptxFallbackSummaryDesc: "高保真渲染失败，已切换到内容摘要。",
   pptxFallbackImages: "图片",
   pptxFallbackTextBlocks: "文本块",
+  fallbackErrorDetails: "错误详情",
 };
 
 // ─── en-US ───
@@ -408,6 +410,7 @@ export const enUS: LocaleMessages = {
     "High-fidelity rendering failed. Showing content summary.",
   pptxFallbackImages: "images",
   pptxFallbackTextBlocks: "text blocks",
+  fallbackErrorDetails: "Error details",
 };
 
 // ─── Context ───
