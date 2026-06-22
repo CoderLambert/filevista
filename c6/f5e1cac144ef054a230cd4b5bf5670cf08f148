@@ -1,0 +1,101 @@
+packages/file-preview/src/SvgPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/HtmlPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/VideoPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/XlsxPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/MarkdownPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/ImagePreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/XlsxPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/PreviewFallback.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/AudioPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/ShikiSourceView.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/UnsupportedPluginPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/HtmlPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/CodePreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/MarkdownPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/PreviewErrorBoundary.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/SourceCodePreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/TextPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/hooks/useSourceText.ts
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/hooks/useObjectUrlFromSource.ts
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/PreviewLoading.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/AudioPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/ImagePreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/EpubPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/PdfPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/XlsxSpreadsheetPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/ZipPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/LargeFileGate.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/DocxPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/DocxPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/XlsxTablePreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/EpubPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/SvgPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/hooks/useSourceBase64.ts
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/CsvPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/PlainTextLargePreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/CsvPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/PdfPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/ZipPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/preview-adapters/RtfPreviewAdapter.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/VideoPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/RtfPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+packages/file-preview/src/TextPreview.tsx
+  s_10eeb741069674::t_8111df740cc710 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "c6f5e1cac144ef054a230cd4b5bf5670cf08f148",
+  "prompts": {},
+  "sessions": {
+    "s_10eeb741069674": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88f729c6-ead2-4c3f-add7-9b9e8fbc1026",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
