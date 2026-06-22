@@ -1,0 +1,22 @@
+apps/playground/package.json
+  s_ed1317aaed7051::t_0e0e8be3bbf669 55
+packages/file-preview/package.json
+  s_ed1317aaed7051::t_3bfb9cde3a7733 71,114
+  s_ed1317aaed7051::t_82a0a0ad7a700f 88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "d349e020cc45f540ccd28d0d02812f2d4b346a3b",
+  "prompts": {},
+  "sessions": {
+    "s_ed1317aaed7051": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126b1dc1bffe6mIJXMM59KSD5c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
