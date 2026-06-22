@@ -1,0 +1,39 @@
+packages/file-preview/src/engines/pptx/pptx-renderer-engine.ts
+  s_10eeb741069674::t_3e2bfbb02b8e21 114,117-119,121
+  s_10eeb741069674::t_f8411994470d02 2-10,12,16,43,58-72,74,87-89,91,112,115-116,122-129,134,136-139,143,146,149,151-156,160-162,166-168,173,175
+packages/file-preview/src/pptx/safely-invoke.ts
+  s_10eeb741069674::t_f139f9393c09df 1-22
+packages/file-preview/src/PptxPreview.tsx
+  s_10eeb741069674::t_6ef737397b54cd 322,327,329-331
+  s_10eeb741069674::t_6a04ac8464839e 231
+  s_10eeb741069674::t_9cadc2242b3158 170-187,192,202,234-235,245,247-250,252-259,261-263,267-269,271-279,281,314
+  s_10eeb741069674::t_b05f7c768f1939 109-113,116-120
+  s_10eeb741069674::t_ac049e74e9aea7 337-339,365-369,372-375,378,390
+  s_10eeb741069674::t_e082065867c8b5 400-404,420,423-425,431,434-436,442,444-447,460,463-465,468-470,477-479
+  s_10eeb741069674::t_03c2af1e62a4c4 634
+  s_10eeb741069674::t_d22e2ed0e529b3 487
+  s_10eeb741069674::t_43ee203678c41a 189,232-233,244,282-283,285-306
+  s_10eeb741069674::t_2f2af749a14ab8 506
+  s_10eeb741069674::t_710a192f148259 68-71,85-95
+  s_10eeb741069674::t_e7def8a033f8f8 1-2,25-26
+packages/file-preview/src/preview-adapters/PptxPreviewAdapter.tsx
+  s_10eeb741069674::t_e3d2be753d1732 1-2,5,7-13,18-32,35
+packages/file-preview/src/core/plugin.ts
+  s_10eeb741069674::t_02a137d6bc42cf 5-17,23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "8bdce0a1dd99537cd532bb969e06e64335f245e0",
+  "prompts": {},
+  "sessions": {
+    "s_10eeb741069674": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88f729c6-ead2-4c3f-add7-9b9e8fbc1026",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
