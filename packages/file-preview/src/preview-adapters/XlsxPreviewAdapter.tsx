@@ -1,3 +1,5 @@
+"use client";
+
 import { XlsxPreview } from "../XlsxPreview";
 import type { FileInfo } from "../utils";
 

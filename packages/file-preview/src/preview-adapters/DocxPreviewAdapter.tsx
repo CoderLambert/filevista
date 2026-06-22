@@ -1,3 +1,5 @@
+"use client";
+
 import { DocxPreview } from "../DocxPreview";
 import type { FileInfo } from "../utils";
 

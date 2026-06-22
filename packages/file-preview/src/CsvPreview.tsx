@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo } from "react";
 import { ArrowUpDownIcon, SearchIcon } from "./icons";
 import "./styles/CsvPreview.css";

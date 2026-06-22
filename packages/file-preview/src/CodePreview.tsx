@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useMemo } from "react";
 import { CopyIcon, CheckIcon, WrapTextIcon } from "./icons";
 import { highlightCode as shikiHighlight, getShikiLanguage } from "./shiki";

@@ -1,3 +1,5 @@
+"use client";
+
 import { PdfPreview } from "../PdfPreview";
 import type { FileInfo } from "../utils";
 

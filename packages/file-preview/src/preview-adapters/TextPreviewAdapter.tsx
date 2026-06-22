@@ -1,3 +1,5 @@
+"use client";
+
 
 import type { FileInfo } from "../utils";
 import { useSourceText } from "../hooks/useSourceText";

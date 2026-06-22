@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import type { FileInfo } from "./utils";
 import { PreviewFallback, type PreviewFallbackKind } from "./PreviewFallback";

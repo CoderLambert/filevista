@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { EyeIcon, Code2Icon } from "./icons";
 import DOMPurify from "dompurify";

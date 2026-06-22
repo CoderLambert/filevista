@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useMemo } from "react";
 import { EyeIcon, Code2Icon } from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";

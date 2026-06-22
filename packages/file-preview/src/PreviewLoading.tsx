@@ -1,3 +1,5 @@
+"use client";
+
 import "./styles/PreviewLoading.css";
 
 interface PreviewLoadingProps {

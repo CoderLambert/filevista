@@ -1,3 +1,5 @@
+"use client";
+
 import { ZoomInIcon, ZoomOutIcon, RotateCwIcon } from "./icons";
 import { useState } from "react";
 import "./styles/ImagePreview.css";

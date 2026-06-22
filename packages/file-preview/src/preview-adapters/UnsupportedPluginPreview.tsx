@@ -1,3 +1,5 @@
+"use client";
+
 
 import type { FileInfo } from "../utils";
 import { PreviewFallback } from "../PreviewFallback";

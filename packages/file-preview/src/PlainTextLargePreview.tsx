@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback, useMemo } from "react";
 import { CopyIcon, CheckIcon, WrapTextIcon } from "./icons";
 import { formatFileSize } from "./utils";

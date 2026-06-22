@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { AlertTriangleIcon, DownloadIcon } from "./icons";
 import type { FileInfo } from "./utils";

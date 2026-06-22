@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * XlsxSpreadsheetPreview — enhanced Excel renderer using x-data-spreadsheet.
  *

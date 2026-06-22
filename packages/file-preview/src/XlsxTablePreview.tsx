@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * XlsxTablePreview — HTML table renderer for Excel preview.
  *
