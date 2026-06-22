@@ -1,0 +1,19 @@
+docs/records/fix-pptx-code-review-feedback.md
+  s_ed1317aaed7051::t_3e7eaa5fc50db7 1-196
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "fb08b4f31daee0b45d935c1569bab2bed4a21bb5",
+  "prompts": {},
+  "sessions": {
+    "s_ed1317aaed7051": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126b1dc1bffe6mIJXMM59KSD5c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
