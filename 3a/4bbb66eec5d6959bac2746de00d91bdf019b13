@@ -1,0 +1,73 @@
+packages/file-preview/src/pptx/order-slides.ts
+  s_1eceb5a9a01286::t_d5bf480e8b3691 19-20,24-26,28-29
+  s_1eceb5a9a01286::t_157fd82004200a 93-103,110,126-127,133-136,144-152
+packages/file-preview/package.json
+  s_1eceb5a9a01286::t_31151e79799471 3
+apps/playground/src/app/page.tsx
+  s_1eceb5a9a01286::t_8b1ea01d3da340 35
+  s_1eceb5a9a01286::t_c338c438a1c6ac 51
+packages/file-preview/src/index.ts
+  s_1eceb5a9a01286::t_bfdea0796eb245 137,139-150,156
+  s_1eceb5a9a01286::t_5ea862f3d06169 4,9,11-28
+packages/file-preview/src/pptx/read-pptx-semantic-deck.ts
+  s_1eceb5a9a01286::t_9c5cf118e7ac6b 188,195-214
+packages/file-preview/src/styles/PptxSemanticFallback.css
+  s_1eceb5a9a01286::t_5defdc15b0c197 19-21
+  s_1eceb5a9a01286::t_fe2be8de6e25f1 46-69
+packages/file-preview/src/pptx/safely-invoke.ts
+  s_1eceb5a9a01286::t_b66a93e98a1005 2-3,5
+packages/file-preview/src/core/i18n.ts
+  s_1eceb5a9a01286::t_e5de1986e6916d 278
+  s_1eceb5a9a01286::t_004445656dcc2f 413
+packages/file-preview/src/PptxPreview.tsx
+  s_1eceb5a9a01286::t_2d4c4c76af5160 372-379,381,386,390,413,419,436
+  s_1eceb5a9a01286::t_6cf9e99474593c 26
+  s_1eceb5a9a01286::t_68ead8d3538016 170-176
+  s_1eceb5a9a01286::t_dfd339bf07aa46 121
+  s_1eceb5a9a01286::t_3ae691df054a0c 292,302,306-317
+  s_1eceb5a9a01286::t_17518fbbf218ad 177-180
+  s_1eceb5a9a01286::t_108b6afcc887d3 234-253
+  s_1eceb5a9a01286::t_b08cc5bf427140 261
+packages/file-preview/src/PptxSummaryFallback.tsx
+  s_1eceb5a9a01286::t_78e76b2492c72e 30,32-37
+packages/file-preview/src/core/safely-invoke.ts
+  s_1eceb5a9a01286::t_476b9f0725a7ca 1-27
+packages/file-preview/src/pptx/read-pptx-insight.ts
+  s_1eceb5a9a01286::t_176ebabde5c5cd 37,45-53,62-64
+packages/file-preview/src/PluginPreviewRenderer.tsx
+  s_1eceb5a9a01286::t_24b93d8093937b 153-154
+  s_1eceb5a9a01286::t_70c75cde90f64e 16
+packages/file-preview/src/styles/PptxSummaryFallback.css
+  s_1eceb5a9a01286::t_4c43346d4c296c 19-21
+  s_1eceb5a9a01286::t_7fc1997ae5cb23 43-66
+packages/file-preview/src/PreviewErrorBoundary.tsx
+  s_1eceb5a9a01286::t_5e978ee28b7cfd 67
+  s_1eceb5a9a01286::t_f5cf77966ab025 7
+packages/file-preview/CHANGELOG.md
+  s_1eceb5a9a01286::t_08edbb7f10e3c8 3-31
+packages/file-preview/src/preview-adapters/PptxPreviewAdapter.tsx
+  s_1eceb5a9a01286::t_86f9307992e189 6,25-26
+packages/file-preview/src/pptx/constants.ts
+  s_1eceb5a9a01286::t_aa2fbdbade5f43 15-20,25-26
+packages/file-preview/README.md
+  s_1eceb5a9a01286::t_38e50316182bc8 201-202,210
+  s_1eceb5a9a01286::t_f599db4f59f7cf 43-48,72-73,78-139
+packages/file-preview/src/PptxSemanticFallback.tsx
+  s_1eceb5a9a01286::t_100f0f118234f8 84,86-91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "3a4bbb66eec5d6959bac2746de00d91bdf019b13",
+  "prompts": {},
+  "sessions": {
+    "s_1eceb5a9a01286": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "386c5a99-f714-4caf-90e4-a4b687ce2dec",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
