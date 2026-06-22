@@ -1,0 +1,53 @@
+packages/file-preview/src/entries/plugins/rtf.ts
+  s_10eeb741069674::t_63518dd786ce3d 1
+packages/file-preview/src/entries/plugins/epub.ts
+  s_10eeb741069674::t_21fa002fde555a 1
+packages/file-preview/src/entries/full.ts
+  s_10eeb741069674::t_eefff8ef485c71 1-28
+packages/file-preview/src/PluginPreviewRenderer.tsx
+  s_10eeb741069674::t_fabb1a1b5d2b21 208
+  s_10eeb741069674::t_09e440f8970770 36
+  s_10eeb741069674::t_8410ae5100769c 1-2
+  s_10eeb741069674::t_72d636c39f9808 70
+  s_10eeb741069674::t_13a659fdfad446 57
+  s_10eeb741069674::t_3810849b63fdb6 8
+  s_10eeb741069674::t_cb1c061b0641b9 142
+  s_10eeb741069674::t_524433f7c3f1c6 73
+  s_10eeb741069674::t_0ef2415f3c4e2c 105
+apps/playground/src/app/page.tsx
+  s_10eeb741069674::t_6dadbc1472e7b1 49-52
+  s_10eeb741069674::t_a274e4ac1d5289 572
+  s_10eeb741069674::t_b9effa3439634a 30
+packages/file-preview/src/entries/plugins/zip.ts
+  s_10eeb741069674::t_0b7b13253622ad 1
+packages/file-preview/src/index.ts
+  s_10eeb741069674::t_9e84b2921d0b30 120-126,131-134
+packages/file-preview/src/entries/plugins/docx.ts
+  s_10eeb741069674::t_88c4413b836074 1
+packages/file-preview/src/entries/plugins/pdf.ts
+  s_10eeb741069674::t_03fe8b31f2ab23 1
+packages/file-preview/package.json
+  s_10eeb741069674::t_1a004b0fb0cd65 41-72
+packages/file-preview/src/entries/plugins/xlsx.ts
+  s_10eeb741069674::t_344a6908e5bcc2 1
+packages/file-preview/src/entries/plugins/pptx.ts
+  s_10eeb741069674::t_3066537b531aa9 1
+packages/file-preview/src/plugins/base-plugins.ts
+  s_10eeb741069674::t_4027755998be52 1-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "4cca5c6fa48b86bf9ac73752fcd3d92bb90e7a4b",
+  "prompts": {},
+  "sessions": {
+    "s_10eeb741069674": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88f729c6-ead2-4c3f-add7-9b9e8fbc1026",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
