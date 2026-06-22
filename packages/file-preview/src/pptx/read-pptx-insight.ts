@@ -27,12 +27,15 @@ function countMatches(xml: string, pattern: RegExp): number {
  * ZIP security limits are enforced upstream, not bypassed here.
  */
 export async function readPptxInsight(
-  slideXmls: string[]
+  slideXmls: string[],
+  signal?: AbortSignal,
 ): Promise<PptxInsight> {
   const slides: PptxSlideInsight[] = [];
   let totalImages = 0;
 
   for (const xml of slideXmls) {
+    signal?.throwIfAborted();
+
     const texts = extractTextFromSlideXml(xml);
     const imageCount = countMatches(xml, /<a:blip\b/g);
 

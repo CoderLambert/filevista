@@ -176,12 +176,14 @@ function parseSlideSize(presentationXml: string): {
  */
 export async function readPptxSemanticDeck(
   presentationXml: string,
-  slideXmls: string[]
+  slideXmls: string[],
+  signal?: AbortSignal,
 ): Promise<PptxSemanticDeck> {
   const { width, height } = parseSlideSize(presentationXml);
 
   const slides: PptxSemanticSlide[] = [];
   for (const [index, xml] of slideXmls.entries()) {
+    signal?.throwIfAborted();
     if (!xml) continue;
     slides.push(parseSlide(xml, index));
   }

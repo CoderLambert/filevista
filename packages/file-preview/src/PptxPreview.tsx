@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -16,7 +17,6 @@ import {
   Minimize2Icon,
 } from "./icons";
 import { readSourceAsArrayBuffer } from "./core/source";
-import type { PreviewSource } from "./core/types";
 import { useLocale } from "./core/i18n";
 import { readPptxInsight } from "./pptx/read-pptx-insight";
 import { readPptxSemanticDeck } from "./pptx/read-pptx-semantic-deck";
@@ -84,6 +84,22 @@ export function PptxPreview({
 }: PptxPreviewProps) {
   const t = useLocale();
 
+  // Warn on invalid zoom bounds in development; we still self-correct via
+  // Math.min/Math.max so a swapped pair won't break the UI.
+  if (process.env.NODE_ENV !== "production" && minZoom > maxZoom) {
+    console.warn(
+      `[PptxPreview] minZoom (${minZoom}) > maxZoom (${maxZoom}); zoom bounds will be auto-swapped.`,
+    );
+  }
+
+  // Normalized zoom bounds used by every zoom action and the initial state.
+  const zoomMin = Math.min(minZoom, maxZoom);
+  const zoomMax = Math.max(minZoom, maxZoom);
+  const defaultZoom = useMemo(
+    () => normalizeZoom(initialZoom, minZoom, maxZoom),
+    [initialZoom, minZoom, maxZoom],
+  );
+
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<PptxViewerController | null>(null);
@@ -92,13 +108,23 @@ export function PptxPreview({
   const [viewMode, setViewMode] = useState<PptxViewMode>("slide");
   const [state, setState] = useState<PptxPreviewState>({ status: "loading" });
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [zoom, setZoomState] = useState(
-    normalizeZoom(initialZoom, minZoom, maxZoom),
-  );
+  const [zoom, setZoomState] = useState(defaultZoom);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isModeSwitching, setIsModeSwitching] = useState(false);
   const [insight, setInsight] = useState<PptxInsight | null>(null);
   const [semanticDeck, setSemanticDeck] = useState<PptxSemanticDeck | null>(null);
+
+  // Latest viewMode/zoom — read by the initialization effect without
+  // forcing it to re-run (and thus re-parse the whole PPTX).
+  const viewModeRef = useRef<PptxViewMode>(viewMode);
+  useEffect(() => {
+    viewModeRef.current = viewMode;
+  }, [viewMode]);
+
+  const initialZoomRef = useRef(defaultZoom);
+  useEffect(() => {
+    initialZoomRef.current = defaultZoom;
+  }, [defaultZoom]);
 
   const callbacksRef = useRef({ onReady, onError, onSlideChange });
   useEffect(() => {
@@ -107,10 +133,14 @@ export function PptxPreview({
 
   const ext = fileName.toLowerCase().split(".").pop() || "";
 
+  // Mount/destroy effect — runs only when the source changes.
+  // Mode/zoom prop changes are applied to the existing viewer instead
+  // of re-parsing the PPTX.
   useEffect(() => {
     const abortController = new AbortController();
     let disposed = false;
-    const currentViewMode = viewMode;
+    const startViewMode = viewModeRef.current;
+    const startInitialZoom = initialZoomRef.current;
 
     async function mountViewer() {
       const container = contentRef.current;
@@ -123,16 +153,16 @@ export function PptxPreview({
 
       setState({ status: "loading" });
       setCurrentSlide(0);
-      setZoomState(normalizeZoom(initialZoom, minZoom, maxZoom));
+      setZoomState(startInitialZoom);
 
       try {
         const viewer = await openPptxViewer({
           source,
           container,
           scrollContainer,
-          renderMode: currentViewMode === "grid" ? "list" : "slide",
+          renderMode: startViewMode === "grid" ? "list" : "slide",
           signal: abortController.signal,
-          initialZoom,
+          initialZoom: startInitialZoom,
 
           onSlideChange(index: number) {
             if (!disposed) {
@@ -167,16 +197,6 @@ export function PptxPreview({
         setInsight(null);
         setSemanticDeck(null);
         callbacksRef.current.onReady?.(readyInfo);
-
-        // If user switched modes while loading, apply now
-        if (currentViewMode !== viewMode && viewMode === "grid") {
-          await viewer.renderList({
-            windowed: true,
-            initialSlides: 4,
-            batchSize: 4,
-            overscanViewport: 1.5,
-          });
-        }
       } catch (error: unknown) {
         if (
           disposed ||
@@ -205,13 +225,17 @@ export function PptxPreview({
             const semantic = await readPptxSemanticDeck(
               archive.presentation,
               slideXmls,
+              abortController.signal,
             );
             if (semantic.slides.length > 0 && !disposed) {
               setSemanticDeck(semantic);
             }
           } catch { /* best-effort */ }
 
-          const pptxInsight = await readPptxInsight(slideXmls);
+          const pptxInsight = await readPptxInsight(
+            slideXmls,
+            abortController.signal,
+          );
           if (pptxInsight.slideCount > 0 && !disposed) {
             setInsight(pptxInsight);
           }
@@ -230,11 +254,23 @@ export function PptxPreview({
       viewerRef.current = null;
       contentRef.current?.replaceChildren();
     };
-  }, [source, viewMode, initialZoom, minZoom, maxZoom]);
+  }, [source]);
 
+  // Apply zoom prop changes to the existing viewer without re-parsing.
   useEffect(() => {
     const viewer = viewerRef.current;
-    if (!viewer || state.status !== "ready") return;
+    if (!viewer) return;
+
+    setZoomState(defaultZoom);
+    void viewer.setZoom(defaultZoom);
+  }, [defaultZoom]);
+
+  // View mode switching — never depends on state.status. Mode buttons are
+  // disabled while not ready, so this effect is only triggered by real user
+  // intent after the viewer is mounted.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
 
     const operationId = ++modeOperationRef.current;
     const targetIndex = viewer.currentSlideIndex;
@@ -275,9 +311,7 @@ export function PptxPreview({
     return () => {
       modeOperationRef.current += 1;
     };
-  }, [viewMode, state.status]);
-
-  const defaultZoom = normalizeZoom(initialZoom, minZoom, maxZoom);
+  }, [viewMode]);
 
   const slideCount = state.status === "ready" ? state.slideCount : 0;
 
@@ -303,18 +337,18 @@ export function PptxPreview({
   const zoomOut = useCallback(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
-    const next = Math.max(minZoom, zoom - PPTX_ZOOM_STEP);
+    const next = Math.max(zoomMin, zoom - PPTX_ZOOM_STEP);
     setZoomState(next);
     void viewer.setZoom(next);
-  }, [zoom, minZoom]);
+  }, [zoom, zoomMin]);
 
   const zoomIn = useCallback(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
-    const next = Math.min(maxZoom, zoom + PPTX_ZOOM_STEP);
+    const next = Math.min(zoomMax, zoom + PPTX_ZOOM_STEP);
     setZoomState(next);
     void viewer.setZoom(next);
-  }, [zoom, maxZoom]);
+  }, [zoom, zoomMax]);
 
   const resetZoom = useCallback(() => {
     const viewer = viewerRef.current;
@@ -373,7 +407,7 @@ export function PptxPreview({
         nextSlide();
       }
     },
-    [viewMode, state.status, prevSlide, nextSlide],
+    [viewMode, state.status, isModeSwitching, prevSlide, nextSlide],
   );
 
   if (ext === "ppt") {

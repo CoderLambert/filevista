@@ -130,6 +130,8 @@ export async function parsePptxZip(
 
   const files = await doParse(buffer, RECOMMENDED_ZIP_LIMITS);
 
+  signal?.throwIfAborted();
+
   return {
     presentation: files.presentation,
     slides: files.slides,
