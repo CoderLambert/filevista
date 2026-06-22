@@ -1,0 +1,19 @@
+docs/records/fix-pptx-avoid-re-parsing-on-mode-switch.md
+  s_5b0e4c7467b25a::t_763dbc3c502984 1-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "4780c12d790c5481d27ff051be124f3cd59a1736",
+  "prompts": {},
+  "sessions": {
+    "s_5b0e4c7467b25a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b69d8f9a-90f2-43d7-b1cb-9aa79729b8dd",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
