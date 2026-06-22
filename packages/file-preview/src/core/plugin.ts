@@ -2,12 +2,25 @@ import type { ComponentType } from "react";
 import type { FileInfo } from "../utils";
 import { PreviewError } from "./preview-error";
 
+/**
+ * Props passed to every preview adapter component loaded via PreviewPlugin.
+ *
+ * `reportError` lets adapters surface non-throwing failures (e.g. PPTX
+ * rendering that recovers via a degraded fallback) to the top-level
+ * `PluginPreviewRenderer.onError` listener — without forcing a render
+ * failure through the React error boundary.
+ */
+export interface PreviewAdapterProps {
+  file: FileInfo;
+  reportError?: (error: PreviewError) => void;
+}
+
 export interface PreviewPlugin {
   id: string;
   name: string;
   priority?: number;
   match(file: FileInfo): boolean;
-  load(): Promise<{ default: ComponentType<{ file: FileInfo }> }>;
+  load(): Promise<{ default: ComponentType<PreviewAdapterProps> }>;
 }
 
 /**

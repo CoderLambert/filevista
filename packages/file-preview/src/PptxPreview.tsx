@@ -1,3 +1,5 @@
+"use client";
+
 import {
   useCallback,
   useEffect,
@@ -20,6 +22,8 @@ import { readSourceAsArrayBuffer } from "./core/source";
 import { useLocale } from "./core/i18n";
 import { readPptxInsight } from "./pptx/read-pptx-insight";
 import { readPptxSemanticDeck } from "./pptx/read-pptx-semantic-deck";
+import { orderSlidesByPresentation } from "./pptx/order-slides";
+import { safelyInvoke } from "./pptx/safely-invoke";
 import { PptxSummaryFallback } from "./PptxSummaryFallback";
 import { PptxSemanticFallback } from "./PptxSemanticFallback";
 import {
@@ -61,16 +65,10 @@ function getErrorMessage(error: unknown): string {
   return "Failed to parse this PPTX file";
 }
 
-function sortSlides(slides: Map<string, string>): string[] {
-  return [...slides.entries()]
-    .filter(([name]) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-    .sort((a, b) => {
-      const ai = Number(a[0].match(/slide(\d+)\.xml/)?.[1] || 0);
-      const bi = Number(b[0].match(/slide(\d+)\.xml/)?.[1] || 0);
-      return ai - bi;
-    })
-    .map(([, xml]) => xml);
-}
+const isDevelopment =
+  typeof process !== "undefined" &&
+  typeof process.env !== "undefined" &&
+  process.env.NODE_ENV !== "production";
 
 export function PptxPreview({
   source,
@@ -84,13 +82,17 @@ export function PptxPreview({
 }: PptxPreviewProps) {
   const t = useLocale();
 
-  // Warn on invalid zoom bounds in development; we still self-correct via
-  // Math.min/Math.max so a swapped pair won't break the UI.
-  if (process.env.NODE_ENV !== "production" && minZoom > maxZoom) {
-    console.warn(
-      `[PptxPreview] minZoom (${minZoom}) > maxZoom (${maxZoom}); zoom bounds will be auto-swapped.`,
-    );
-  }
+  // Warn on invalid zoom bounds in development. We still self-correct via
+  // Math.min/Math.max so a swapped pair won't break the UI. The warning
+  // lives in an effect so each render does not duplicate the log.
+  useEffect(() => {
+    if (!isDevelopment) return;
+    if (minZoom > maxZoom) {
+      console.warn(
+        `[PptxPreview] minZoom (${minZoom}) > maxZoom (${maxZoom}); zoom bounds will be auto-swapped.`,
+      );
+    }
+  }, [minZoom, maxZoom]);
 
   // Normalized zoom bounds used by every zoom action and the initial state.
   const zoomMin = Math.min(minZoom, maxZoom);
@@ -104,8 +106,18 @@ export function PptxPreview({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<PptxViewerController | null>(null);
   const modeOperationRef = useRef(0);
+  // Tracks the DOM node we put into fullscreen. Other components on the page
+  // (videos, images, a second PPTX) can put their own elements into
+  // fullscreen too — without this ref we would flip our own UI state in
+  // response to their events.
+  const fullscreenTargetRef = useRef<Element | null>(null);
 
   const [viewMode, setViewMode] = useState<PptxViewMode>("slide");
+  // Mirrors the viewer's actual rendering mode. `viewMode` reflects the
+  // user's intent; `activeViewMode` reflects what the viewer has confirmed.
+  // They diverge only briefly while a switch is in flight, and they always
+  // converge after the switch resolves (or rolls back).
+  const [activeViewMode, setActiveViewMode] = useState<PptxViewMode>("slide");
   const [state, setState] = useState<PptxPreviewState>({ status: "loading" });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [zoom, setZoomState] = useState(defaultZoom);
@@ -155,9 +167,29 @@ export function PptxPreview({
       setCurrentSlide(0);
       setZoomState(startInitialZoom);
 
+      // Read the source ONCE into an ArrayBuffer. The buffer is shared
+      // between the high-fidelity viewer and the fallback paths — this
+      // avoids a double fetch for URL sources when the viewer fails.
+      let buffer: ArrayBuffer;
+      try {
+        buffer = await readSourceAsArrayBuffer(source, {
+          signal: abortController.signal,
+        });
+      } catch (error) {
+        if (disposed || abortController.signal.aborted) return;
+        const message = getErrorMessage(error);
+        setState({ status: "error", message });
+        safelyInvoke(callbacksRef.current.onError,
+          error instanceof Error ? error : new Error(message));
+        return;
+      }
+
+      if (disposed || abortController.signal.aborted) return;
+
+      let viewerError: unknown = null;
       try {
         const viewer = await openPptxViewer({
-          source,
+          input: buffer,
           container,
           scrollContainer,
           renderMode: startViewMode === "grid" ? "list" : "slide",
@@ -167,7 +199,7 @@ export function PptxPreview({
           onSlideChange(index: number) {
             if (!disposed) {
               setCurrentSlide(index);
-              callbacksRef.current.onSlideChange?.(index);
+              safelyInvoke(callbacksRef.current.onSlideChange, index);
             }
           },
 
@@ -196,7 +228,11 @@ export function PptxPreview({
         setCurrentSlide(viewer.currentSlideIndex);
         setInsight(null);
         setSemanticDeck(null);
-        callbacksRef.current.onReady?.(readyInfo);
+        setActiveViewMode(startViewMode);
+        // Note: onReady is invoked via safelyInvoke so a consumer-thrown
+        // error never trips the catch below and never triggers fallback.
+        safelyInvoke(callbacksRef.current.onReady, readyInfo);
+        return;
       } catch (error: unknown) {
         if (
           disposed ||
@@ -205,44 +241,69 @@ export function PptxPreview({
         ) {
           return;
         }
+        viewerError = error;
+      }
 
-        const message = getErrorMessage(error);
-        setState({ status: "error", message });
-        callbacksRef.current.onError?.(error instanceof Error ? error : new Error(message));
+      // High-fidelity viewer failed — try fallback using the same buffer.
+      let fallbackSuccess = false;
+      try {
+        if (disposed || abortController.signal.aborted) return;
 
-        // Fallback: parse PPTX through safe zip parsing (enforces security limits)
-        // This must not bypass the limits that PptxViewer.open enforces.
+        const archive = await parsePptxZip(buffer, abortController.signal);
+        if (disposed || abortController.signal.aborted) return;
+
+        const slideXmls = orderSlidesByPresentation(
+          archive.slides,
+          archive.presentation,
+          archive.presentationRels,
+        );
+
         try {
-          const buffer = await readSourceAsArrayBuffer(source, {
-            signal: abortController.signal,
-          });
-          abortController.signal.throwIfAborted();
-
-          const archive = await parsePptxZip(buffer, abortController.signal);
-          const slideXmls = sortSlides(archive.slides);
-
-          try {
-            const semantic = await readPptxSemanticDeck(
-              archive.presentation,
-              slideXmls,
-              abortController.signal,
-            );
-            if (semantic.slides.length > 0 && !disposed) {
-              setSemanticDeck(semantic);
-            }
-          } catch { /* best-effort */ }
-
-          const pptxInsight = await readPptxInsight(
+          const semantic = await readPptxSemanticDeck(
+            archive.presentation,
             slideXmls,
             abortController.signal,
           );
-          if (pptxInsight.slideCount > 0 && !disposed) {
-            setInsight(pptxInsight);
+          if (semantic.slides.length > 0 && !disposed) {
+            setSemanticDeck(semantic);
+            fallbackSuccess = true;
           }
-        } catch {
-          // bare error state is fine
+        } catch { /* best-effort */ }
+
+        const pptxInsight = await readPptxInsight(
+          slideXmls,
+          abortController.signal,
+        );
+        if (pptxInsight.slideCount > 0 && !disposed) {
+          setInsight(pptxInsight);
+          fallbackSuccess = true;
         }
+      } catch {
+        // Fallback parsing failed (corrupted PPTX, abort, etc.). The error
+        // is reported below via the original viewerError.
       }
+
+      if (disposed) return;
+
+      const message = getErrorMessage(viewerError);
+      setState({ status: "error", message });
+
+      // Surface the original PPTX rendering error to the consumer once,
+      // AFTER the fallback attempt completes. We emit onError regardless
+      // of whether the fallback produced a degraded view — the original
+      // failure is still meaningful telemetry. Consumers that want to
+      // distinguish "fully failed" from "degraded" can listen to setSemantic
+      // / setInsight indirectly via the rendered fallback markup, or use
+      // the future onDegraded hook (not yet exposed).
+      safelyInvoke(callbacksRef.current.onError,
+        viewerError instanceof Error
+          ? viewerError
+          : new Error(message));
+
+      // Note: `fallbackSuccess` is currently unused at the callback layer.
+      // Future enhancement: emit onDegraded(viewerError) when true, and
+      // onError(viewerError) only when false.
+      void fallbackSuccess;
     }
 
     void mountViewer();
@@ -250,6 +311,7 @@ export function PptxPreview({
     return () => {
       disposed = true;
       abortController.abort();
+      modeOperationRef.current += 1;
       viewerRef.current?.destroy();
       viewerRef.current = null;
       contentRef.current?.replaceChildren();
@@ -257,17 +319,24 @@ export function PptxPreview({
   }, [source]);
 
   // Apply zoom prop changes to the existing viewer without re-parsing.
+  // On failure the zoom state is rolled back to the viewer's actual value.
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
 
+    const prevZoom = viewer.zoomPercent ?? defaultZoom;
     setZoomState(defaultZoom);
-    void viewer.setZoom(defaultZoom);
+    void viewer.setZoom(defaultZoom).catch(() => {
+      setZoomState(prevZoom);
+    });
   }, [defaultZoom]);
 
   // View mode switching — never depends on state.status. Mode buttons are
   // disabled while not ready, so this effect is only triggered by real user
   // intent after the viewer is mounted.
+  //
+  // On failure we roll back `viewMode` to the last known `activeViewMode`,
+  // keeping the UI in sync with the viewer's actual rendering state.
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
@@ -293,13 +362,20 @@ export function PptxPreview({
         } else {
           await viewer.renderSlide(targetIndex);
         }
+
+        // Commit — the viewer has confirmed the new mode.
+        if (operationId === modeOperationRef.current) {
+          setActiveViewMode(viewMode);
+        }
       } catch (error) {
         if (operationId === modeOperationRef.current) {
-          callbacksRef.current.onError?.(
+          // Roll back the requested mode to the last known active mode.
+          setViewMode(activeViewMode);
+
+          safelyInvoke(callbacksRef.current.onError,
             error instanceof Error
               ? error
-              : new Error("Failed to switch PPTX view mode"),
-          );
+              : new Error("Failed to switch PPTX view mode"));
         }
       } finally {
         if (operationId === modeOperationRef.current) {
@@ -311,7 +387,7 @@ export function PptxPreview({
     return () => {
       modeOperationRef.current += 1;
     };
-  }, [viewMode]);
+  }, [viewMode, activeViewMode]);
 
   const slideCount = state.status === "ready" ? state.slideCount : 0;
 
@@ -321,7 +397,11 @@ export function PptxPreview({
       if (!viewer || state.status !== "ready") return;
 
       const nextIndex = Math.min(slideCount - 1, Math.max(0, index));
-      await viewer.goToSlide(nextIndex, { behavior: "smooth", block: "center" });
+      try {
+        await viewer.goToSlide(nextIndex, { behavior: "smooth", block: "center" });
+      } catch {
+        // Navigate failure is non-fatal — viewer stays in a usable state.
+      }
     },
     [state.status, slideCount],
   );
@@ -337,25 +417,34 @@ export function PptxPreview({
   const zoomOut = useCallback(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
+    const prev = zoom;
     const next = Math.max(zoomMin, zoom - PPTX_ZOOM_STEP);
     setZoomState(next);
-    void viewer.setZoom(next);
+    void viewer.setZoom(next).catch(() => {
+      setZoomState(prev);
+    });
   }, [zoom, zoomMin]);
 
   const zoomIn = useCallback(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
+    const prev = zoom;
     const next = Math.min(zoomMax, zoom + PPTX_ZOOM_STEP);
     setZoomState(next);
-    void viewer.setZoom(next);
+    void viewer.setZoom(next).catch(() => {
+      setZoomState(prev);
+    });
   }, [zoom, zoomMax]);
 
   const resetZoom = useCallback(() => {
     const viewer = viewerRef.current;
     if (!viewer) return;
+    const prev = zoom;
     setZoomState(defaultZoom);
-    void viewer.setZoom(defaultZoom);
-  }, [defaultZoom]);
+    void viewer.setZoom(defaultZoom).catch(() => {
+      setZoomState(prev);
+    });
+  }, [zoom, defaultZoom]);
 
   const switchViewMode = useCallback((mode: PptxViewMode) => {
     setViewMode(mode);
@@ -368,19 +457,26 @@ export function PptxPreview({
     if (!el) return;
 
     if (!document.fullscreenElement) {
+      fullscreenTargetRef.current = el;
       el.requestFullscreen()
         .then(() => setIsFullscreen(true))
-        .catch(() => {});
+        .catch(() => {
+          fullscreenTargetRef.current = null;
+        });
     } else {
       document.exitFullscreen()
-        .then(() => setIsFullscreen(false))
+        .then(() => {
+          fullscreenTargetRef.current = null;
+        })
         .catch(() => {});
     }
   }, []);
 
   useEffect(() => {
     function onFullscreenChange() {
-      setIsFullscreen(!!document.fullscreenElement);
+      setIsFullscreen(
+        document.fullscreenElement === fullscreenTargetRef.current,
+      );
     }
     document.addEventListener("fullscreenchange", onFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
@@ -388,7 +484,7 @@ export function PptxPreview({
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (viewMode !== "slide" || state.status !== "ready" || isModeSwitching) return;
+      if (activeViewMode !== "slide" || state.status !== "ready" || isModeSwitching) return;
 
       const target = event.target as HTMLElement;
       if (
@@ -407,7 +503,7 @@ export function PptxPreview({
         nextSlide();
       }
     },
-    [viewMode, state.status, isModeSwitching, prevSlide, nextSlide],
+    [activeViewMode, state.status, isModeSwitching, prevSlide, nextSlide],
   );
 
   if (ext === "ppt") {
@@ -535,7 +631,7 @@ export function PptxPreview({
 
         <div
           className={
-            viewMode === "slide"
+            activeViewMode === "slide"
               ? "fv-pptx__slide-wrap"
               : "fv-pptx__grid-wrap"
           }
