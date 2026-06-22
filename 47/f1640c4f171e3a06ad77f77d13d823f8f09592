@@ -1,0 +1,22 @@
+packages/file-preview/src/__tests__/PptxPreview.lifecycle.test.tsx
+  s_10eeb741069674::t_9663aed9bb0a55 1-184,186-212
+  s_10eeb741069674::t_aac6252881e93a 185
+packages/file-preview/src/__tests__/order-slides.test.ts
+  s_10eeb741069674::t_2792c6caf6d5f4 1-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "47f1640c4f171e3a06ad77f77d13d823f8f09592",
+  "prompts": {},
+  "sessions": {
+    "s_10eeb741069674": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88f729c6-ead2-4c3f-add7-9b9e8fbc1026",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
