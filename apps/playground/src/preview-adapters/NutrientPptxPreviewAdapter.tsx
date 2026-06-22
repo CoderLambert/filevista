@@ -9,12 +9,16 @@ type NutrientViewerModule = {
     document: ArrayBuffer;
     licenseKey?: string;
     useCDN?: boolean;
+    baseUrl?: string;
   }): Promise<unknown>;
   unload(target: HTMLElement | string | null): boolean;
 };
 
 const NUTRIENT_LICENSE_KEY =
   process.env.NEXT_PUBLIC_NUTRIENT_LICENSE_KEY?.trim() || undefined;
+
+// Respect the basePath config for GitHub Pages deployment
+const NUTRIENT_BASE_URL = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/vendor/nutrient/`;
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
@@ -50,7 +54,8 @@ export default function NutrientPptxPreviewAdapter({ file }: { file: FileInfo })
           container,
           document: buffer,
           licenseKey: NUTRIENT_LICENSE_KEY,
-          useCDN: true,
+          // Nutrient requires an absolute URL for baseUrl
+          baseUrl: `${window.location.origin}${NUTRIENT_BASE_URL}`,
         });
 
         if (cancelled) {

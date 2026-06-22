@@ -10,7 +10,7 @@
     "start": "NODE_ENV=production node .next/standalone/apps/playground/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "copy:vendor-assets": "node ../../packages/file-preview/scripts/copy-pdf-worker.mjs && node ../../packages/file-preview/scripts/copy-rtfjs-bundles.mjs",
+    "copy:vendor-assets": "node ../../packages/file-preview/scripts/copy-pdf-worker.mjs && node ../../packages/file-preview/scripts/copy-rtfjs-bundles.mjs && node scripts/copy-nutrient-assets.mjs",
     "postinstall": "pnpm run copy:vendor-assets && pnpm run sync:demos"
   },
   "dependencies": {

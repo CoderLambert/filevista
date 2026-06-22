@@ -27,3 +27,6 @@ apps/playground/public/demo/*.jpg filter=lfs diff=lfs merge=lfs -text
 apps/playground/public/demo/*.jpeg filter=lfs diff=lfs merge=lfs -text
 apps/playground/public/demo/*.gif filter=lfs diff=lfs merge=lfs -text
 apps/playground/public/demo/*.webp filter=lfs diff=lfs merge=lfs -text
+
+# Vendor SDK assets (Nutrient Web SDK — WASM, fonts, data files)
+apps/playground/public/vendor/** filter=lfs diff=lfs merge=lfs -text
