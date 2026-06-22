@@ -29,11 +29,26 @@ export async function fetchBinaryDemoFiles(): Promise<
       if (!response.ok) continue;
 
       const blob = await response.blob();
-      const base64 = await new Promise<string>((resolve) => {
+
+      const head = await blob.slice(0, 256).text();
+      if (head.startsWith("version https://git-lfs.github.com/spec/v1")) {
+        console.warn(`Skipping LFS pointer file: ${entry.name}`);
+        continue;
+      }
+
+      const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
           const result = reader.result as string;
-          resolve(result.split(",")[1]); // Remove data:...;base64, prefix
+          const content = result.split(",")[1];
+          if (!content) {
+            reject(new Error(`Invalid data URL for demo file: ${entry.name}`));
+            return;
+          }
+          resolve(content);
+        };
+        reader.onerror = () => {
+          reject(reader.error ?? new Error(`Failed to read: ${entry.name}`));
         };
         reader.readAsDataURL(blob);
       });
@@ -44,9 +59,8 @@ export async function fetchBinaryDemoFiles(): Promise<
         content: base64,
         size: blob.size,
       });
-    } catch {
-      // Skip files that fail to load
-      console.warn(`Failed to load demo file: ${entry.name}`);
+    } catch (error) {
+      console.error(`Failed to load demo file: ${entry.name}`, error);
     }
   }
 

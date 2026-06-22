@@ -22,8 +22,30 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with Git LFS
         uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Verify Git LFS demo assets
+        shell: bash
+        run: |
+          git lfs pull
+
+          pointer_files="$(
+            grep -RIl \
+              '^version https://git-lfs.github.com/spec/v1$' \
+              apps/playground/public/demo \
+              || true
+          )"
+
+          if [ -n "$pointer_files" ]; then
+            echo "::error::The following demo assets are still Git LFS pointer files:"
+            echo "$pointer_files"
+            exit 1
+          fi
+
+          echo "All Git LFS demo assets were downloaded successfully."
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
