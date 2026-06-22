@@ -1,0 +1,19 @@
+docs/records/fix-git-lfs-github-pages-checkout.md
+  s_595a155b93c02d::t_03d6531448efca 1-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "ae43d492d9a44213b9e17c82bb201fe444be1ec5",
+  "prompts": {},
+  "sessions": {
+    "s_595a155b93c02d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1114bd4c2ffeVhGcWfCFnHcFel",
+        "model": "deepseek-v4-flash-free"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
