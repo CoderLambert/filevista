@@ -1,0 +1,25 @@
+packages/file-preview/src/styles/PptxPreview.css
+  s_ed1317aaed7051::t_15645f105ae0b8 271-277,286
+packages/file-preview/src/plugins/pptx-plugin.ts
+  s_ed1317aaed7051::t_87419ecb324602 9-13
+packages/file-preview/src/engines/pptx/pptx-renderer-engine.ts
+  s_ed1317aaed7051::t_9497f33b4621a1 1-85
+packages/file-preview/src/PptxPreview.tsx
+  s_ed1317aaed7051::t_ecdec82f9eb272 25-29,44-47,49-51,54-55,71-73,76-78,80-81,85-92,94-100,103-126,129-147,149-167,169,171,173-180,183-190,192,196,200,204-209,212-217,220-228,233-234,253,258,269,281,283,286,292,297-298,307,338,341-342,344,349-350,358,366,377-378,381,392
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "f107b431387fd53cc09db9a159f3d0538bb8254f",
+  "prompts": {},
+  "sessions": {
+    "s_ed1317aaed7051": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126b1dc1bffe6mIJXMM59KSD5c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
