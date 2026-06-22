@@ -1,0 +1,33 @@
+packages/file-preview/src/engines/pptx/pptx-renderer-engine.ts
+  s_ed1317aaed7051::t_82f98b906b1388 4-12
+  s_ed1317aaed7051::t_2371aa8b0e23c7 102-137
+packages/file-preview/src/pptx/read-pptx-insight.ts
+  s_ed1317aaed7051::t_889940e4cc2c10 22,25-27,30,35
+packages/file-preview/src/styles/PptxPreview.css
+  s_ed1317aaed7051::t_2542c8c3b86745 140-144
+packages/file-preview/src/pptx/read-pptx-semantic-deck.ts
+  s_ed1317aaed7051::t_c13ef47e8cb3ef 158-176,178-179,181,184,189,193-194
+packages/file-preview/src/PptxPreview.tsx
+  s_ed1317aaed7051::t_de2ee533613073 18,27,49-58,64-74,90,95-97,99,113,126,133,170-179,193-194,196-198,200-203,205-208,214,218-220,233,239-240,242,244-271,273-278
+  s_ed1317aaed7051::t_32b86ab33db8cc 199
+  s_ed1317aaed7051::t_886d945dabe6b6 357
+  s_ed1317aaed7051::t_25cd07cea0b7ab 280,322-324
+  s_ed1317aaed7051::t_1d4c328ccaffc5 282,289,292
+  s_ed1317aaed7051::t_c9095be367bdc6 433,442
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "3987d452757290d6c33bd154fa20021695b226ab",
+  "prompts": {},
+  "sessions": {
+    "s_ed1317aaed7051": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126b1dc1bffe6mIJXMM59KSD5c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
