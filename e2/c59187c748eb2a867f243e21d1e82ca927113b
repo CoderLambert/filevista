@@ -1,0 +1,19 @@
+docs/records/refactor-pptx-replace-pptx-preview-with-pptx-renderer.md
+  s_ed1317aaed7051::t_90942741dec029 1-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "e2c59187c748eb2a867f243e21d1e82ca927113b",
+  "prompts": {},
+  "sessions": {
+    "s_ed1317aaed7051": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126b1dc1bffe6mIJXMM59KSD5c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
