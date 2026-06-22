@@ -1,0 +1,50 @@
+packages/file-preview/src/pptx/usePptxFitScale.ts
+  s_e48c5bffb53b31::t_98388848432c9b 45-63,98-110,122-127
+  s_e48c5bffb53b31::t_51b4e441a79384 143-152
+  s_e48c5bffb53b31::t_5ab1fa8e82cf1f 1
+  s_e48c5bffb53b31::t_1f77a1ad0cc959 86-92
+apps/playground/src/app/page.tsx
+  s_e48c5bffb53b31::t_4b286010bba472 622
+  s_e48c5bffb53b31::t_de32398a3e4120 530
+  s_e48c5bffb53b31::t_391cd9416fda2d 611
+packages/file-preview/src/styles/PptxPreview.css
+  s_e48c5bffb53b31::t_d50e092d0cc718 339-342,345-347,349-357
+  s_e48c5bffb53b31::t_5120524d8a5b6a 333-334
+  s_e48c5bffb53b31::t_f74a60f0810dba 337-338,348
+  s_e48c5bffb53b31::t_5e19ef18347c3a 287,300-301
+  s_e48c5bffb53b31::t_35485c257d59ef 9-13,24,30,34-35,42-43,54,56,58-64,66,74,76,78,80,82,86,88-89,91,93,96-97,109-110,113-114,116,120-122,124,126-128,130,137-144,146,148-156,158,168-169,171-176,178,180-181,183-186,190-204,215-216,243-249,251,254-255,265,268,271,278,280,283,292-299,302,304-313,315-324,358-395
+  s_e48c5bffb53b31::t_96fe3a2e11c4b5 218-231
+packages/file-preview/src/PptxPreview.tsx
+  s_e48c5bffb53b31::t_83ca22782bea1f 90,92
+  s_e48c5bffb53b31::t_d35fc0b838847b 543-547,550-552
+  s_e48c5bffb53b31::t_c9493e62e56be9 425
+  s_e48c5bffb53b31::t_09f09a1a1d1b5c 178-180,182-186,188-191,195-196,206,209-211,213-216,227
+  s_e48c5bffb53b31::t_66b0e245dac3dd 337-340,343,354,374,378-380,386,394-396,399,411,415,421,423-424,434,448,467,473-477,480-482,503-504,516-517,522-540,572,574,576,583,586-592,595-598,600
+  s_e48c5bffb53b31::t_cd8f35445340bf 505
+  s_e48c5bffb53b31::t_b6c007f41d2cad 575,577-582,584-585
+  s_e48c5bffb53b31::t_c493bcd113a094 77,98,106
+  s_e48c5bffb53b31::t_86b02638253b0e 192-193,212,217
+  s_e48c5bffb53b31::t_cdb819322f7dda 548-549,560-561
+  s_e48c5bffb53b31::t_d74dc5b1cda5ed 76,79-82,84-88,91,93-95,97,101,111-115,118-127,130-150,152-177,204-205
+  s_e48c5bffb53b31::t_d7b88f98a7223b 556-559,562-570
+  s_e48c5bffb53b31::t_b4988977a65baa 187,194,197-201,207-208,220-226,228-233
+  s_e48c5bffb53b31::t_815ae57e4f60d1 96,99-100,102-103,105,117,129
+  s_e48c5bffb53b31::t_a70a5a9532e58f 83,89,104,107-110,116,128
+  s_e48c5bffb53b31::t_05fc238bbfedd5 382-385,387-393
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "11e89b95b4e3eea82c1719e52771919b26f603d0",
+  "prompts": {},
+  "sessions": {
+    "s_e48c5bffb53b31": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e8c1fa9f-902a-4361-a02c-84aaf4f5dd38",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
