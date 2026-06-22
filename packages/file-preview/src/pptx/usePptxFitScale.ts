@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import type { RefObject } from "react";
 import type { PptxFitMode, PptxFitState } from "./types";
 import {
@@ -42,6 +42,25 @@ function normalizeScale(scale: number): number {
   return Math.max(0.05, Math.min(scale, 5));
 }
 
+/**
+ * Read the actual padding of the wrap element (slide-wrap / grid-wrap) that
+ * sits inside the viewport container. The stage lives inside this wrap, so
+ * the available space for the stage is the viewport rect minus the wrap's
+ * padding — not a fixed constant.
+ */
+function measureWrapPadding(el: HTMLElement): { padH: number; padV: number } {
+  const wrapEl = el.firstElementChild as HTMLElement | null;
+  if (!wrapEl) return { padH: PPTX_STAGE_PADDING, padV: PPTX_STAGE_PADDING };
+  const style = window.getComputedStyle(wrapEl);
+  const padH =
+    (parseFloat(style.paddingLeft) || 0) +
+    (parseFloat(style.paddingRight) || 0);
+  const padV =
+    (parseFloat(style.paddingTop) || 0) +
+    (parseFloat(style.paddingBottom) || 0);
+  return { padH: padH || PPTX_STAGE_PADDING, padV: padV || PPTX_STAGE_PADDING };
+}
+
 export function usePptxFitScale(input: {
   viewportRef: RefObject<HTMLElement | null>;
   fit: PptxFitMode;
@@ -64,20 +83,31 @@ export function usePptxFitScale(input: {
     viewportHeight: baseHeight,
   });
 
-  useEffect(() => {
+  // Use useLayoutEffect so the initial measurement (and any re-measurement
+  // triggered by dependency changes) happens synchronously BEFORE the browser
+  // paints. With useEffect, the first render uses the default state
+  // (viewportWidth = baseWidth = 960), producing a visible flash where the
+  // stage is wider than the actual container before the async effect corrects
+  // it. useLayoutEffect eliminates that flash entirely.
+  useLayoutEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
 
     const update = () => {
       const rect = el.getBoundingClientRect();
+      const { padH, padV } = measureWrapPadding(el);
 
-      const viewportWidth = Math.max(1, rect.width - padding);
-      const viewportHeight = Math.max(1, rect.height - padding);
+      // Use the wrap's actual padding to compute available space for the
+      // stage. Previously we subtracted a fixed PPTX_STAGE_PADDING (32px),
+      // but the slide-wrap's own padding is 64px on desktop (2rem per side),
+      // which caused the stage to overflow horizontally when zoomed in.
+      const viewportWidth = Math.max(1, rect.width - padH);
+      // For height we still use the fixed padding as a safe minimum, because
+      // the wrap has `min-height: 100%` and grows with content — using its
+      // own padding-based height would over-estimate the visible viewport.
+      const viewportHeight = Math.max(1, rect.height - Math.max(padV, padding));
 
-      setSize({
-        viewportWidth,
-        viewportHeight,
-      });
+      setSize({ viewportWidth, viewportHeight });
     };
 
     update();
@@ -89,6 +119,12 @@ export function usePptxFitScale(input: {
 
     const observer = new ResizeObserver(update);
     observer.observe(el);
+    // Also observe the wrap element so we recompute when its padding changes
+    // (e.g. the 768px media query switching slide-wrap padding from 1rem to
+    // 2rem). Wrap width changes are covered implicitly by observing the
+    // viewport container.
+    const wrapEl = el.firstElementChild as HTMLElement | null;
+    if (wrapEl) observer.observe(wrapEl);
 
     return () => observer.disconnect();
   }, [viewportRef, padding]);
@@ -104,7 +140,16 @@ export function usePptxFitScale(input: {
       })
     );
 
-    const displayScale = normalizeScale(fitScale * (userZoom / 100));
+    const rawDisplayScale = fitScale * (userZoom / 100);
+
+    // Clamp the display scale so the stage width never exceeds the viewport
+    // width. Without this, zooming in makes the slide wider than the
+    // container, which produces scrollbars / flex-centering overflow in slide
+    // mode. Height still scales proportionally (aspect ratio preserved).
+    const maxScaleByWidth = size.viewportWidth / baseWidth;
+    const displayScale = normalizeScale(
+      Math.min(rawDisplayScale, maxScaleByWidth)
+    );
 
     return {
       viewportWidth: size.viewportWidth,

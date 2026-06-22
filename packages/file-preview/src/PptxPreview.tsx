@@ -27,7 +27,6 @@ import { normalizePptxPreviewModel } from "./pptx/normalize-preview-model";
 import { PptxSummaryFallback } from "./PptxSummaryFallback";
 import { PptxSemanticFallback } from "./PptxSemanticFallback";
 import type {
-  PptxFitMode,
   PptxInsight,
   PptxPreviewProps,
   PptxRenderHandle,
@@ -74,38 +73,164 @@ function hideBrokenImages(container: HTMLElement) {
 }
 
 /**
- * Remove internal scrollbars and navigation elements injected by pptx-preview.
- * In slide mode we enforce overflow:hidden on every descendant to prevent
- * nested scrolling that breaks the fit-to-container layout.
+ * Build the CSS string injected into the iframe to override pptx-preview's
+ * inline styles.
  */
-function cleanupPptxPreviewDom(container: HTMLElement, mode: PptxViewMode) {
-  hideBrokenImages(container);
+function buildIframeCss(mode: PptxViewMode): string {
+  const base = `
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: transparent !important;
+    }
+    button, [class*="pre-btn"], [class*="next-btn"], [class*="pagination"] {
+      display: none !important;
+    }
+    /* Wrapper fills container width */
+    [class*="pptx-preview-wrapper"] {
+      width: 100% !important;
+      height: auto !important;
+      overflow: visible !important;
+      background: transparent !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    /* Slide wrappers are positioned relative for absolute inner content */
+    [class*="pptx-preview-slide"] {
+      position: relative !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow: hidden !important;
+      background: white;
+    }
+    /* Inner content div maintains original 960x540 size, scaled via JS */
+    [class*="pptx-preview-slide"] > div[style] {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+    }
+  `;
 
-  const navElements = container.querySelectorAll(
-    ".pre-btn, .next-btn, .pagination, [class*='pre-btn'], [class*='next-btn'], [class*='pagination'], button"
+  if (mode === "grid") {
+    return base + `
+      body { display: flex; flex-direction: column; align-items: center; padding: 1.5rem; }
+      [class*="pptx-preview-slide"] {
+        margin: 0 auto 1.5rem auto !important;
+        border-radius: 12px;
+        box-shadow:
+          0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06),
+          0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+      }
+    `;
+  }
+
+  return base + `
+    body { display: flex; flex-direction: column; align-items: center; }
+    [class*="pptx-preview-slide"] {
+      margin: 0 auto !important;
+      border-radius: 8px;
+      box-shadow:
+        0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06),
+        0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    }
+  `;
+}
+
+/**
+ * Clone the rendered DOM from the hidden container into the iframe and inject
+ * our override CSS. Called on initial render and on every MutationObserver
+ * tick (navigation, async image loads, etc.).
+ */
+function syncIframeContent(
+  iframe: HTMLIFrameElement,
+  sourceContainer: HTMLElement,
+  mode: PptxViewMode
+) {
+  const doc = iframe.contentDocument;
+  if (!doc) return;
+
+  // Ensure basic HTML structure
+  if (!doc.head) {
+    doc.write("<!DOCTYPE html><html><head></head><body></body></html>");
+    doc.close();
+  }
+
+  // Inject / update CSS
+  let styleEl = doc.getElementById("fv-pptx-iframe-style") as HTMLStyleElement | null;
+  if (!styleEl) {
+    styleEl = doc.createElement("style");
+    styleEl.id = "fv-pptx-iframe-style";
+    doc.head.appendChild(styleEl);
+  }
+  styleEl.textContent = buildIframeCss(mode);
+
+  // Clone rendered DOM into iframe body
+  const clone = sourceContainer.cloneNode(true) as HTMLElement;
+  hideBrokenImages(clone);
+
+  // Remove navigation buttons from clone
+  clone
+    .querySelectorAll(
+      "button, [class*='pre-btn'], [class*='next-btn'], [class*='pagination']"
+    )
+    .forEach((el) => el.remove());
+
+  // Apply responsive scaling to each slide wrapper
+  const slideWrappers = clone.querySelectorAll<HTMLElement>(
+    '[class*="pptx-preview-slide"]'
   );
-  navElements.forEach((el) => {
-    (el as HTMLElement).style.display = "none";
+
+  slideWrappers.forEach((wrapper) => {
+    // The inner div that has transform: scale() from the library
+    const innerDiv = wrapper.querySelector<HTMLElement>("div[style]");
+    if (innerDiv) {
+      // Reset library's inline styles
+      innerDiv.style.transform = "none";
+      innerDiv.style.position = "absolute";
+      innerDiv.style.top = "0";
+      innerDiv.style.left = "0";
+      innerDiv.style.width = `${PPTX_BASE_WIDTH}px`;
+      innerDiv.style.height = `${PPTX_BASE_HEIGHT}px`;
+      innerDiv.style.transformOrigin = "top left";
+    }
+
+    // Reset wrapper
+    wrapper.style.transform = "none";
+    wrapper.style.position = "relative";
+    wrapper.style.width = "100%";
+    wrapper.style.overflow = "hidden";
   });
 
-  if (mode === "slide") {
-    const candidates = container.querySelectorAll<HTMLElement>("*");
-    candidates.forEach((el) => {
-      const style = window.getComputedStyle(el);
-      const hasScroll =
-        style.overflow === "auto" ||
-        style.overflow === "scroll" ||
-        style.overflowX === "auto" ||
-        style.overflowX === "scroll" ||
-        style.overflowY === "auto" ||
-        style.overflowY === "scroll";
+  doc.body.innerHTML = "";
+  doc.body.appendChild(clone);
 
-      if (hasScroll) {
-        el.style.overflow = "hidden";
-        el.style.overflowX = "hidden";
-        el.style.overflowY = "hidden";
+  // Function to calculate and apply scale
+  const applyScale = () => {
+    slideWrappers.forEach((wrapper) => {
+      const actualWidth = wrapper.clientWidth;
+      if (actualWidth > 0) {
+        const scale = actualWidth / PPTX_BASE_WIDTH;
+        const innerDiv = wrapper.querySelector<HTMLElement>("div[style]");
+        if (innerDiv) {
+          innerDiv.style.transform = `scale(${scale})`;
+        }
+        wrapper.style.height = `${PPTX_BASE_HEIGHT * scale}px`;
       }
     });
+  };
+
+  // Apply scale after DOM is inserted
+  requestAnimationFrame(() => {
+    applyScale();
+    // Apply again after a short delay to ensure layout is complete
+    setTimeout(applyScale, 50);
+  });
+
+  // Use ResizeObserver to re-apply scale when iframe resizes
+  if (typeof ResizeObserver !== "undefined") {
+    const resizeObserver = new ResizeObserver(() => applyScale());
+    resizeObserver.observe(doc.body);
+    slideWrappers.forEach((wrapper) => resizeObserver.observe(wrapper));
   }
 }
 
@@ -209,9 +334,13 @@ const PptxRenderContainer = forwardRef<
   },
   ref
 ) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  // Hidden container where pptx-preview actually renders (library's document calls go here)
+  const hiddenRef = useRef<HTMLDivElement>(null);
+  // Visible iframe that displays the cloned, style-overridden content
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const viewerRef = useRef<any>(null);
   const slideCountRef = useRef(0);
+  const observerRef = useRef<MutationObserver | null>(null);
 
   useImperativeHandle(
     ref,
@@ -222,9 +351,7 @@ const PptxRenderContainer = forwardRef<
         const clamped = Math.max(0, Math.min(index, slideCountRef.current - 1));
         try {
           viewer.renderSingleSlide(clamped);
-          if (containerRef.current) {
-            cleanupPptxPreviewDom(containerRef.current, mode);
-          }
+          // MutationObserver will pick up DOM changes and sync to iframe
         } catch (err) {
           console.warn("Slide navigation error:", err);
         }
@@ -234,9 +361,6 @@ const PptxRenderContainer = forwardRef<
         if (!viewer) return;
         try {
           viewer.renderNextSlide();
-          if (containerRef.current) {
-            cleanupPptxPreviewDom(containerRef.current, mode);
-          }
         } catch {}
       },
       prevSlide() {
@@ -244,22 +368,35 @@ const PptxRenderContainer = forwardRef<
         if (!viewer) return;
         try {
           viewer.renderPreSlide();
-          if (containerRef.current) {
-            cleanupPptxPreviewDom(containerRef.current, mode);
-          }
         } catch {}
       },
     }),
-    [mode]
+    []
   );
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const hiddenEl = hiddenRef.current;
+    const iframe = iframeRef.current;
+    if (!hiddenEl || !iframe) return;
     let cancelled = false;
+    let syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Set up MutationObserver to sync DOM changes (navigation, etc.) to iframe.
+    // Debounced to avoid excessive re-cloning during the library's rendering.
+    const observer = new MutationObserver(() => {
+      if (cancelled || !iframe.contentDocument) return;
+      if (syncTimer) clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        if (!cancelled) {
+          syncIframeContent(iframe, hiddenEl, mode);
+        }
+      }, 16); // One frame delay
+    });
+    observer.observe(hiddenEl, { childList: true, subtree: true });
+    observerRef.current = observer;
 
     async function render() {
-      const container = containerRef.current;
-      if (!container) return;
+      if (!hiddenEl) return;
 
       // Destroy previous viewer
       if (viewerRef.current) {
@@ -271,19 +408,21 @@ const PptxRenderContainer = forwardRef<
         viewerRef.current = null;
       }
 
-      container.innerHTML = "";
+      hiddenEl.innerHTML = "";
 
       try {
         const { init } = await getPptxPreview();
-        if (cancelled || !containerRef.current) return;
+        if (cancelled || !hiddenEl) return;
 
         const buffer = await readBinaryPreviewAsArrayBuffer({ source, content });
         if (cancelled) return;
 
         const createViewer = () =>
-          init(containerRef.current!, {
+          init(hiddenEl!, {
             width: baseWidth,
-            height: baseHeight,
+            // In grid mode, omit height so the library does NOT set
+            // overflow-y:auto on its internal wrapper.
+            height: mode === "grid" ? undefined : baseHeight,
             mode: mode === "grid" ? "list" : "slide",
           });
 
@@ -292,7 +431,7 @@ const PptxRenderContainer = forwardRef<
 
         try {
           await viewer.preview(buffer);
-          if (!containerRef.current || !hasRenderedSlides(containerRef.current)) {
+          if (!hiddenEl || !hasRenderedSlides(hiddenEl)) {
             throw new Error("PPTX preview produced no rendered slides");
           }
         } catch (previewError) {
@@ -306,10 +445,7 @@ const PptxRenderContainer = forwardRef<
             // ignore
           }
 
-          if (containerRef.current) {
-            containerRef.current.innerHTML = "";
-          }
-
+          hiddenEl.innerHTML = "";
           viewer = createViewer();
           viewerRef.current = viewer;
 
@@ -328,17 +464,22 @@ const PptxRenderContainer = forwardRef<
             viewer.renderSingleSlide(0);
           }
 
-          if (!containerRef.current || !hasRenderedSlides(containerRef.current)) {
+          if (!hiddenEl || !hasRenderedSlides(hiddenEl)) {
             throw new Error("PPTX preview produced no rendered slides");
           }
         }
         if (cancelled) return;
 
-        const readyInfo = await getReliableReadyInfo(viewer, container, buffer);
+        const readyInfo = await getReliableReadyInfo(
+          viewer,
+          hiddenEl,
+          buffer
+        );
         slideCountRef.current = readyInfo.slideCount;
 
-        if (containerRef.current) {
-          cleanupPptxPreviewDom(containerRef.current, mode);
+        // Initial sync to iframe
+        if (iframe) {
+          syncIframeContent(iframe, hiddenEl, mode);
         }
 
         onReady(readyInfo);
@@ -359,6 +500,9 @@ const PptxRenderContainer = forwardRef<
 
     return () => {
       cancelled = true;
+      observer.disconnect();
+      observerRef.current = null;
+      if (syncTimer) clearTimeout(syncTimer);
 
       if (viewerRef.current) {
         try {
@@ -369,41 +513,91 @@ const PptxRenderContainer = forwardRef<
         viewerRef.current = null;
       }
 
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
+      if (hiddenEl) {
+        hiddenEl.innerHTML = "";
       }
     };
   }, [content, source, mode, baseWidth, baseHeight, onReady, onError]);
 
+  // Auto-resize iframe to match content height
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const resize = () => {
+      const doc = iframe.contentDocument;
+      if (!doc?.body) return;
+      const scrollHeight = doc.body.scrollHeight;
+      if (scrollHeight > 0) {
+        iframe.style.height = `${scrollHeight}px`;
+      }
+    };
+
+    resize();
+    const interval = setInterval(resize, 200);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div
-      className="fv-pptx__stage"
-      style={{
-        width: baseWidth * scale,
-        height: baseHeight * scale,
-      }}
+      className={`fv-pptx__stage ${mode === "grid" ? "fv-pptx__stage--grid" : ""}`}
+      style={
+        mode === "slide"
+          ? {
+              width: baseWidth * scale,
+              height: "auto",
+              minHeight: baseHeight * scale,
+            }
+          : undefined
+      }
     >
       <div
         className="fv-pptx__scale-layer"
-        style={{
-          width: baseWidth,
-          height: baseHeight,
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-        }}
+        style={
+          mode === "slide"
+            ? {
+                width: baseWidth,
+                height: "auto",
+                minHeight: baseHeight,
+                transform: `scale(${scale})`,
+                transformOrigin: "top left",
+              }
+            : {
+                width: "100%",
+                height: "auto",
+                transform: "none",
+              }
+        }
       >
+        {/* Hidden container: pptx-preview renders here (uses document.createElement) */}
         <div
-          ref={containerRef}
-          className={`fv-pptx__render-container ${
-            mode === "slide"
-              ? "fv-pptx__render-container--slide"
-              : "fv-pptx__render-container--grid"
+          ref={hiddenRef}
+          aria-hidden
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: `${baseWidth}px`,
+            height: `${baseHeight}px`,
+            clipPath: "inset(100%)",
+            pointerEvents: "none",
+            overflow: "hidden",
+            zIndex: -1,
+          }}
+        />
+        {/* Visible iframe: cloned content with our CSS injected */}
+        <iframe
+          ref={iframeRef}
+          className={`fv-pptx__iframe ${
+            mode === "slide" ? "fv-pptx__iframe--slide" : "fv-pptx__iframe--grid"
           }`}
           style={{
-            width: baseWidth,
-            height: mode === "slide" ? baseHeight : undefined,
-            minHeight: mode === "slide" ? baseHeight : undefined,
+            width: mode === "slide" ? baseWidth : "100%",
+            border: "none",
+            background: "transparent",
+            overflow: "hidden",
           }}
+          title="PPTX preview"
         />
       </div>
     </div>
