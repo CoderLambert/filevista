@@ -68,7 +68,7 @@
     "exceljs": "^4.4.0",
     "jszip": "^3.10.1",
     "pdfjs-dist": "^4.4.0",
-    "pptx-preview": "^1.0.7",
+    "@aiden0z/pptx-renderer": "^1.2.0",
     "rtf.js": "^3.0.9",
     "x-data-spreadsheet": "^1.1.9"
   },
@@ -85,7 +85,7 @@
     "pdfjs-dist": {
       "optional": true
     },
-    "pptx-preview": {
+    "@aiden0z/pptx-renderer": {
       "optional": true
     },
     "rtf.js": {
@@ -111,7 +111,7 @@
     "jsdom": "^29.1.1",
     "jszip": "^3.10.1",
     "pdfjs-dist": "4.4.168",
-    "pptx-preview": "^1.0.7",
+    "@aiden0z/pptx-renderer": "^1.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "rtf.js": "^3.0.9",

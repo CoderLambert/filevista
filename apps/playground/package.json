@@ -52,7 +52,7 @@
     "next": "^16.1.1",
     "next-themes": "^0.4.6",
     "pdfjs-dist": "4.4.168",
-    "pptx-preview": "^1.0.7",
+    "@aiden0z/pptx-renderer": "^1.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "rtf.js": "^3.0.9",
