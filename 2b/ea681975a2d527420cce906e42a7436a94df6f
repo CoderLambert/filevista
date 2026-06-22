@@ -1,0 +1,19 @@
+apps/playground/src/lib/demos.ts
+  s_ed1317aaed7051::t_ba6a29330b2b98 14-18,25,27-28,42-43,49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "2bea681975a2d527420cce906e42a7436a94df6f",
+  "prompts": {},
+  "sessions": {
+    "s_ed1317aaed7051": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126b1dc1bffe6mIJXMM59KSD5c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
