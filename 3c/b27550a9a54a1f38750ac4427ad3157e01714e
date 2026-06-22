@@ -1,0 +1,27 @@
+packages/file-preview/src/pptx/order-slides.ts
+  s_10eeb741069674::t_feca7fd4c290c2 39-42,58-60
+  s_10eeb741069674::t_148d2d9946396a 1-38,43-57,61-126
+packages/file-preview/src/PptxSemanticFallback.tsx
+  s_10eeb741069674::t_d4afe90e4971ee 82,84
+  s_10eeb741069674::t_df24e7fbbc332c 1-2
+  s_10eeb741069674::t_d260a71232aa68 108-111
+packages/file-preview/src/styles/PptxSemanticFallback.css
+  s_10eeb741069674::t_4cfaf3bb549da2 89-90
+  s_10eeb741069674::t_fa13034c62b4c9 92-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "3cb27550a9a54a1f38750ac4427ad3157e01714e",
+  "prompts": {},
+  "sessions": {
+    "s_10eeb741069674": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88f729c6-ead2-4c3f-add7-9b9e8fbc1026",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
