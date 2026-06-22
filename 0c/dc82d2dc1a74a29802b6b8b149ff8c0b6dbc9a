@@ -1,0 +1,74 @@
+packages/file-preview/src/styles/ShikiSourceView.css
+  s_10eeb741069674::t_fa13034c62b4c9 14-15,33-34,43-44
+packages/file-preview/src/styles/PdfPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 12-13
+packages/file-preview/src/styles/AudioPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 15-16
+packages/file-preview/src/styles/RtfPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 11-12,32-33
+packages/file-preview/src/core/i18n.ts
+  s_10eeb741069674::t_230cf905bf45e4 272-276
+  s_10eeb741069674::t_a0ae4246364833 138-144
+  s_10eeb741069674::t_e48fba18c14c29 404-410
+packages/file-preview/src/styles/VideoPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 8-9,14-15
+packages/file-preview/src/styles/SvgPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 10-11,36-37,71-72
+packages/file-preview/src/styles/CsvPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 12-13,40-41,60-61,101-102
+packages/file-preview/src/styles/ZipPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 12-13,37-38
+packages/file-preview/src/styles/PreviewFallback.css
+  s_10eeb741069674::t_fa13034c62b4c9 87-88
+packages/file-preview/src/styles/ImagePreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 13-14
+packages/file-preview/src/pptx/constants.ts
+  s_10eeb741069674::t_0407643e7fc19a 4-23
+packages/file-preview/src/core/abort-compat.ts
+  s_10eeb741069674::t_630e3d9ca48cee 1-12
+packages/file-preview/src/styles/PluginDebugBar.css
+  s_10eeb741069674::t_fa13034c62b4c9 6-7
+packages/file-preview/src/styles/EpubPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 42-43,111-112,145-146,155-156,198-199,256-257,270-271,384-385,398-399,458-459,466-467,501-502
+packages/file-preview/src/styles/XlsxPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 14-15,47-48,116-117,465-466,580-581,592-593
+packages/file-preview/src/styles/base.css
+  s_10eeb741069674::t_fa13034c62b4c9 237-238
+  s_10eeb741069674::t_1f308071cf7b42 79-83
+  s_10eeb741069674::t_f0f257f91081a0 21-33
+packages/file-preview/src/PptxSummaryFallback.tsx
+  s_10eeb741069674::t_0a5ac2917413ee 28,30,45
+  s_10eeb741069674::t_13739bbde28c47 1-2
+  s_10eeb741069674::t_02429fcbc19090 56
+packages/file-preview/src/styles/ViewModeBar.css
+  s_10eeb741069674::t_fa13034c62b4c9 7-8,33-34
+packages/file-preview/src/pptx/read-pptx-semantic-deck.ts
+  s_10eeb741069674::t_6a1a42f66770ae 190
+  s_10eeb741069674::t_a56cbe93f97545 8
+  s_10eeb741069674::t_55d2d61a70f100 9
+  s_10eeb741069674::t_a2be7c0bacac3c 186,188-189,191,193-200
+packages/file-preview/src/pptx/read-pptx-insight.ts
+  s_10eeb741069674::t_25bd0859258493 42
+  s_10eeb741069674::t_870b617ce36f92 3,37,39-41,43-65,73-74,80-86,93
+  s_10eeb741069674::t_1f54371db25a76 2
+packages/file-preview/src/styles/PlainTextLargePreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 12-13,31-32
+packages/file-preview/src/styles/DocxPreview.css
+  s_10eeb741069674::t_fa13034c62b4c9 9-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "0cdc82d2dc1a74a29802b6b8b149ff8c0b6dbc9a",
+  "prompts": {},
+  "sessions": {
+    "s_10eeb741069674": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "88f729c6-ead2-4c3f-add7-9b9e8fbc1026",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
