@@ -38,6 +38,38 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./full": {
+      "types": "./dist/entries/full.d.ts",
+      "import": "./dist/entries/full.js"
+    },
+    "./plugins/pptx": {
+      "types": "./dist/entries/plugins/pptx.d.ts",
+      "import": "./dist/entries/plugins/pptx.js"
+    },
+    "./plugins/pdf": {
+      "types": "./dist/entries/plugins/pdf.d.ts",
+      "import": "./dist/entries/plugins/pdf.js"
+    },
+    "./plugins/docx": {
+      "types": "./dist/entries/plugins/docx.d.ts",
+      "import": "./dist/entries/plugins/docx.js"
+    },
+    "./plugins/xlsx": {
+      "types": "./dist/entries/plugins/xlsx.d.ts",
+      "import": "./dist/entries/plugins/xlsx.js"
+    },
+    "./plugins/rtf": {
+      "types": "./dist/entries/plugins/rtf.d.ts",
+      "import": "./dist/entries/plugins/rtf.js"
+    },
+    "./plugins/zip": {
+      "types": "./dist/entries/plugins/zip.d.ts",
+      "import": "./dist/entries/plugins/zip.js"
+    },
+    "./plugins/epub": {
+      "types": "./dist/entries/plugins/epub.d.ts",
+      "import": "./dist/entries/plugins/epub.js"
+    },
     "./styles/index.css": "./dist/styles/index.css",
     "./styles/*.css": "./dist/styles/*.css",
     "./scripts/copy-pdf-worker.mjs": "./scripts/copy-pdf-worker.mjs",

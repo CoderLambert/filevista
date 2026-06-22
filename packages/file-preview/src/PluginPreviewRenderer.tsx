@@ -1,9 +1,11 @@
+"use client";
+
 import { useEffect, useMemo, useState, useCallback } from "react";
 import type { ComponentType } from "react";
 import type { FileInfo } from "./utils";
 import type { PreviewPlugin } from "./core/plugin";
 import type { PreviewPluginRegistry } from "./core/registry";
-import { createBuiltinPreviewRegistry } from "./plugins/builtin-plugins";
+import { createBasePreviewRegistry } from "./plugins/base-plugins";
 import { UnsupportedPluginPreview } from "./preview-adapters/UnsupportedPluginPreview";
 import { getPreviewSupportMeta } from "./support-status";
 import { PreviewErrorBoundary } from "./PreviewErrorBoundary";
@@ -31,7 +33,7 @@ class PreviewPluginLoadError extends PreviewError {
   }
 }
 
-type PluginModule = { default: ComponentType<{ file: FileInfo }> };
+type PluginModule = { default: ComponentType<{ file: FileInfo; reportError?: (error: PreviewError) => void }> };
 const promiseCache = new WeakMap<PreviewPlugin, Promise<PluginModule>>();
 
 function getPluginPromise(plugin: PreviewPlugin): Promise<PluginModule> {
@@ -52,6 +54,7 @@ function invalidatePluginPromise(plugin: PreviewPlugin) {
 interface PluginContentProps {
   plugin: PreviewPlugin;
   file: FileInfo;
+  onError?: (error: PreviewError) => void;
 }
 
 // Load state for a plugin module. We use an explicit state machine instead of
@@ -64,10 +67,10 @@ interface PluginContentProps {
 //   ready  → render the resolved component
 type PluginContentState =
   | { status: "loading" }
-  | { status: "ready"; Component: ComponentType<{ file: FileInfo }> }
+  | { status: "ready"; Component: ComponentType<{ file: FileInfo; reportError?: (error: PreviewError) => void }> }
   | { status: "error"; error: Error };
 
-function PluginContent({ plugin, file }: PluginContentProps) {
+function PluginContent({ plugin, file, onError }: PluginContentProps) {
   const [state, setState] = useState<PluginContentState>({ status: "loading" });
 
   useEffect(() => {
@@ -99,7 +102,7 @@ function PluginContent({ plugin, file }: PluginContentProps) {
 
   if (state.status === "loading") return <PreviewLoading />;
   if (state.status === "error") throw state.error;
-  return <state.Component file={file} />;
+  return <state.Component file={file} reportError={onError} />;
 }
 
 export interface PluginPreviewRendererProps {
@@ -136,7 +139,7 @@ export function PluginPreviewRenderer({
   const [retryKey, setRetryKey] = useState(0);
 
   const finalRegistry = useMemo(() => {
-    return registry ?? createBuiltinPreviewRegistry();
+    return registry ?? createBasePreviewRegistry();
   }, [registry]);
 
   const plugin = useMemo(
@@ -202,7 +205,7 @@ export function PluginPreviewRenderer({
           onRetry={handleRetry}
           onError={onError}
         >
-          <PluginContent plugin={plugin} file={file} />
+          <PluginContent plugin={plugin} file={file} onError={onError} />
         </PreviewErrorBoundary>
       </div>
     </div>

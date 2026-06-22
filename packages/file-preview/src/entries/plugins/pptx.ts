@@ -1,0 +1,1 @@
+export { pptxPlugin } from "../../plugins/pptx-plugin";

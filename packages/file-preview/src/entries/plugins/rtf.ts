@@ -1,0 +1,1 @@
+export { rtfPlugin } from "../../plugins/rtf-plugin";

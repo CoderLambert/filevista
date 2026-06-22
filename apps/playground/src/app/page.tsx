@@ -27,6 +27,7 @@ import {
   detectFileType,
   detectFileMeta,
   PluginPreviewRenderer,
+  createBuiltinPreviewRegistry,
   setAssetBasePath,
   processRemoteUrl,
   RemoteUrlError,
@@ -44,6 +45,10 @@ import "@lamberl-lee/file-preview/styles/index.css";
 
 // Initialize asset base path from Next.js env (used by PDF.js worker, RTF.js bundles, demo files)
 setAssetBasePath(process.env.NEXT_PUBLIC_BASE_PATH || "");
+
+// Playground previews every supported file type, so use the full registry
+// (PDF, DOCX, PPTX, XLSX, RTF, ZIP, EPUB and base formats).
+const previewRegistry = createBuiltinPreviewRegistry();
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
   pdf: "📄",
@@ -564,6 +569,7 @@ export default function Home() {
               <div className="flex-1 min-h-0 min-w-0">
                 <PluginPreviewRenderer
                   file={activeFile}
+                  registry={previewRegistry}
                   showPluginDebug={process.env.NODE_ENV === "development"}
                 />
               </div>

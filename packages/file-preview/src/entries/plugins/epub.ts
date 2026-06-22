@@ -1,0 +1,1 @@
+export { epubPlugin } from "../../plugins/epub-plugin";

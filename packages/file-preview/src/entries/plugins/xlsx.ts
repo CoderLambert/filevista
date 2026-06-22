@@ -1,0 +1,1 @@
+export { xlsxPlugin } from "../../plugins/xlsx-plugin";

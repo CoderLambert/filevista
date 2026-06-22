@@ -1,0 +1,1 @@
+export { docxPlugin } from "../../plugins/docx-plugin";

@@ -1,0 +1,1 @@
+export { zipPlugin } from "../../plugins/zip-plugin";

@@ -1,0 +1,1 @@
+export { pdfPlugin } from "../../plugins/pdf-plugin";

@@ -117,10 +117,21 @@ export {
 export { LargeFileGate } from "./LargeFileGate";
 
 // ─── Built-in plugins (full registry) ─────────────────────────────────────
+//
+// The root entry continues to export every plugin so existing consumers
+// (`import { pptxPlugin } from "@lamberl-lee/file-preview"`) keep working.
+// As of 0.4.0, `<PluginPreviewRenderer>` defaults to `createBasePreviewRegistry()`
+// instead of `createBuiltinPreviewRegistry()` — apps that need heavy formats
+// (PDF/DOCX/PPTX/XLSX/RTF/ZIP/EPUB) must either pass a custom `registry` or
+// import from `@lamberl-lee/file-preview/full`.
 export {
   builtinPreviewPlugins,
   createBuiltinPreviewRegistry,
 } from "./plugins/builtin-plugins";
+export {
+  basePreviewPlugins,
+  createBasePreviewRegistry,
+} from "./plugins/base-plugins";
 
 // Individual plugins — for custom registries that drop or replace formats.
 export { audioPlugin } from "./plugins/audio-plugin";
