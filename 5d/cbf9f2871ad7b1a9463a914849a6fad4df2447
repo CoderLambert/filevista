@@ -1,0 +1,19 @@
+docs/records/refactor-pptx-iframe-rendering-and-nutrient-local-assets.md
+  s_ed1317aaed7051::t_b3b1f68a082cbe 1-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "5dcbf9f2871ad7b1a9463a914849a6fad4df2447",
+  "prompts": {},
+  "sessions": {
+    "s_ed1317aaed7051": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126b1dc1bffe6mIJXMM59KSD5c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
