@@ -1,0 +1,34 @@
+apps/playground/scripts/copy-nutrient-assets.mjs
+  s_e48c5bffb53b31::t_c130b80b240216 1-42
+.gitattributes
+  s_ed1317aaed7051::t_81ba620a2aa337 30-32
+apps/playground/src/preview-adapters/NutrientPptxPreviewAdapter.tsx
+  s_e48c5bffb53b31::t_cf9338d26706a2 12,20-21
+  s_e48c5bffb53b31::t_7db8b72ea960e7 57-58
+apps/playground/package.json
+  s_e48c5bffb53b31::t_84e9c03c8f4cc7 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "3ae3ccdcdb5bad6637d4350be674acf0e5be8c52",
+  "prompts": {},
+  "sessions": {
+    "s_e48c5bffb53b31": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e8c1fa9f-902a-4361-a02c-84aaf4f5dd38",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    },
+    "s_ed1317aaed7051": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_126b1dc1bffe6mIJXMM59KSD5c",
+        "model": "qwen3.7-plus"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
