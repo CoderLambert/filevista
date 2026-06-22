@@ -8,32 +8,24 @@
 import { resolveAssetPath } from "@lamberl-lee/file-preview";
 import { DEMO_FILE_ENTRIES } from "./demos.generated";
 
-export const DEMO_BINARY_FILES: Record<
-  string,
-  { name: string; type: string; url: string }
-> = Object.fromEntries(
-  DEMO_FILE_ENTRIES.map((entry) => [
-    entry.name,
-    {
-      name: entry.name,
-      type: entry.type,
-      url: resolveAssetPath(entry.path),
-    },
-  ])
-);
-
 /**
  * Fetch binary demo files and convert to FileInfo-compatible format.
  * Returns array of { name, type, content (base64), size } entries.
+ *
+ * Note: `resolveAssetPath` is called lazily inside this function rather than
+ * at module scope, because `setAssetBasePath` is called in `page.tsx` after
+ * module evaluation. On GitHub Pages the base path (/filevista) must be
+ * applied; resolving at call time ensures it is.
  */
 export async function fetchBinaryDemoFiles(): Promise<
   { name: string; type: string; content: string; size: number }[]
 > {
   const results: { name: string; type: string; content: string; size: number }[] = [];
 
-  for (const demo of Object.values(DEMO_BINARY_FILES)) {
+  for (const entry of DEMO_FILE_ENTRIES) {
     try {
-      const response = await fetch(demo.url);
+      const url = resolveAssetPath(entry.path);
+      const response = await fetch(url);
       if (!response.ok) continue;
 
       const blob = await response.blob();
@@ -47,14 +39,14 @@ export async function fetchBinaryDemoFiles(): Promise<
       });
 
       results.push({
-        name: demo.name,
-        type: demo.type,
+        name: entry.name,
+        type: entry.type,
         content: base64,
         size: blob.size,
       });
     } catch {
       // Skip files that fail to load
-      console.warn(`Failed to load demo file: ${demo.name}`);
+      console.warn(`Failed to load demo file: ${entry.name}`);
     }
   }
 
