@@ -6,7 +6,10 @@ export const pptxPlugin: PreviewPlugin = {
   priority: 100,
   match: (file) => file.fileType === "pptx",
   load: loadWithOptionalDep(
-    () => import("../preview-adapters/PptxPreviewAdapter"),
-    { package: "pptx-preview", featureLabel: "PPTX preview" },
+    async () => {
+      await import("@aiden0z/pptx-renderer");
+      return import("../preview-adapters/PptxPreviewAdapter");
+    },
+    { package: "@aiden0z/pptx-renderer", featureLabel: "PPTX preview" },
   ),
 };

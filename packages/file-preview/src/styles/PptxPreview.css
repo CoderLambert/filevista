@@ -215,22 +215,6 @@
   background: transparent;
 }
 
-/* ── Iframe (isolated rendering) ── */
-.fv-pptx__iframe {
-  display: block;
-  border: none;
-  background: transparent;
-}
-
-.fv-pptx__iframe--slide {
-  margin: 0 auto;
-}
-
-.fv-pptx__iframe--grid {
-  width: 100%;
-  min-height: 200px;
-}
-
 /* Loading overlay */
 .fv-pptx__loading-overlay {
   position: absolute;
@@ -284,80 +268,27 @@
   }
 }
 
-/* ── Stage: real layout size after scale ─ */
-.fv-pptx__stage {
-  position: relative;
-  flex: 0 0 auto;
-  overflow: hidden;
-  background: white;
+/* Render container — pptx-renderer mounts directly here */
+.fv-pptx__render-container {
+  width: 100%;
+  min-height: 200px;
+}
+
+.fv-pptx__render-container > * {
   border-radius: 12px;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06),
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.3s ease;
-  height: auto;
-  min-height: 0;
 }
 
-[data-fv-theme="dark"] .fv-pptx__stage {
-  background: #1e293b;
+[data-fv-theme="dark"] .fv-pptx__render-container > * {
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 2px 4px -1px rgba(0, 0, 0, 0.2),
     0 20px 25px -5px rgba(0, 0, 0, 0.3),
     0 10px 10px -5px rgba(0, 0, 0, 0.2);
-}
-
-.fv-pptx__stage:hover {
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05),
-    0 25px 50px -12px rgba(0, 0, 0, 0.15);
-}
-
-[data-fv-theme="dark"] .fv-pptx__stage:hover {
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.4),
-    0 4px 6px -2px rgba(0, 0, 0, 0.3),
-    0 25px 50px -12px rgba(0, 0, 0, 0.4);
-}
-
-/* Inner layer: original render size, scaled visually */
-.fv-pptx__scale-layer {
-  position: absolute;
-  inset: 0 auto auto 0;
-  transform-origin: top left;
-  will-change: transform;
-  height: auto;
-  min-height: 0;
-}
-
-/* Grid mode stage - fill width, allow natural flow */
-.fv-pptx__stage--grid {
-  width: 100% !important;
-  height: auto !important;
-  max-width: none;
-  overflow: visible !important;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
-}
-
-/* Grid mode scale layer - remove transform */
-.fv-pptx__stage--grid .fv-pptx__scale-layer {
-  position: relative;
-  inset: auto;
-  width: 100%;
-  height: auto;
-  transform: none !important;
-  will-change: auto;
-}
-
-/* Smooth transitions */
-.fv-pptx__scale-layer {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Responsive adjustments */
