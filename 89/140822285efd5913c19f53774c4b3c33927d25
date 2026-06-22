@@ -1,0 +1,25 @@
+packages/file-preview/src/PptxPreview.tsx
+  s_5b0e4c7467b25a::t_79e81becd73a90 4,87-102,111,117-128,136-138,142-143,156,163,165,228,235-238,257,259,262-273,314,340,343,348,351,410
+packages/file-preview/src/pptx/read-pptx-insight.ts
+  s_5b0e4c7467b25a::t_0607059b8fd656 30-31,37-38
+packages/file-preview/src/engines/pptx/pptx-renderer-engine.ts
+  s_5b0e4c7467b25a::t_f428fbff840320 133-134
+packages/file-preview/src/pptx/read-pptx-semantic-deck.ts
+  s_5b0e4c7467b25a::t_a44870833a2408 179-180,186
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "89140822285efd5913c19f53774c4b3c33927d25",
+  "prompts": {},
+  "sessions": {
+    "s_5b0e4c7467b25a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b69d8f9a-90f2-43d7-b1cb-9aa79729b8dd",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
