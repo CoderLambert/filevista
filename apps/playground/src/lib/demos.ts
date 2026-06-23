@@ -26,13 +26,34 @@ export async function fetchBinaryDemoFiles(): Promise<
     try {
       const url = resolveAssetPath(entry.path);
       const response = await fetch(url);
-      if (!response.ok) continue;
+      if (!response.ok) {
+        console.error(
+          `Failed to fetch demo file: ${entry.name}`,
+          response.status,
+          response.statusText,
+          url,
+        );
+        continue;
+      }
 
       const blob = await response.blob();
 
       const head = await blob.slice(0, 256).text();
-      if (head.startsWith("version https://git-lfs.github.com/spec/v1")) {
+      const normalizedHead = head.trimStart().toLowerCase();
+
+      if (normalizedHead.startsWith("version https://git-lfs.github.com/spec/v1")) {
         console.warn(`Skipping LFS pointer file: ${entry.name}`);
+        continue;
+      }
+
+      if (
+        normalizedHead.startsWith("<!doctype html") ||
+        normalizedHead.startsWith("<html")
+      ) {
+        console.error(
+          `Demo file returned HTML instead of binary data: ${entry.name}`,
+          url,
+        );
         continue;
       }
 

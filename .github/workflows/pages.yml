@@ -47,6 +47,39 @@ jobs:
 
           echo "All Git LFS demo assets were downloaded successfully."
 
+      - name: Verify Office demo archives
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          from zipfile import BadZipFile, ZipFile
+
+          demo_dir = Path("apps/playground/public/demo")
+          zip_extensions = {".xlsx", ".docx", ".pptx", ".epub"}
+
+          failed = []
+
+          for path in demo_dir.iterdir():
+              if not path.is_file() or path.suffix.lower() not in zip_extensions:
+                  continue
+
+              try:
+                  with ZipFile(path) as archive:
+                      bad_member = archive.testzip()
+                      if bad_member:
+                          failed.append(f"{path}: corrupt member {bad_member}")
+              except BadZipFile:
+                  failed.append(f"{path}: not a valid ZIP/OOXML package")
+
+          if failed:
+              print("Invalid Office demo files:")
+              for item in failed:
+                  print(f"  - {item}")
+              raise SystemExit(1)
+
+          print("All Office demo archives are valid.")
+          PY
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
