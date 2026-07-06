@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { EyeIcon, Code2Icon } from "./icons";
+import { useState, useEffect } from "react";
+import { EyeIcon, Code2Icon, AlertTriangleIcon } from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";
 import { useLocale } from "./core/i18n";
 import "./styles/HtmlPreview.css";
@@ -17,20 +17,41 @@ type HtmlSecurityMode = "safe" | "trusted";
 
 export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
+  const [securityMode, setSecurityMode] = useState<HtmlSecurityMode>("safe");
+  const [blobUrl, setBlobUrl] = useState<string>("");
   const t = useLocale();
 
-  const [securityMode] = useState<HtmlSecurityMode>("safe");
-  const sandbox =
-    securityMode === "trusted" ? "allow-scripts allow-same-origin" : "";
-
-  const blobUrl = useMemo(() => {
+  // Build blob URL in an effect (not useMemo) so the cleanup runs exactly
+  // once per `content` change. Returning the revoke from the effect cleanup
+  // avoids two failure modes:
+  //   1. useMemo returning a fresh blob each render but the old URL never
+  //      being revoked → leak.
+  //   2. StrictMode double-invoking the effect cleanup → revoking a URL
+  //      that's still in use, causing iframe flashes.
+  useEffect(() => {
     const blob = new Blob([content], { type: "text/html" });
-    return URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    setBlobUrl(url);
+    return () => URL.revokeObjectURL(url);
   }, [content]);
 
-  useEffect(() => {
-    return () => URL.revokeObjectURL(blobUrl);
-  }, [blobUrl]);
+  // sandbox:
+  //   "safe"     → "" (most restrictive: no scripts, no forms, no popups,
+  //                       treated as unique origin; CSS + text + images still work)
+  //   "trusted"  → "allow-scripts allow-same-origin allow-popups allow-forms"
+  //                (enables interactive HTML; user must opt in via the toggle)
+  //
+  // We do NOT default to "trusted" — running untrusted HTML with scripts
+  // enabled is a known XSS vector. The toggle lets a user explicitly accept
+  // that risk for files they trust.
+  const sandbox =
+    securityMode === "trusted"
+      ? "allow-scripts allow-same-origin allow-popups allow-forms"
+      : "";
+
+  const toggleSecurity = () => {
+    setSecurityMode((prev) => (prev === "safe" ? "trusted" : "safe"));
+  };
 
   return (
     <div className="fv-html">
@@ -51,7 +72,24 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
             {t.source}
           </button>
         </div>
+
+        <div className="fv-view-mode-group">
+          <button
+            onClick={toggleSecurity}
+            className={`fv-view-mode-btn ${securityMode === "trusted" ? "fv-view-mode-btn--active" : ""}`}
+            title={t.htmlTrustedModeHint}
+          >
+            <AlertTriangleIcon size={13} />
+            {securityMode === "trusted"
+              ? t.htmlDisableScripts
+              : t.htmlEnableScripts}
+          </button>
+        </div>
       </div>
+
+      {securityMode === "trusted" && (
+        <div className="fv-html__hint">{t.htmlTrustedModeHint}</div>
+      )}
 
       <div className="fv-html__content">
         {viewMode === "preview" ? (

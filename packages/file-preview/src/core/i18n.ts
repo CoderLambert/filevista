@@ -61,6 +61,11 @@ export interface LocaleMessages {
   legacyXlsBanner: string;
   unsupportedFileType: string;
 
+  // HTML preview security toggle
+  htmlEnableScripts: string;
+  htmlDisableScripts: string;
+  htmlTrustedModeHint: string;
+
   // Large file
   largeFileHint: string;
   largeFile: string;
@@ -201,6 +206,11 @@ export const zhCN: LocaleMessages = {
   legacyXlsBanner: "旧版 Excel 格式暂不支持",
   unsupportedFileType: "该文件类型 ({fileType}) 暂不支持浏览器端预览。",
 
+  // HTML preview security toggle
+  htmlEnableScripts: "启用脚本",
+  htmlDisableScripts: "关闭脚本",
+  htmlTrustedModeHint: "已启用脚本：可执行 HTML 内 JavaScript，仅信任来源时使用。",
+
   // Large file
   largeFileHint: "当前文件较大，浏览器端解析可能需要更长时间，期间页面可能短暂卡顿。",
   largeFile: "大文件",
@@ -338,6 +348,11 @@ export const enUS: LocaleMessages = {
   legacyXlsError: "This file is in the legacy .xls binary format. Only the Open XML format (.xlsx/.xlsm) is supported. Please use Excel or WPS to save the file as .xlsx and try again.",
   legacyXlsBanner: "Legacy Excel format not supported",
   unsupportedFileType: "File type ({fileType}) is not supported for browser-side preview.",
+
+  // HTML preview security toggle
+  htmlEnableScripts: "Enable scripts",
+  htmlDisableScripts: "Disable scripts",
+  htmlTrustedModeHint: "Scripts enabled: JavaScript in the HTML will run. Use only for trusted sources.",
 
   // Large file
   largeFileHint: "This file is large. Browser-side parsing may take longer and the page may briefly freeze.",

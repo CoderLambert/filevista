@@ -11,9 +11,10 @@ import type { ExcelWorkbookLoadResult } from "./types";
 import { extractWorkbookTheme, themeColorsToArray } from "./theme";
 
 // Lazy-load ExcelJS
-let ExcelJS: typeof import("exceljs") | null = null;
+type ExcelJSModule = typeof import("exceljs");
+let ExcelJS: ExcelJSModule | null = null;
 
-async function getExcelJS() {
+async function getExcelJS(): Promise<ExcelJSModule> {
   if (!ExcelJS) {
     ExcelJS = await import("exceljs");
   }
@@ -40,7 +41,18 @@ export async function readXlsxWorkbook(
   const [workbook, theme] = await Promise.all([
     (async () => {
       const EJS = await getExcelJS();
-      const wb = new EJS.Workbook();
+      if (!EJS) {
+        throw new Error("ExcelJS module failed to load.");
+      }
+      // ESM/CJS interop: some bundlers wrap the CJS module as { default: Module }
+      // rather than spreading the namespace onto the import itself. Fall back
+      // to `EJS.Workbook` for the standard ESM case, but prefer `.default.Workbook`
+      // when the wrapper shape is detected.
+      const mod = EJS as ExcelJSModule & {
+        default?: { Workbook: ExcelJSModule["Workbook"] };
+      };
+      const Workbook = mod.default?.Workbook ?? EJS.Workbook;
+      const wb = new Workbook();
       await wb.xlsx.load(buffer);
       return wb;
     })(),

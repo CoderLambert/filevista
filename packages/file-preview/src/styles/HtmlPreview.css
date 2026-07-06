@@ -3,6 +3,13 @@
   flex-direction: column;
   height: 100%;
 }
+.fv-html__hint {
+  padding: 6px 12px;
+  font-size: 12px;
+  background: var(--fv-warning-bg, #fff7e6);
+  color: var(--fv-warning-fg, #d97706);
+  border-bottom: 1px solid var(--fv-warning-border, #fde68a);
+}
 .fv-html__content {
   flex: 1;
   min-height: 0;
