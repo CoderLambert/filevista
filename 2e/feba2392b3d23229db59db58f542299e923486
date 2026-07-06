@@ -1,0 +1,36 @@
+packages/file-preview/src/core/i18n.ts
+  s_3c271c4c74ee8b::t_3c6579bb7afb74 64-68
+  s_3c271c4c74ee8b::t_3c0f0d902d3617 209-213
+  s_3c271c4c74ee8b::t_f08b5d7ab61267 352-356
+packages/file-preview/src/HtmlPreview.tsx
+  s_3c271c4c74ee8b::t_1ba78b8078fdf4 3,20-21,24-31,33-35,38-54,75-81,83-87,90-93
+  s_3c271c4c74ee8b::t_b364885255452e 4,82
+packages/file-preview/src/styles/HtmlPreview.css
+  s_3c271c4c74ee8b::t_9b7af502c776fa 6-12
+packages/file-preview/src/excel/read-workbook.ts
+  s_3c271c4c74ee8b::t_d316d5ee1c0558 47-50,53-55
+  s_3c271c4c74ee8b::t_53c3ee6ab29b77 51-52
+  s_3c271c4c74ee8b::t_8fd4a21b5a73a0 44-46
+  s_3c271c4c74ee8b::t_493c4e668503b3 14-15,17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2efeba2392b3d23229db59db58f542299e923486",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  },
+  "sessions": {
+    "s_3c271c4c74ee8b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "634d96a9-e445-4d69-8e2c-a9b3ca89c947",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
