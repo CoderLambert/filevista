@@ -121,8 +121,13 @@ export {
 // ─── Performance / size limits ────────────────────────────────────────────
 export {
   PREVIEW_SIZE_LIMITS,
+  resolvePreviewSizePolicy,
+  validatePreviewSizePolicy,
   getPreviewSizeLevel,
   getPreviewSizePolicy,
+  type LargeFilePolicy,
+  type PreviewSizePolicyConfig,
+  type ResolvedPreviewSizePolicy,
   type PreviewSizeLevel,
   type PreviewSizePolicy,
 } from "./performance-limits";
@@ -132,7 +137,11 @@ export {
   shouldHighlight,
   truncateContent,
 } from "./limits";
-export { LargeFileGate } from "./LargeFileGate";
+export {
+  LargeFileGate,
+  type LargeFileGateProps,
+  type LargeFileBlockedContext,
+} from "./LargeFileGate";
 
 // ─── Built-in plugins (base only) ──────────────────────────────────────────
 //

@@ -13,6 +13,7 @@ https://coderlambert.github.io/filevista/
 - 拖拽上传、多文件切换、TabCache 状态保持
 - Legacy Renderer / Plugin Renderer 双引擎切换
 - 按文件类型懒加载 Preview Adapter
+- 可配置大文件预览策略（`largeFilePolicy`），支持 warning / confirm / block 三档阈值自定义、`onError` 错误上报与自定义降级 UI
 - GitHub Actions CI 自动验证
 - GitHub Pages 自动部署
 
@@ -96,6 +97,58 @@ CI 会自动执行 lint、test、build。Pages workflow 会自动构建并部署
 - 远程 URL 预览依赖目标服务器 CORS 配置，若目标服务器未允许浏览器跨域访问，则无法直接预览
 - 所有预览均在浏览器端执行，最终效果受浏览器能力影响
 
+## 大文件预览策略
+
+`PluginPreviewRenderer` 默认启用大文件保护：20 MB 提示、50 MB 需用户确认、100 MB 拦截预览（仅提供下载）。可通过 `largeFilePolicy` prop 自定义：
+
+```tsx
+import { PluginPreviewRenderer, validatePreviewSizePolicy } from "@lamberl-lee/file-preview";
+
+// 1. 自定义阈值（warning / confirm 可选，置 null 禁用某档）
+<PluginPreviewRenderer
+  file={file}
+  registry={registry}
+  largeFilePolicy={{
+    warningBytes: 20 * 1024 * 1024,
+    confirmBytes: 35 * 1024 * 1024,
+    maxBytes: 50 * 1024 * 1024,
+  }}
+  onError={(error) => {
+    if (error.code === "FILE_TOO_LARGE") {
+      // 上报到监控系统：error.details.actualBytes / maxBytes / fileType
+    }
+  }}
+  renderLargeFileFallback={({ file, maxBytes, download }) => (
+    <div>
+      {file.name} 超出 {maxBytes} 限制
+      <button onClick={() => download().catch(console.error)}>下载</button>
+    </div>
+  )}
+/>
+
+// 2. 关闭限制（仅适用于已在外层做过大小控制的场景）
+<PluginPreviewRenderer file={file} largeFilePolicy="off" />
+
+// 3. 使用默认策略（20 / 50 / 100 MB）
+<PluginPreviewRenderer file={file} largeFilePolicy="default" />
+```
+
+**接收用户输入的 maxBytes 时**，应先 try/catch `validatePreviewSizePolicy` 校验，非法值回退到 `"default"`：
+
+```tsx
+const policy = useMemo(() => {
+  const maxBytes = userMB * 1024 * 1024;
+  try {
+    validatePreviewSizePolicy({ maxBytes });
+    return { maxBytes };
+  } catch {
+    return "default";
+  }
+}, [userMB]);
+```
+
+完整示例参考 [apps/playground/src/app/large-file-policy-demo.tsx](apps/playground/src/app/large-file-policy-demo.tsx)。
+
 ## 文档
 
 - 用户版支持矩阵：[docs/user-facing-preview-support.md](docs/user-facing-preview-support.md)
@@ -111,10 +164,11 @@ CI 会自动执行 lint、test、build。Pages workflow 会自动构建并部署
 Stage 18：预览性能与大文件处理优化
 ```
 
-候选方向：
+候选方向（✅ 表示已落地）：
 
+- ✅ 大文件预览策略可配置化（`largeFilePolicy`，含 warning / confirm / block 三档）
+- ✅ 统一错误边界（`onError` + `PreviewError`，覆盖 `FILE_TOO_LARGE` / `UNSUPPORTED_FILE_TYPE` / `RENDER_FAILED` 等 code）
 - 大文件读取进度提示
 - PDF / Office 渲染取消机制
 - Plugin 加载失败 fallback
 - Worker 化部分解析任务
-- 统一错误边界

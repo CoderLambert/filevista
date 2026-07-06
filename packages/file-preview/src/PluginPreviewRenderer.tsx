@@ -10,7 +10,8 @@ import { UnsupportedPluginPreview } from "./preview-adapters/UnsupportedPluginPr
 import { getPreviewSupportMeta } from "./support-status";
 import { PreviewErrorBoundary } from "./PreviewErrorBoundary";
 import { PreviewLoading } from "./PreviewLoading";
-import { LargeFileGate } from "./LargeFileGate";
+import { LargeFileGate, type LargeFileBlockedContext } from "./LargeFileGate";
+import { type LargeFilePolicy } from "./performance-limits";
 import { PreviewError, isPreviewError } from "./core/preview-error";
 import type { PreviewErrorCode } from "./core/preview-error";
 import { safelyInvoke } from "./core/safely-invoke";
@@ -126,8 +127,27 @@ export interface PluginPreviewRendererProps {
    *   default — real users upload unpredictable files.
    * - `"off"`: no gate. Use only when the caller enforces its own size
    *   policy or is previewing trusted, size-bounded content.
+   * - `PreviewSizePolicyConfig`: custom thresholds for warning, confirmation,
+   *   and blocking.
+   *
+   *   ```tsx
+   *   <PluginPreviewRenderer
+   *     file={file}
+   *     largeFilePolicy={{ maxBytes: 50 * 1024 * 1024 }}
+   *   />
+   *   ```
    */
-  largeFilePolicy?: "default" | "off";
+  largeFilePolicy?: LargeFilePolicy;
+  /**
+   * Custom fallback UI when the file exceeds the block threshold.
+   *
+   * When set, this replaces the default `PreviewFallback("file-too-large")`
+   * with the consumer's own component. The context includes `file`,
+   * `actualBytes`, `maxBytes`, and a `download` function.
+   */
+  renderLargeFileFallback?: (
+    context: LargeFileBlockedContext,
+  ) => React.ReactNode;
 }
 
 export function PluginPreviewRenderer({
@@ -136,6 +156,7 @@ export function PluginPreviewRenderer({
   showPluginDebug = false,
   onError,
   largeFilePolicy = "default",
+  renderLargeFileFallback,
 }: PluginPreviewRendererProps) {
   const [retryKey, setRetryKey] = useState(0);
 
@@ -167,10 +188,12 @@ export function PluginPreviewRenderer({
     setRetryKey((value) => value + 1);
   }, [plugin]);
 
+  let content: React.ReactNode;
+
   if (!plugin) {
     const support = getPreviewSupportMeta(file.fileType);
 
-    return (
+    content = (
       <UnsupportedPluginPreview
         file={file}
         title={support.status === "legacy-only" ? "Not Migrated Yet" : undefined}
@@ -185,37 +208,46 @@ export function PluginPreviewRenderer({
         }
       />
     );
+  } else {
+    content = (
+      <div className="fv-plugin-renderer">
+        {showPluginDebug && (
+          <div className="fv-plugin-debug">
+            <span className="fv-plugin-debug__label">Plugin Renderer</span>
+            <span>→</span>
+            <span>{plugin.name}</span>
+            <span className="fv-plugin-debug__id">{plugin.id}</span>
+          </div>
+        )}
+
+        <div className="fv-plugin-renderer__content">
+          <PreviewErrorBoundary
+            file={file}
+            pluginId={plugin.id}
+            pluginName={plugin.name}
+            resetKey={`${file.id}:${plugin.id}:${retryKey}`}
+            onRetry={handleRetry}
+            onError={onError}
+          >
+            <PluginContent plugin={plugin} file={file} onError={onError} />
+          </PreviewErrorBoundary>
+        </div>
+      </div>
+    );
   }
 
-  const content = (
-    <div className="fv-plugin-renderer">
-      {showPluginDebug && (
-        <div className="fv-plugin-debug">
-          <span className="fv-plugin-debug__label">Plugin Renderer</span>
-          <span>→</span>
-          <span>{plugin.name}</span>
-          <span className="fv-plugin-debug__id">{plugin.id}</span>
-        </div>
-      )}
+  if (largeFilePolicy === "off") {
+    return <>{content}</>;
+  }
 
-      <div className="fv-plugin-renderer__content">
-        <PreviewErrorBoundary
-          file={file}
-          pluginId={plugin.id}
-          pluginName={plugin.name}
-          resetKey={`${file.id}:${plugin.id}:${retryKey}`}
-          onRetry={handleRetry}
-          onError={onError}
-        >
-          <PluginContent plugin={plugin} file={file} onError={onError} />
-        </PreviewErrorBoundary>
-      </div>
-    </div>
+  return (
+    <LargeFileGate
+      file={file}
+      policy={largeFilePolicy}
+      onError={onError}
+      renderBlockedFallback={renderLargeFileFallback}
+    >
+      {content}
+    </LargeFileGate>
   );
-
-  // Default: protect against accidentally previewing huge files. The gate
-  // is a no-op for files under the 20 MB warning threshold, so normal-size
-  // previews render exactly as before.
-  if (largeFilePolicy === "off") return content;
-  return <LargeFileGate file={file}>{content}</LargeFileGate>;
 }

@@ -64,6 +64,11 @@ export interface LocaleMessages {
   // Large file
   largeFileHint: string;
   largeFile: string;
+  fileTooLargeToPreview: string;
+  fileTooLargeBlockedDesc: string;
+  largeFilePreviewTitle: string;
+  previewAnyway: string;
+  largeFileWarningBanner: string;
   largeFileRows: string;
   largeFileCols: string;
   largeFileImages: string;
@@ -199,6 +204,11 @@ export const zhCN: LocaleMessages = {
   // Large file
   largeFileHint: "当前文件较大，浏览器端解析可能需要更长时间，期间页面可能短暂卡顿。",
   largeFile: "大文件",
+  fileTooLargeToPreview: "文件过大，无法预览",
+  fileTooLargeBlockedDesc: "文件大小 {actualSize}，超过最大预览限制 {maxSize}，请下载后查看。",
+  largeFilePreviewTitle: "大文件预览",
+  previewAnyway: "继续预览",
+  largeFileWarningBanner: "大文件：{fileSize}，预览可能较慢。",
   largeFileRows: "行",
   largeFileCols: "列",
   largeFileImages: "张图片",
@@ -332,6 +342,11 @@ export const enUS: LocaleMessages = {
   // Large file
   largeFileHint: "This file is large. Browser-side parsing may take longer and the page may briefly freeze.",
   largeFile: "Large File",
+  fileTooLargeToPreview: "File too large to preview",
+  fileTooLargeBlockedDesc: "File size {actualSize} exceeds the maximum preview limit of {maxSize}. Please download to view.",
+  largeFilePreviewTitle: "Large file preview",
+  previewAnyway: "Preview anyway",
+  largeFileWarningBanner: "Large file: {fileSize}. Preview may be slower.",
   largeFileRows: "rows",
   largeFileCols: "cols",
   largeFileImages: "images",

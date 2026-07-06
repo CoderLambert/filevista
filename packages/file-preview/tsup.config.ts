@@ -29,6 +29,7 @@ export default defineConfig({
     "!src/**/*.test.ts",
     "!src/**/*.test.tsx",
     "!src/**/__tests__/**",
+    "!src/**/*.d.ts",
   ],
   format: ["esm"],
   dts: true,
