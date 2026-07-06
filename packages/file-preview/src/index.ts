@@ -176,6 +176,7 @@ export { videoPlugin } from "./plugins/video-plugin";
 // ─── Remote URL loader ────────────────────────────────────────────────────
 export {
   processRemoteUrl,
+  createRemoteFileInfo,
   RemoteUrlError,
   DEFAULT_REMOTE_MAX_BYTES,
   type RemoteUrlErrorCode,

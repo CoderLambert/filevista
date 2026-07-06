@@ -133,6 +133,16 @@ import { PluginPreviewRenderer, validatePreviewSizePolicy } from "@lamberl-lee/f
 <PluginPreviewRenderer file={file} largeFilePolicy="default" />
 ```
 
+`largeFilePolicy` 是三段式分级闸门，按文件大小从宽松到严格依次触发：
+
+| 字段 | 触发条件 | 行为 | 是否阻塞预览 |
+|------|---------|------|--------------|
+| `warningBytes` | `file.size >= warningBytes` | 预览上方显示非阻塞提示条（"大文件：X MB，预览可能较慢"），预览正常渲染 | 否 |
+| `confirmBytes` | `file.size >= confirmBytes` | 弹出确认对话框，用户必须点击"继续预览"才会加载插件；未确认前不渲染 | 是（可绕过） |
+| `maxBytes` | `file.size > maxBytes` | 完全阻止预览，仅显示下载按钮，并触发 `onError({ code: "FILE_TOO_LARGE" })` | 是（不可绕过） |
+
+**约束**：三者必须满足 `warningBytes < confirmBytes < maxBytes`（严格小于），否则 `validatePreviewSizePolicy` 抛 `TypeError`。任一字段可设为 `null` 禁用对应档位，例如 `{ maxBytes: 50MB, warningBytes: null }` 只启用 confirm + block 两档。
+
 **接收用户输入的 maxBytes 时**，应先 try/catch `validatePreviewSizePolicy` 校验，非法值回退到 `"default"`：
 
 ```tsx
@@ -148,6 +158,65 @@ const policy = useMemo(() => {
 ```
 
 完整示例参考 [apps/playground/src/app/large-file-policy-demo.tsx](apps/playground/src/app/large-file-policy-demo.tsx)。
+
+### 远程文件：用后端 metadata 提前判断闸门
+
+如果后端文件列表已经返回 `name` + `size`（无需下载即可拿到大小），应使用 `createRemoteFileInfo()` 直接拼装 `FileInfo`，让闸门在**零网络请求**时即生效：
+
+```tsx
+import {
+  PluginPreviewRenderer,
+  createRemoteFileInfo,
+} from "@lamberl-lee/file-preview";
+
+interface BackendFileMeta {
+  name: string;
+  size: number;
+  last_modified: number;
+}
+
+function FilePreview({ meta, downloadUrl }: {
+  meta: BackendFileMeta;
+  downloadUrl: string;
+}) {
+  const file = useMemo(
+    () =>
+      createRemoteFileInfo({
+        name: meta.name,
+        size: meta.size,           // ← 闸门立即基于此值判断
+        url: downloadUrl,
+        id: `${meta.name}-${meta.last_modified}`,
+        // mimeType 可选；不传时 detectFileType 退化到只看扩展名
+      }),
+    [meta, downloadUrl],
+  );
+
+  return (
+    <PluginPreviewRenderer
+      file={file}
+      registry={registry}
+      largeFilePolicy={{
+        warningBytes: 2 * 1024 * 1024,
+        confirmBytes: 3 * 1024 * 1024,
+        maxBytes: 5 * 1024 * 1024,
+      }}
+    />
+  );
+}
+```
+
+`createRemoteFileInfo()` 与 `processRemoteUrl()` 的关键差异：
+
+| 能力 | `processRemoteUrl()` | `createRemoteFileInfo()` |
+|------|----------------------|--------------------------|
+| 大小判断时机 | 下载完后 | **metadata 到达即判断** ✅ |
+| 是否发请求 | 立即 fetch 整个 body | 不发请求，plugin 渲染时才懒加载 |
+| MIME 嗅探 | magic bytes + 扩展名 + Content-Type | 仅扩展名（或调用方传入的 `mimeType`） |
+| 100 MB 硬上限 | 有（`DEFAULT_REMOTE_MAX_BYTES`） | 无，由 `largeFilePolicy.maxBytes` 替代 |
+| 下载进度 | 有 `onProgress` | 无 |
+| 错误归一化 | `RemoteUrlError` 带错误码 | 走 `readSourceAsArrayBuffer`，普通 `Error` |
+
+> 适用场景：后端文件列表/网盘 API 已返回 `size` 字段、且你能从其他途径拿到下载 URL。否则继续用 `processRemoteUrl()`。
 
 ## 文档
 

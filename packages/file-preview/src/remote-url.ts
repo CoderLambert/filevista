@@ -480,6 +480,54 @@ async function readResponseAsArrayBufferWithProgress(
   return merged.buffer;
 }
 
+/**
+ * Build a `FileInfo` for a remote URL using metadata the caller already has
+ * (e.g. a backend file listing that returns `name` + `size` without downloading
+ * the body).
+ *
+ * Unlike {@link processRemoteUrl}, this does NOT fetch — the size is taken
+ * from the caller-supplied metadata, so `LargeFileGate` can apply warning /
+ * confirm / block thresholds before any network traffic starts. The download
+ * happens lazily, when a preview plugin calls `readSourceAsArrayBuffer(source)`
+ * / `readSourceAsText(source)`.
+ *
+ * Trade-offs vs `processRemoteUrl`:
+ *   - MIME type comes from `mimeType` (or empty) — no magic-byte sniffing.
+ *     Pass `mimeType` if the backend knows it.
+ *   - No `onProgress` download callback.
+ *   - No built-in 100 MB hard cap — caller controls via `largeFilePolicy.maxBytes`.
+ *   - Network/CORS errors surface as plain `Error` from `readSourceAsArrayBuffer`,
+ *     not the typed `RemoteUrlError` you'd get from `processRemoteUrl`.
+ */
+export function createRemoteFileInfo(input: {
+  name: string;
+  size: number;
+  url: string;
+  mimeType?: string;
+  headers?: Record<string, string>;
+  /**
+   * Stable identifier. Defaults to `${name}::${size}` — pass a real id if your
+   * backend has one, since name+size can collide across revisions or directories.
+   */
+  id?: string;
+}): FileInfo {
+  const mimeType = input.mimeType ?? "";
+  return {
+    id: input.id ?? `${input.name}::${input.size}`,
+    name: input.name,
+    size: input.size,
+    type: mimeType,
+    fileType: detectFileType(input.name, mimeType),
+    source: {
+      kind: "url",
+      url: input.url,
+      name: input.name,
+      mimeType: mimeType || undefined,
+      headers: input.headers,
+    },
+  };
+}
+
 export async function processRemoteUrl(
   rawUrl: string,
   options: ProcessRemoteUrlOptions = {}
