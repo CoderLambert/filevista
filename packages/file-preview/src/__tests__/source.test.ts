@@ -43,13 +43,44 @@ describe("readSourceAsArrayBuffer", () => {
     expect(new TextDecoder().decode(buf)).toBe("ho");
   });
 
-  it("returns the underlying ArrayBuffer verbatim", async () => {
+  it("returns a copy, not the underlying ArrayBuffer reference", async () => {
     const original = new TextEncoder().encode("abc").buffer as ArrayBuffer;
     const buf = await readSourceAsArrayBuffer({
       kind: "arrayBuffer",
       buffer: original,
     });
-    expect(buf).toBe(original); // same reference, no copy
+    expect(buf).not.toBe(original); // distinct reference — defensive copy
+    expect(new TextDecoder().decode(buf)).toBe("abc");
+    // The original is still usable (not detached) after the read.
+    expect(original.byteLength).toBe(3);
+  });
+
+  it("keeps the source buffer usable after the returned copy is detached", async () => {
+    // Reproduces the PdfPreview crash: pdf.js's `getDocument({ data })`
+    // transfers the underlying ArrayBuffer to a Web Worker, detaching it.
+    // Before the fix, readSourceAsArrayBuffer returned `source.buffer`
+    // directly, so after the first read the source buffer was detached and
+    // a second read (React StrictMode double-invoke, file re-selection,
+    // source reuse) crashed with "Cannot perform Construct on a detached
+    // ArrayBuffer". The fix returns a copy, so only the copy gets detached.
+    const source = buffer("payload");
+    const original = (source as { buffer: ArrayBuffer }).buffer;
+
+    const first = await readSourceAsArrayBuffer(source);
+    expect(new TextDecoder().decode(first)).toBe("payload");
+
+    // Detach the *returned* buffer (mimics worker transfer of `data`).
+    const port = new MessageChannel();
+    port.port1.postMessage(first, [first]);
+    port.port1.close();
+    port.port2.close();
+    expect(first.byteLength).toBe(0); // returned copy is detached
+
+    // The source's own buffer must still be intact — second read works.
+    expect(original.byteLength).toBe("payload".length);
+    const second = await readSourceAsArrayBuffer(source);
+    expect(new TextDecoder().decode(second)).toBe("payload");
+    expect(second).not.toBe(first); // a fresh copy each call
   });
 
   describe("url", () => {

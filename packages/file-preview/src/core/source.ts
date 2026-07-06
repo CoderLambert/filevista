@@ -25,7 +25,15 @@ export async function readSourceAsArrayBuffer(
       if (options.signal?.aborted) {
         throw new DOMException("The operation was aborted.", "AbortError");
       }
-      return source.buffer;
+      // Return a copy, not the underlying reference. Downstream consumers
+      // (e.g. pdf.js via `getDocument({ data })`) transfer the buffer to a
+      // Web Worker, which detaches the original ArrayBuffer. If we returned
+      // `source.buffer` directly, a second read on the same source (React
+      // StrictMode double-invoke, file re-selection, source reuse across
+      // previews) would hit `Cannot perform Construct on a detached ArrayBuffer`.
+      // The `file` and `blob` branches already return fresh buffers per call;
+      // this matches their behavior.
+      return source.buffer.slice(0);
 
     case "url": {
       const response = await fetch(source.url, {
