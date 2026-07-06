@@ -1,0 +1,24 @@
+.changeset/large-file-policy-and-detached-buffer-fix.md
+  s_3c271c4c74ee8b::t_99550544be5ed4 1-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "077365161a6084f247f5039cb07899b73a4524f2",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  },
+  "sessions": {
+    "s_3c271c4c74ee8b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "634d96a9-e445-4d69-8e2c-a9b3ca89c947",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
