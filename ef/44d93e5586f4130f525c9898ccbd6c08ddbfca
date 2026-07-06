@@ -1,0 +1,24 @@
+.changeset/html-preview-fixes.md
+  s_3c271c4c74ee8b::t_5a6ac8a36be79f 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ef44d93e5586f4130f525c9898ccbd6c08ddbfca",
+  "prompts": {},
+  "humans": {
+    "h_0c102f4798bf38": {
+      "author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  },
+  "sessions": {
+    "s_3c271c4c74ee8b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "634d96a9-e445-4d69-8e2c-a9b3ca89c947",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
