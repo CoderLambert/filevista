@@ -148,11 +148,19 @@ export default function Home() {
       // Load binary demos from public/demo/ directory
       const binaryDemos = await fetchBinaryDemoFiles();
       const allDemos: FileInfo[] = binaryDemos.map((demo) => {
-        const bytes = base64ToUint8Array(demo.content);
-        const buffer = bytes.buffer.slice(
-          bytes.byteOffset,
-          bytes.byteOffset + bytes.byteLength
-        ) as ArrayBuffer;
+        // HTML demos come back as UTF-8 text; encode to an ArrayBuffer so
+        // they fit the same `arrayBuffer` source shape as binary demos.
+        // Base64 demos go through the existing base64ToUint8Array path.
+        const buffer =
+          demo.encoding === "utf8"
+            ? (new TextEncoder().encode(demo.content).buffer.slice(0) as ArrayBuffer)
+            : (() => {
+                const bytes = base64ToUint8Array(demo.content);
+                return bytes.buffer.slice(
+                  bytes.byteOffset,
+                  bytes.byteOffset + bytes.byteLength,
+                ) as ArrayBuffer;
+              })();
 
         return {
           id: generateId(),
@@ -565,12 +573,18 @@ export default function Home() {
               )}
 
               {/* Preview content — PluginPreviewRenderer applies its own
-                  built-in LargeFileGate (20 MB warn / 50 MB confirm / 100 MB block). */}
+                  LargeFileGate. Thresholds are tuned for the demo: warn at
+                  2 MB, require confirmation at 3 MB, block at 5 MB. */}
               <div className="flex-1 min-h-0 min-w-0">
                 <PluginPreviewRenderer
                   file={activeFile}
                   registry={previewRegistry}
                   showPluginDebug={process.env.NODE_ENV === "development"}
+                  largeFilePolicy={{
+                    warningBytes: 2 * 1024 * 1024,
+                    confirmBytes: 3 * 1024 * 1024,
+                    maxBytes: 5 * 1024 * 1024,
+                  }}
                 />
               </div>
             </>

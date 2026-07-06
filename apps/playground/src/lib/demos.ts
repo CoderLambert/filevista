@@ -18,9 +18,22 @@ import { DEMO_FILE_ENTRIES } from "./demos.generated";
  * applied; resolving at call time ensures it is.
  */
 export async function fetchBinaryDemoFiles(): Promise<
-  { name: string; type: string; content: string; size: number }[]
+  {
+    name: string;
+    type: string;
+    content: string;
+    size: number;
+    /** "base64" — opaque binary; "utf8" — text content already decoded. */
+    encoding: "base64" | "utf8";
+  }[]
 > {
-  const results: { name: string; type: string; content: string; size: number }[] = [];
+  const results: {
+    name: string;
+    type: string;
+    content: string;
+    size: number;
+    encoding: "base64" | "utf8";
+  }[] = [];
 
   for (const entry of DEMO_FILE_ENTRIES) {
     try {
@@ -46,39 +59,40 @@ export async function fetchBinaryDemoFiles(): Promise<
         continue;
       }
 
-      if (
+      // HTML files in /demo/ are valid preview targets (FileVista supports
+      // HTML preview), but they must not be treated as opaque binary blobs —
+      // encoding them as base64 → ArrayBuffer would lose the UTF-8 text
+      // boundary and surface as a "binary" file in the demo list. Read them as
+      // text and let the caller encode to UTF-8 bytes if it wants a buffer.
+      const isHtml =
         normalizedHead.startsWith("<!doctype html") ||
-        normalizedHead.startsWith("<html")
-      ) {
-        console.error(
-          `Demo file returned HTML instead of binary data: ${entry.name}`,
-          url,
-        );
-        continue;
-      }
+        normalizedHead.startsWith("<html");
 
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          const content = result.split(",")[1];
-          if (!content) {
-            reject(new Error(`Invalid data URL for demo file: ${entry.name}`));
-            return;
-          }
-          resolve(content);
-        };
-        reader.onerror = () => {
-          reject(reader.error ?? new Error(`Failed to read: ${entry.name}`));
-        };
-        reader.readAsDataURL(blob);
-      });
+      const content = isHtml
+        ? await blob.text()
+        : await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result as string;
+              const dataUrl = result.split(",")[1];
+              if (!dataUrl) {
+                reject(new Error(`Invalid data URL for demo file: ${entry.name}`));
+                return;
+              }
+              resolve(dataUrl);
+            };
+            reader.onerror = () => {
+              reject(reader.error ?? new Error(`Failed to read: ${entry.name}`));
+            };
+            reader.readAsDataURL(blob);
+          });
 
       results.push({
         name: entry.name,
         type: entry.type,
-        content: base64,
+        content,
         size: blob.size,
+        encoding: isHtml ? "utf8" : "base64",
       });
     } catch (error) {
       console.error(`Failed to load demo file: ${entry.name}`, error);
