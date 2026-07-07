@@ -14,6 +14,7 @@ https://coderlambert.github.io/filevista/
 - Legacy Renderer / Plugin Renderer 双引擎切换
 - 按文件类型懒加载 Preview Adapter
 - 可配置大文件预览策略（`largeFilePolicy`），支持 warning / confirm / block 三档阈值自定义、`onError` 错误上报与自定义降级 UI
+- HTML 支持安全预览、源码查看和需确认的完整预览模式
 - GitHub Actions CI 自动验证
 - GitHub Pages 自动部署
 
@@ -27,7 +28,7 @@ https://coderlambert.github.io/filevista/
 | Text | .txt/.log/.env | ✅ | 纯文本预览 |
 | Markdown | .md/.mdx | ✅ | GFM 渲染 |
 | CSV | .csv | ✅ | 表格预览 |
-| HTML | .html/.htm | ✅ | 安全预览 + 源码 |
+| HTML | .html/.htm | ✅ | 安全预览 + 完整预览确认 + 源码 |
 | SVG | .svg | ✅ | 预览 + 源码 |
 | Image | .png/.jpg/.webp/.gif 等 | ✅ | 浏览器原生预览 |
 | Audio | .mp3/.wav/.ogg 等 | ✅ | 浏览器原生播放器 |
@@ -217,6 +218,28 @@ function FilePreview({ meta, downloadUrl }: {
 | 错误归一化 | `RemoteUrlError` 带错误码 | 走 `readSourceAsArrayBuffer`，普通 `Error` |
 
 > 适用场景：后端文件列表/网盘 API 已返回 `size` 字段、且你能从其他途径拿到下载 URL。否则继续用 `processRemoteUrl()`。
+
+## HTML 预览安全模式
+
+HTML 默认使用安全预览：iframe sandbox 不放开脚本、表单和弹窗，适合预览来源未知的 HTML 文件。
+
+如果需要体验页面动效、脚本交互等完整效果，可以在业务侧接入 `onHtmlTrustedPreviewRequest`，先弹出确认提示，再调用 `request.confirm()` 开启完整预览：
+
+```tsx
+<PluginPreviewRenderer
+  file={file}
+  registry={registry}
+  onHtmlTrustedPreviewRequest={(request) => {
+    openConfirmDialog({
+      fileName: request.fileName,
+      onConfirm: request.confirm,
+      onCancel: request.cancel,
+    });
+  }}
+/>
+```
+
+完整预览会放开 HTML 内脚本执行，仅建议在信任文件来源时使用。公开 Demo 已内置确认弹窗作为参考。
 
 ## 文档
 

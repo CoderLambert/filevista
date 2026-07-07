@@ -3,11 +3,20 @@
 
 import type { FileInfo } from "../utils";
 import { useSourceText } from "../hooks/useSourceText";
-import { HtmlPreview } from "../HtmlPreview";
+import {
+  HtmlPreview,
+  type HtmlTrustedPreviewRequestHandler,
+} from "../HtmlPreview";
 import { PreviewFallback } from "../PreviewFallback";
 import { PreviewLoading } from "../PreviewLoading";
 
-export default function HtmlPreviewAdapter({ file }: { file: FileInfo }) {
+export default function HtmlPreviewAdapter({
+  file,
+  onHtmlTrustedPreviewRequest,
+}: {
+  file: FileInfo;
+  onHtmlTrustedPreviewRequest?: HtmlTrustedPreviewRequestHandler;
+}) {
   const { content, loading, error } = useSourceText(file.source);
 
   if (loading) {
@@ -26,5 +35,11 @@ export default function HtmlPreviewAdapter({ file }: { file: FileInfo }) {
     );
   }
 
-  return <HtmlPreview content={content} fileName={file.name} />;
+  return (
+    <HtmlPreview
+      content={content}
+      fileName={file.name}
+      onTrustedPreviewRequest={onHtmlTrustedPreviewRequest}
+    />
+  );
 }

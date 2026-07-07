@@ -7,6 +7,7 @@ import {
   FileText,
   X,
   Eye,
+  AlertTriangle,
   Trash2,
   File,
   FolderOpen,
@@ -14,6 +15,7 @@ import {
   Github,
   BookOpen,
   Link2,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +26,7 @@ import { toast } from "sonner";
 import {
   type FileInfo,
   type FileType,
+  type HtmlTrustedPreviewRequest,
   detectFileType,
   detectFileMeta,
   PluginPreviewRenderer,
@@ -86,8 +89,30 @@ export default function Home() {
   const [loadingRemoteUrl, setLoadingRemoteUrl] = useState(false);
   const [remoteProgress, setRemoteProgress] = useState<RemoteLoadProgress | null>(null);
   const remoteAbortRef = useRef<AbortController | null>(null);
+  const [trustedPreviewRequest, setTrustedPreviewRequest] =
+    useState<HtmlTrustedPreviewRequest | null>(null);
 
   const activeFile = files.find((f) => f.id === activeFileId) || null;
+
+  const handleTrustedPreviewRequest = useCallback(
+    (request: HtmlTrustedPreviewRequest) => {
+      setTrustedPreviewRequest(request);
+    },
+    [],
+  );
+
+  const cancelTrustedPreview = useCallback(() => {
+    trustedPreviewRequest?.cancel();
+    setTrustedPreviewRequest(null);
+  }, [trustedPreviewRequest]);
+
+  const confirmTrustedPreview = useCallback(() => {
+    trustedPreviewRequest?.confirm();
+    setTrustedPreviewRequest(null);
+    toast.success("完整预览已开启", {
+      description: "HTML 内脚本现在会在沙箱中执行。",
+    });
+  }, [trustedPreviewRequest]);
 
   const processFile = useCallback(async (file: File): Promise<FileInfo> => {
     const meta = await detectFileMeta({ kind: "file", file });
@@ -580,6 +605,7 @@ export default function Home() {
                   file={activeFile}
                   registry={previewRegistry}
                   showPluginDebug={process.env.NODE_ENV === "development"}
+                  onHtmlTrustedPreviewRequest={handleTrustedPreviewRequest}
                   largeFilePolicy={{
                     warningBytes: 2 * 1024 * 1024,
                     confirmBytes: 3 * 1024 * 1024,
@@ -717,6 +743,65 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {trustedPreviewRequest && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={cancelTrustedPreview}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="trusted-preview-title"
+            aria-describedby="trusted-preview-desc"
+            className="w-full max-w-[480px] rounded-lg border bg-background p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 text-left">
+                <h2
+                  id="trusted-preview-title"
+                  className="text-lg font-semibold leading-6"
+                >
+                  确认开启完整预览？
+                </h2>
+                <p
+                  id="trusted-preview-desc"
+                  className="mt-2 text-sm leading-6 text-muted-foreground"
+                >
+                  开启后，页面中的脚本将被放开执行，你将体验到完整的交互效果，包括动效、表单提交等功能。
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">
+                {trustedPreviewRequest?.fileName}
+              </p>
+              <p className="mt-1 leading-5">
+                仅建议在你信任当前 HTML 文件来源时使用。
+              </p>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={cancelTrustedPreview}>
+                取消
+              </Button>
+              <Button
+                onClick={confirmTrustedPreview}
+                className="gap-2 bg-destructive text-white hover:bg-destructive/90"
+              >
+                <Zap className="h-4 w-4" />
+                确认开启
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

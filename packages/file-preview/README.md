@@ -108,6 +108,57 @@ function Demo({ file }: { file: File }) {
 }
 ```
 
+### HTML preview safety modes
+
+HTML files open in **safe preview** by default. In this mode the iframe sandbox
+does not allow scripts, forms, popups, or same-origin access, so unknown HTML can
+be inspected with lower risk.
+
+If your product wants to offer an interactive "full preview" mode, wire
+`onHtmlTrustedPreviewRequest` and show your own confirmation UI. Call
+`request.confirm()` only after the user accepts:
+
+```tsx
+import { useState } from "react";
+import {
+  PluginPreviewRenderer,
+  type FileInfo,
+  type HtmlTrustedPreviewRequest,
+} from "@lamberl-lee/file-preview";
+
+function Preview({ file }: { file: FileInfo }) {
+  const [pendingHtmlRequest, setPendingHtmlRequest] =
+    useState<HtmlTrustedPreviewRequest | null>(null);
+
+  return (
+    <>
+      <PluginPreviewRenderer
+        file={file}
+        onHtmlTrustedPreviewRequest={setPendingHtmlRequest}
+      />
+
+      {pendingHtmlRequest && (
+        <ConfirmDialog
+          title="Enable full HTML preview?"
+          description="Scripts inside this HTML file will be allowed to run."
+          onCancel={() => {
+            pendingHtmlRequest.cancel();
+            setPendingHtmlRequest(null);
+          }}
+          onConfirm={() => {
+            pendingHtmlRequest.confirm();
+            setPendingHtmlRequest(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+```
+
+Use full preview only for files whose source you trust. Safe preview and source
+view remain available without enabling scripts.
+
 Need only a subset of heavy formats? Import the individual plugins from their
 own subpath so the bundler never touches the rest:
 

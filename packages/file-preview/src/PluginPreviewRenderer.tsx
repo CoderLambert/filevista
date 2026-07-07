@@ -14,6 +14,7 @@ import { LargeFileGate, type LargeFileBlockedContext } from "./LargeFileGate";
 import { type LargeFilePolicy } from "./performance-limits";
 import { PreviewError, isPreviewError } from "./core/preview-error";
 import type { PreviewErrorCode } from "./core/preview-error";
+import type { HtmlTrustedPreviewRequestHandler } from "./HtmlPreview";
 import { safelyInvoke } from "./core/safely-invoke";
 import "./styles/PluginDebugBar.css";
 
@@ -35,7 +36,13 @@ class PreviewPluginLoadError extends PreviewError {
   }
 }
 
-type PluginModule = { default: ComponentType<{ file: FileInfo; reportError?: (error: PreviewError) => void }> };
+type PreviewAdapterProps = {
+  file: FileInfo;
+  reportError?: (error: PreviewError) => void;
+  onHtmlTrustedPreviewRequest?: HtmlTrustedPreviewRequestHandler;
+};
+
+type PluginModule = { default: ComponentType<PreviewAdapterProps> };
 const promiseCache = new WeakMap<PreviewPlugin, Promise<PluginModule>>();
 
 function getPluginPromise(plugin: PreviewPlugin): Promise<PluginModule> {
@@ -57,6 +64,7 @@ interface PluginContentProps {
   plugin: PreviewPlugin;
   file: FileInfo;
   onError?: (error: PreviewError) => void;
+  onHtmlTrustedPreviewRequest?: HtmlTrustedPreviewRequestHandler;
 }
 
 // Load state for a plugin module. We use an explicit state machine instead of
@@ -69,10 +77,15 @@ interface PluginContentProps {
 //   ready  → render the resolved component
 type PluginContentState =
   | { status: "loading" }
-  | { status: "ready"; Component: ComponentType<{ file: FileInfo; reportError?: (error: PreviewError) => void }> }
+  | { status: "ready"; Component: ComponentType<PreviewAdapterProps> }
   | { status: "error"; error: Error };
 
-function PluginContent({ plugin, file, onError }: PluginContentProps) {
+function PluginContent({
+  plugin,
+  file,
+  onError,
+  onHtmlTrustedPreviewRequest,
+}: PluginContentProps) {
   const [state, setState] = useState<PluginContentState>({ status: "loading" });
 
   useEffect(() => {
@@ -104,7 +117,13 @@ function PluginContent({ plugin, file, onError }: PluginContentProps) {
 
   if (state.status === "loading") return <PreviewLoading />;
   if (state.status === "error") throw state.error;
-  return <state.Component file={file} reportError={onError} />;
+  return (
+    <state.Component
+      file={file}
+      reportError={onError}
+      onHtmlTrustedPreviewRequest={onHtmlTrustedPreviewRequest}
+    />
+  );
 }
 
 export interface PluginPreviewRendererProps {
@@ -148,6 +167,15 @@ export interface PluginPreviewRendererProps {
   renderLargeFileFallback?: (
     context: LargeFileBlockedContext,
   ) => React.ReactNode;
+  /**
+   * Fired when the built-in HTML preview requests "full preview" mode.
+   *
+   * Use this to show your own warning/confirmation dialog. Call
+   * `request.confirm()` after the user accepts to allow scripts/forms/popups
+   * inside the HTML iframe. If omitted, full preview is enabled immediately,
+   * matching the previous toggle behavior.
+   */
+  onHtmlTrustedPreviewRequest?: HtmlTrustedPreviewRequestHandler;
 }
 
 export function PluginPreviewRenderer({
@@ -157,6 +185,7 @@ export function PluginPreviewRenderer({
   onError,
   largeFilePolicy = "default",
   renderLargeFileFallback,
+  onHtmlTrustedPreviewRequest,
 }: PluginPreviewRendererProps) {
   const [retryKey, setRetryKey] = useState(0);
 
@@ -229,7 +258,12 @@ export function PluginPreviewRenderer({
             onRetry={handleRetry}
             onError={onError}
           >
-            <PluginContent plugin={plugin} file={file} onError={onError} />
+            <PluginContent
+              plugin={plugin}
+              file={file}
+              onError={onError}
+              onHtmlTrustedPreviewRequest={onHtmlTrustedPreviewRequest}
+            />
           </PreviewErrorBoundary>
         </div>
       </div>

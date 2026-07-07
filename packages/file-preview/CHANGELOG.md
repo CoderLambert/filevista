@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.0
+
+### Minor Changes
+
+- Add a redesigned HTML preview toolbar with safe/full preview modes, source view switching, and a new `onHtmlTrustedPreviewRequest` callback so consumers can show a confirmation dialog before enabling full HTML preview.
+
 ## 0.6.1
 
 ### Patch Changes

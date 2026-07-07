@@ -1,24 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { EyeIcon, Code2Icon, AlertTriangleIcon } from "./icons";
+import { useState, useEffect, useRef } from "react";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  Code2Icon,
+  ShieldCheckIcon,
+  ZapIcon,
+} from "./icons";
 import { ShikiSourceView } from "./ShikiSourceView";
 import { useLocale } from "./core/i18n";
 import "./styles/HtmlPreview.css";
-import "./styles/ViewModeBar.css";
 
 interface HtmlPreviewProps {
   content: string;
   fileName: string;
+  onTrustedPreviewRequest?: HtmlTrustedPreviewRequestHandler;
 }
 
 type ViewMode = "preview" | "source";
-type HtmlSecurityMode = "safe" | "trusted";
+export type HtmlSecurityMode = "safe" | "trusted";
 
-export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
+export interface HtmlTrustedPreviewRequest {
+  fileName: string;
+  confirm: () => void;
+  cancel: () => void;
+}
+
+export type HtmlTrustedPreviewRequestHandler = (
+  request: HtmlTrustedPreviewRequest,
+) => void;
+
+export function HtmlPreview({
+  content,
+  fileName,
+  onTrustedPreviewRequest,
+}: HtmlPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
   const [securityMode, setSecurityMode] = useState<HtmlSecurityMode>("safe");
+  const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string>("");
+  const modeMenuRef = useRef<HTMLDivElement>(null);
   const t = useLocale();
 
   // Build blob URL in an effect (not useMemo) so the cleanup runs exactly
@@ -35,6 +57,33 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
     return () => URL.revokeObjectURL(url);
   }, [content]);
 
+  useEffect(() => {
+    if (!isModeMenuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        modeMenuRef.current &&
+        !modeMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsModeMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsModeMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isModeMenuOpen]);
+
   // sandbox:
   //   "safe"     → "" (most restrictive: no scripts, no forms, no popups,
   //                       treated as unique origin; CSS + text + images still work)
@@ -49,47 +98,118 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
       ? "allow-scripts allow-same-origin allow-popups allow-forms"
       : "";
 
-  const toggleSecurity = () => {
-    setSecurityMode((prev) => (prev === "safe" ? "trusted" : "safe"));
+  const showSafePreview = () => {
+    setSecurityMode("safe");
+    setViewMode("preview");
+    setIsModeMenuOpen(false);
+  };
+
+  const enableTrustedPreview = () => {
+    setSecurityMode("trusted");
+    setViewMode("preview");
+    setIsModeMenuOpen(false);
+  };
+
+  const requestTrustedPreview = () => {
+    setViewMode("preview");
+    setIsModeMenuOpen(false);
+
+    if (securityMode === "trusted") return;
+
+    if (!onTrustedPreviewRequest) {
+      enableTrustedPreview();
+      return;
+    }
+
+    onTrustedPreviewRequest({
+      fileName,
+      confirm: enableTrustedPreview,
+      cancel: () => setSecurityMode("safe"),
+    });
   };
 
   return (
     <div className="fv-html">
-      <div className="fv-view-mode-bar">
-        <div className="fv-view-mode-group">
+      <div className="fv-html__toolbar">
+        <div className="fv-html__mode-picker" ref={modeMenuRef}>
           <button
-            onClick={() => setViewMode("preview")}
-            className={`fv-view-mode-btn ${viewMode === "preview" ? "fv-view-mode-btn--active" : ""}`}
+            type="button"
+            onClick={() => setIsModeMenuOpen((open) => !open)}
+            className={`fv-html__mode-trigger ${viewMode === "preview" ? "fv-html__mode-trigger--active" : ""}`}
+            aria-expanded={isModeMenuOpen}
+            aria-haspopup="menu"
           >
-            <EyeIcon size={13} />
-            {t.preview}
+            {securityMode === "trusted" ? (
+              <ZapIcon size={13} />
+            ) : (
+              <ShieldCheckIcon size={13} />
+            )}
+            <span>
+              {securityMode === "trusted"
+                ? t.htmlTrustedPreview
+                : t.htmlSafePreview}
+            </span>
+            <ChevronDownIcon size={12} className="fv-html__chevron" />
           </button>
+
+          {isModeMenuOpen && (
+            <div className="fv-html__mode-menu" role="menu">
+              <button
+                type="button"
+                className={`fv-html__mode-option ${securityMode === "safe" ? "fv-html__mode-option--active" : ""}`}
+                onClick={showSafePreview}
+                role="menuitem"
+              >
+                <span className="fv-html__mode-icon fv-html__mode-icon--safe">
+                  <ShieldCheckIcon size={14} />
+                </span>
+                <span className="fv-html__mode-copy">
+                  <span className="fv-html__mode-title">
+                    {t.htmlSafePreview}
+                  </span>
+                  <span className="fv-html__mode-desc">
+                    {t.htmlSafePreviewDesc}
+                  </span>
+                </span>
+                {securityMode === "safe" && <CheckIcon size={16} />}
+              </button>
+
+              <button
+                type="button"
+                className={`fv-html__mode-option ${securityMode === "trusted" ? "fv-html__mode-option--active" : ""}`}
+                onClick={requestTrustedPreview}
+                role="menuitem"
+              >
+                <span className="fv-html__mode-icon fv-html__mode-icon--trusted">
+                  <ZapIcon size={14} />
+                </span>
+                <span className="fv-html__mode-copy">
+                  <span className="fv-html__mode-title">
+                    {t.htmlTrustedPreview}
+                  </span>
+                  <span className="fv-html__mode-desc">
+                    {t.htmlTrustedPreviewDesc}
+                  </span>
+                </span>
+                {securityMode === "trusted" && <CheckIcon size={16} />}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="fv-html__toolbar-divider" />
+
+        <div className="fv-html__source-group">
           <button
             onClick={() => setViewMode("source")}
-            className={`fv-view-mode-btn ${viewMode === "source" ? "fv-view-mode-btn--active" : ""}`}
+            className={`fv-html__source-btn ${viewMode === "source" ? "fv-html__source-btn--active" : ""}`}
+            type="button"
           >
             <Code2Icon size={13} />
             {t.source}
           </button>
         </div>
-
-        <div className="fv-view-mode-group">
-          <button
-            onClick={toggleSecurity}
-            className={`fv-view-mode-btn ${securityMode === "trusted" ? "fv-view-mode-btn--active" : ""}`}
-            title={t.htmlTrustedModeHint}
-          >
-            <AlertTriangleIcon size={13} />
-            {securityMode === "trusted"
-              ? t.htmlDisableScripts
-              : t.htmlEnableScripts}
-          </button>
-        </div>
       </div>
-
-      {securityMode === "trusted" && (
-        <div className="fv-html__hint">{t.htmlTrustedModeHint}</div>
-      )}
 
       <div className="fv-html__content">
         {viewMode === "preview" ? (

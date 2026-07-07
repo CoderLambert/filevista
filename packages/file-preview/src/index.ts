@@ -33,6 +33,11 @@ export {
   PluginPreviewRenderer,
   type PluginPreviewRendererProps,
 } from "./PluginPreviewRenderer";
+export type {
+  HtmlSecurityMode,
+  HtmlTrustedPreviewRequest,
+  HtmlTrustedPreviewRequestHandler,
+} from "./HtmlPreview";
 
 // ─── Core abstractions ────────────────────────────────────────────────────
 export type {

@@ -65,6 +65,10 @@ export interface LocaleMessages {
   htmlEnableScripts: string;
   htmlDisableScripts: string;
   htmlTrustedModeHint: string;
+  htmlSafePreview: string;
+  htmlSafePreviewDesc: string;
+  htmlTrustedPreview: string;
+  htmlTrustedPreviewDesc: string;
 
   // Large file
   largeFileHint: string;
@@ -210,6 +214,10 @@ export const zhCN: LocaleMessages = {
   htmlEnableScripts: "启用脚本",
   htmlDisableScripts: "关闭脚本",
   htmlTrustedModeHint: "已启用脚本：可执行 HTML 内 JavaScript，仅信任来源时使用。",
+  htmlSafePreview: "安全预览",
+  htmlSafePreviewDesc: "限制脚本执行，保护你的设备安全",
+  htmlTrustedPreview: "完整预览",
+  htmlTrustedPreviewDesc: "放开脚本执行，体验完整页面效果",
 
   // Large file
   largeFileHint: "当前文件较大，浏览器端解析可能需要更长时间，期间页面可能短暂卡顿。",
@@ -353,6 +361,10 @@ export const enUS: LocaleMessages = {
   htmlEnableScripts: "Enable scripts",
   htmlDisableScripts: "Disable scripts",
   htmlTrustedModeHint: "Scripts enabled: JavaScript in the HTML will run. Use only for trusted sources.",
+  htmlSafePreview: "Safe preview",
+  htmlSafePreviewDesc: "Restrict script execution to protect your device",
+  htmlTrustedPreview: "Full preview",
+  htmlTrustedPreviewDesc: "Allow scripts for the complete page experience",
 
   // Large file
   largeFileHint: "This file is large. Browser-side parsing may take longer and the page may briefly freeze.",
