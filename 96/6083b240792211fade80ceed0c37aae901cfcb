@@ -1,0 +1,21 @@
+packages/file-preview/src/HtmlPreview.tsx
+  s_4fe9f8d4254ebc::t_7031e4a87cb27e 96-105
+.changeset/html-security-mode-reload.md
+  s_4fe9f8d4254ebc::t_7748b7e86f4ee6 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "966083b240792211fade80ceed0c37aae901cfcb",
+  "prompts": {},
+  "sessions": {
+    "s_4fe9f8d4254ebc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b7317272-088f-407d-9012-8df68dc07938",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
