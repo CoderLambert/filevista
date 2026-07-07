@@ -93,13 +93,16 @@ export function HtmlPreview({ content, fileName }: HtmlPreviewProps) {
 
       <div className="fv-html__content">
         {viewMode === "preview" ? (
-          <iframe
-            src={blobUrl}
-            sandbox={sandbox}
-            referrerPolicy="no-referrer"
-            className="fv-html__iframe"
-            title={fileName}
-          />
+          blobUrl ? (
+            <iframe
+              key={securityMode}
+              src={blobUrl}
+              sandbox={sandbox}
+              referrerPolicy="no-referrer"
+              className="fv-html__iframe"
+              title={fileName}
+            />
+          ) : null
         ) : (
           <ShikiSourceView content={content} fileName={fileName} language="html" />
         )}
