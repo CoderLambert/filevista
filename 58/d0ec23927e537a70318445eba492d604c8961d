@@ -1,0 +1,50 @@
+packages/file-preview/src/core/i18n.ts
+  s_d9ca51d40e89e3::t_74cd311345a96c 68-71,217-220,364-367
+apps/playground/src/app/page.tsx
+  s_d9ca51d40e89e3::t_48e28307a5cc83 782-787,791-794,798-800
+  s_d9ca51d40e89e3::t_5cf4e8ea79fcdb 10,18,29,92-93,97-116,608,746,761-765,770,776,778-780,789
+  s_d9ca51d40e89e3::t_4d253dca986e16 747-760,766-769,771-775,777,781,788,790,795-797,801-804
+packages/file-preview/README.md
+  s_d9ca51d40e89e3::t_469f7097c4216a 122
+  s_d9ca51d40e89e3::t_c3292c89fcd414 111-121,123-161
+packages/file-preview/CHANGELOG.md
+  s_d9ca51d40e89e3::t_49db6a040bd92f 3-8
+packages/file-preview/package.json
+  s_d9ca51d40e89e3::t_49db6a040bd92f 3
+README.md
+  s_d9ca51d40e89e3::t_658273bc11baec 17,31,222-242
+  s_d9ca51d40e89e3::t_784409fcce31df 243
+packages/file-preview/src/icons.tsx
+  s_d9ca51d40e89e3::t_e781ed3594e42f 58-71
+packages/file-preview/src/styles/HtmlPreview.css
+  s_d9ca51d40e89e3::t_0176f6e55713ef 59,67,136,234,240,271,280-281
+  s_d9ca51d40e89e3::t_4cfa212597fedf 16,18,35-37,39,80,86,97,99-100,102,112,114,116-117,119,143-145,172-173,180,304-305,310-312
+  s_d9ca51d40e89e3::t_b279851125e02b 61,105-107,166,182
+  s_d9ca51d40e89e3::t_8e535bfadf43ba 5-15,17,19-23,25-34,38,40-41,43-57,60,62-64,68,71-79,81-85,87-96,98,101,103-104,108-111,113,115,118,120-129,131-134,137-142,146-148,151-154,160-165,167,169-171,174-179,181,183-184,188-191,193,199-231,233,235-237,241-264,266-269,272-274,282-283,285-303,306-309,313-325
+  s_d9ca51d40e89e3::t_ed985c9a2214ac 58,65-66,69-70,130,135,149-150,155-159,232,238-239,265,270,275-279,284
+packages/file-preview/src/preview-adapters/HtmlPreviewAdapter.tsx
+  s_d9ca51d40e89e3::t_292f1cd0c170a0 6-9,13-19,38-44
+packages/file-preview/src/PluginPreviewRenderer.tsx
+  s_d9ca51d40e89e3::t_596c6e85f70635 17,39-45,67,80,83-88,120-126,170-178,188,261-266
+packages/file-preview/src/index.ts
+  s_d9ca51d40e89e3::t_b2bad062988075 36-40
+packages/file-preview/src/HtmlPreview.tsx
+  s_d9ca51d40e89e3::t_2f3bdac2a1d206 3-10,18,22,24-38,41,43,60-86,101-128,133-134,136-140,142,144,146-151,154-163,165-183,185-202,205-206
+  s_d9ca51d40e89e3::t_e4940e0dfd4d05 143,145,152,164,184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "58d0ec23927e537a70318445eba492d604c8961d",
+  "prompts": {},
+  "sessions": {
+    "s_d9ca51d40e89e3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f3ab9-1cd1-7fa3-a6a2-77277313f2d5",
+        "model": "gpt-5.5"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
