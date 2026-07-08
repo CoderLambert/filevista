@@ -43,6 +43,12 @@ interface PdfRenderTaskLike {
   cancel: () => void;
 }
 
+function getCanvasOutputScale() {
+  if (typeof window === "undefined") return 1;
+  const ratio = window.devicePixelRatio || 1;
+  return Number.isFinite(ratio) && ratio > 1 ? ratio : 1;
+}
+
 export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,55 +59,68 @@ export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pdfDocRef = useRef<PdfDocumentLike | null>(null);
   const renderTaskRef = useRef<PdfRenderTaskLike | null>(null);
-  const renderingRef = useRef(false);
+  const renderRequestIdRef = useRef(0);
 
   const renderPage = useCallback(async () => {
     const pdfDoc = pdfDocRef.current;
     if (!pdfDoc || !canvasRef.current) return;
 
-    if (renderingRef.current) {
-      const prevTask = renderTaskRef.current;
-      if (prevTask) {
-        try { prevTask.cancel(); } catch { /* ignore */ }
-      }
-    }
+    const requestId = renderRequestIdRef.current + 1;
+    renderRequestIdRef.current = requestId;
 
-    renderingRef.current = true;
+    const prevTask = renderTaskRef.current;
+    if (prevTask) {
+      try { prevTask.cancel(); } catch { /* ignore */ }
+    }
 
     try {
       const page = await pdfDoc.getPage(currentPage);
+      if (requestId !== renderRequestIdRef.current || !canvasRef.current) return;
 
       const viewport = page.getViewport({ scale, rotation });
+      const outputScale = getCanvasOutputScale();
+      const renderViewport = outputScale === 1
+        ? viewport
+        : page.getViewport({ scale: scale * outputScale, rotation });
       const displayCanvas = canvasRef.current;
       const context = displayCanvas.getContext("2d");
       if (!context) return;
 
       const offscreen = document.createElement("canvas");
-      offscreen.width = viewport.width;
-      offscreen.height = viewport.height;
+      offscreen.width = Math.max(1, Math.floor(renderViewport.width));
+      offscreen.height = Math.max(1, Math.floor(renderViewport.height));
       const offCtx = offscreen.getContext("2d");
       if (!offCtx) return;
 
       const renderTask = page.render({
         canvasContext: offCtx,
-        viewport,
+        viewport: renderViewport,
       });
 
       renderTaskRef.current = renderTask;
 
       await renderTask.promise;
 
-      displayCanvas.width = viewport.width;
-      displayCanvas.height = viewport.height;
+      if (requestId !== renderRequestIdRef.current || canvasRef.current !== displayCanvas) {
+        return;
+      }
+
+      displayCanvas.width = offscreen.width;
+      displayCanvas.height = offscreen.height;
+      displayCanvas.style.width = `${viewport.width}px`;
+      displayCanvas.style.height = `${viewport.height}px`;
       context.drawImage(offscreen, 0, 0);
 
     } catch (err: unknown) {
       const errObj = err as { name?: string };
       if (errObj?.name === "RenderingCancelledException") return;
-      console.error("Error rendering PDF page:", err);
+      if (requestId === renderRequestIdRef.current) {
+        console.error("Error rendering PDF page:", err);
+      }
     } finally {
-      renderingRef.current = false;
-      renderTaskRef.current = null;
+      if (requestId === renderRequestIdRef.current) {
+        renderTaskRef.current = null;
+      }
     }
   }, [currentPage, scale, rotation]);
 
@@ -150,6 +169,7 @@ export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
 
     return () => {
       cancelled = true;
+      renderRequestIdRef.current += 1;
 
       try {
         renderTaskRef.current?.cancel();
@@ -165,7 +185,6 @@ export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
 
       renderTaskRef.current = null;
       pdfDocRef.current = null;
-      renderingRef.current = false;
     };
   }, [content, source]);
 

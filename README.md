@@ -6,6 +6,12 @@ FileVista 是一个纯浏览器端文件预览工具集，基于 Next.js、React
 
 https://coderlambert.github.io/filevista/
 
+## 这个仓库包含什么
+
+- `@lamberl-lee/file-preview`：可发布到 npm 的 React 文件预览库，代码在 [packages/file-preview](packages/file-preview)。
+- Playground Demo：在线演示和本地调试应用，代码在 [apps/playground](apps/playground)。
+- 文档与验证资产：支持矩阵、插件开发指南、GitHub Pages 发布清单等，代码在 [docs](docs)。
+
 ## Features
 
 - 支持本地文件上传，也支持可跨域访问的远程 URL 预览
@@ -42,6 +48,137 @@ https://coderlambert.github.io/filevista/
 | DOC | .doc | ⚠️ | 旧版 Word 二进制格式，降级支持 |
 | PPT | .ppt | ❌ | 建议转为 .pptx |
 | XLS | .xls | ❌ | 建议转为 .xlsx |
+
+## 在其他项目中安装使用
+
+基础安装：
+
+```bash
+pnpm add @lamberl-lee/file-preview
+```
+
+也可以使用 npm / yarn：
+
+```bash
+npm install @lamberl-lee/file-preview
+yarn add @lamberl-lee/file-preview
+```
+
+如果国内镜像还没有同步最新版本，可临时指定官方 npm registry：
+
+```bash
+pnpm add @lamberl-lee/file-preview --registry https://registry.npmjs.org
+```
+
+`react` 和 `react-dom` 是 peer dependencies，业务项目需要已经安装 React 18.2+ 或 React 19。
+
+### 最小接入：基础格式预览
+
+根入口默认只包含轻量格式：Markdown、代码、HTML、JSON、CSV、SVG、纯文本、图片、音频、视频。适合先快速接入：
+
+```tsx
+import {
+  PluginPreviewRenderer,
+  detectFileType,
+  type FileInfo,
+} from "@lamberl-lee/file-preview";
+import "@lamberl-lee/file-preview/styles/index.css";
+
+function FilePreview({ file }: { file: File }) {
+  const info: FileInfo = {
+    id: crypto.randomUUID(),
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    fileType: detectFileType(file.name, file.type),
+    source: { kind: "file", file },
+  };
+
+  return <PluginPreviewRenderer file={info} />;
+}
+```
+
+### 启用 PDF / Office / ZIP / EPUB 等重格式
+
+重格式依赖体积较大，库不会默认打进根入口。业务项目按需安装对应 peer dependency，然后使用 `/full` registry：
+
+```bash
+pnpm add @lamberl-lee/file-preview pdfjs-dist docx-preview exceljs @aiden0z/pptx-renderer rtf.js jszip
+```
+
+```tsx
+import {
+  PluginPreviewRenderer,
+  detectFileType,
+  setAssetBasePath,
+  type FileInfo,
+} from "@lamberl-lee/file-preview";
+import { createFullPreviewRegistry } from "@lamberl-lee/file-preview/full";
+import "@lamberl-lee/file-preview/styles/index.css";
+
+setAssetBasePath("");
+
+const registry = createFullPreviewRegistry();
+
+function FilePreview({ file }: { file: File }) {
+  const info: FileInfo = {
+    id: crypto.randomUUID(),
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    fileType: detectFileType(file.name, file.type),
+    source: { kind: "file", file },
+  };
+
+  return <PluginPreviewRenderer file={info} registry={registry} />;
+}
+```
+
+只需要部分重格式时，也可以只安装并导入对应插件，例如 `@lamberl-lee/file-preview/plugins/pdf`、`@lamberl-lee/file-preview/plugins/pptx`。
+
+### 静态资源配置
+
+PDF.js worker 和 RTF.js bundles 需要放到业务项目的静态目录。可在业务项目 `package.json` 中加 postinstall：
+
+```jsonc
+{
+  "scripts": {
+    "postinstall": "node node_modules/@lamberl-lee/file-preview/scripts/copy-pdf-worker.mjs && node node_modules/@lamberl-lee/file-preview/scripts/copy-rtfjs-bundles.mjs"
+  }
+}
+```
+
+默认复制到：
+
+- `public/vendor/pdfjs/pdf.worker.min.mjs`
+- `public/vendor/rtfjs/{WMFJS,EMFJS,RTFJS}.bundle.min.js`
+
+如果项目部署在子路径或 CDN 前缀下，启动时调用 `setAssetBasePath("/your-base-path")`。
+
+### 远程文件接入
+
+如果后端只给一个 URL，且需要前端下载后识别：
+
+```tsx
+import { processRemoteUrl } from "@lamberl-lee/file-preview";
+
+const info = await processRemoteUrl("https://example.com/report.pdf");
+```
+
+如果后端文件列表已经返回 `name` 和 `size`，推荐用 `createRemoteFileInfo()`，这样大文件闸门可以在下载前生效：
+
+```tsx
+import { createRemoteFileInfo } from "@lamberl-lee/file-preview";
+
+const info = createRemoteFileInfo({
+  name: meta.name,
+  size: meta.size,
+  url: downloadUrl,
+  id: `${meta.name}-${meta.last_modified}`,
+});
+```
+
+更多细节见 [packages/file-preview/README.md](packages/file-preview/README.md)。
 
 ## 本地开发
 

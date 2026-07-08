@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.1
+
+### Patch Changes
+
+- Fix PDF zoom rendering so sub-100% zoom changes resize the whole page instead of blurring text, and prevent stale PDF render tasks from overwriting newer zoom renders.
+
 ## 0.7.0
 
 ### Minor Changes

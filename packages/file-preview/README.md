@@ -38,6 +38,16 @@ If a user uploads a format whose peer dep is missing, the preview falls back to 
 
 `react` and `react-dom` (>=18.2) are also peer dependencies.
 
+## Integration checklist
+
+1. Install the package and import `@lamberl-lee/file-preview/styles/index.css` once in your app.
+2. Build a `FileInfo` from your `File`, `Blob`, `ArrayBuffer`, or remote URL source.
+3. Render `<PluginPreviewRenderer file={info} />` for base formats.
+4. For PDF / DOCX / PPTX / XLSX / RTF / ZIP / EPUB, install only the peer dependencies you need and pass a registry from `/full` or `/plugins/*`.
+5. If you use PDF or RTF, copy their runtime assets into your public directory and call `setAssetBasePath()` at startup.
+6. Keep the default `largeFilePolicy`, or set your own warning / confirm / block thresholds for large files.
+7. For HTML full preview, wire `onHtmlTrustedPreviewRequest` and ask the user for confirmation before calling `request.confirm()`.
+
 ## Quick start
 
 The root entry ships only the **base** formats — Markdown, code, HTML, JSON,
