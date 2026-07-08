@@ -1,0 +1,33 @@
+packages/file-preview/README.md
+  s_d2d8c10729ba4d::t_41b0111eed20b6 41-50
+packages/file-preview/package.json
+  s_d2d8c10729ba4d::t_b1ad3174e0406a 3
+packages/file-preview/src/__tests__/PdfPreview.rendering.test.tsx
+  s_d2d8c10729ba4d::t_e06cf4d10f8a3f 74-77,135-186
+  s_d2d8c10729ba4d::t_86c8323c4ae93f 1-73,78-134,187-188
+packages/file-preview/CHANGELOG.md
+  s_d2d8c10729ba4d::t_b1ad3174e0406a 3-8
+README.md
+  s_d2d8c10729ba4d::t_41b0111eed20b6 9-14,52-181
+  s_d2d8c10729ba4d::t_bbe26f185403c7 182
+packages/file-preview/src/PdfPreview.tsx
+  s_d2d8c10729ba4d::t_86c8323c4ae93f 62,68-69,71-74,78,104-106,117-119,121-123,172
+  s_d2d8c10729ba4d::t_f51bb72af0b7b7 46-51,81-84,90-91,97,108-111
+  s_d2d8c10729ba4d::t_78d9a84bf7f647 107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "419fd14d53aa9b36e2cf62719f55b62cadda8dd5",
+  "prompts": {},
+  "sessions": {
+    "s_d2d8c10729ba4d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f3fa9-bd16-7780-8c36-ba83a8cb4002",
+        "model": "gpt-5.5"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
