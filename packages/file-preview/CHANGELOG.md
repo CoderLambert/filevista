@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.4
+
+### Patch Changes
+
+- 7f08aff: Improve XLSX comment fallback compatibility across browsers and safely handle paired or namespace-prefixed worksheet relationships.
+
 ## 0.7.3
 
 ### Patch Changes
