@@ -9,6 +9,7 @@ import { readBinaryPreviewAsUint8Array } from "../core/binary";
 import type { PreviewSource } from "../core/types";
 import type { ExcelWorkbookLoadResult } from "./types";
 import { extractWorkbookTheme, themeColorsToArray } from "./theme";
+import { normalizeCommentsForExcelJs } from "./normalize-comments";
 
 // Lazy-load ExcelJS
 type ExcelJSModule = typeof import("exceljs");
@@ -19,6 +20,10 @@ async function getExcelJS(): Promise<ExcelJSModule> {
     ExcelJS = await import("exceljs");
   }
   return ExcelJS;
+}
+
+function isExcelJsCommentReconcileError(error: unknown): boolean {
+  return error instanceof TypeError && /reading ['"]comments['"]/i.test(error.message);
 }
 
 /**
@@ -53,8 +58,19 @@ export async function readXlsxWorkbook(
       };
       const Workbook = mod.default?.Workbook ?? EJS.Workbook;
       const wb = new Workbook();
-      await wb.xlsx.load(buffer);
-      return wb;
+      try {
+        await wb.xlsx.load(buffer);
+        return wb;
+      } catch (error) {
+        if (!isExcelJsCommentReconcileError(error)) throw error;
+
+        const normalizedBuffer = await normalizeCommentsForExcelJs(buffer);
+        if (!normalizedBuffer) throw error;
+
+        const normalizedWorkbook = new Workbook();
+        await normalizedWorkbook.xlsx.load(normalizedBuffer);
+        return normalizedWorkbook;
+      }
     })(),
     extractWorkbookTheme(buffer),
   ]);
