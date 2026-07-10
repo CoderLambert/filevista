@@ -1,0 +1,45 @@
+packages/file-preview/package.json
+  s_cd7f0360d217ea::t_1748a2fd9b17c0 3
+packages/file-preview/src/PdfPreview.tsx
+  s_cd7f0360d217ea::t_e1a1234df43adc 208-210
+packages/file-preview/src/styles/HtmlPreview.css
+  s_cd7f0360d217ea::t_665569abb23cf6 319
+  s_cd7f0360d217ea::t_07bda8b6936698 210,230-231
+  s_cd7f0360d217ea::t_11ca1a612eff83 314
+  s_cd7f0360d217ea::t_6ca8b723a803e3 15,32,59,85-86,89-90,198-199,203,209,211-229,232-248,255-262,285,293,315,318,369,374-387,395,413
+  s_cd7f0360d217ea::t_2fd612487c7756 33,60,82-84,87-88,286,294,311-313,316-317,396
+apps/playground/public/demo/html-preview-fixed-slide-overflow.html
+  s_cd7f0360d217ea::t_4190c7a959e4bd 1-259
+packages/file-preview/src/core/i18n.ts
+  s_cd7f0360d217ea::t_58a45c4cc273e6 223-224,373
+  s_cd7f0360d217ea::t_6138aeac3f227b 72-73,372
+packages/file-preview/src/HtmlPreview.tsx
+  s_cd7f0360d217ea::t_8a1b7a96ded5b2 345
+  s_cd7f0360d217ea::t_426c381da562e6 317-319
+  s_cd7f0360d217ea::t_29891aaea8a9d1 108
+  s_cd7f0360d217ea::t_4ac4b500194e8d 23,88,224,233-235,307-312,314-316,334-335,341
+  s_cd7f0360d217ea::t_7f5a35d0c0656f 29-38,56-58,60-61,63,66,70,72,100,102,106,225-226,228-232,355,372
+  s_cd7f0360d217ea::t_70b211782dc58e 112-127,132-133,136-137,139-145,147-150
+  s_cd7f0360d217ea::t_893e5114203527 134-135,138
+  s_cd7f0360d217ea::t_24ec39f98af494 62,71,105,107,227
+  s_cd7f0360d217ea::t_ffd23455e7d37a 3,8,26-28,59,64,68,73-87,103-104,109-111,128-131,146,151,313,332-333,336-338,342-344,346-354,356-371,373-380
+packages/file-preview/CHANGELOG.md
+  s_cd7f0360d217ea::t_1748a2fd9b17c0 3-7,10
+  s_cd7f0360d217ea::t_f68b8f9c200e34 8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "dcd7914fd812599a97c1c33b64e4543bf16b10c4",
+  "prompts": {},
+  "sessions": {
+    "s_cd7f0360d217ea": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f4985-00d7-7eb0-a207-750c36546a14",
+        "model": "gpt-5.5"
+      },
+      "human_author": null
+    }
+  }
+}
