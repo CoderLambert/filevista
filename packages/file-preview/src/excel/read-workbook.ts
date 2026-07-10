@@ -22,8 +22,15 @@ async function getExcelJS(): Promise<ExcelJSModule> {
   return ExcelJS;
 }
 
-function isExcelJsCommentReconcileError(error: unknown): boolean {
-  return error instanceof TypeError && /reading ['"]comments['"]/i.test(error.message);
+export function isExcelJsCommentReconcileError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const candidate = error as { name?: unknown; message?: unknown };
+  return (
+    candidate.name === "TypeError" &&
+    typeof candidate.message === "string" &&
+    /comments/i.test(candidate.message)
+  );
 }
 
 /**

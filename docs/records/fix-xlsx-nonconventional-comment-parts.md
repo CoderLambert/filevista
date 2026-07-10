@@ -50,9 +50,11 @@ ExcelJS 能读取工作表关系，却没有为上述批注路径建立索引。
 
 ## 改动方案
 
-### 1. 精确识别 ExcelJS 批注关联异常
+### 1. 识别 ExcelJS 批注关联异常
 
-`readXlsxWorkbook()` 仍然先直接调用 ExcelJS。只有捕获到 `TypeError` 且错误消息指向读取 `comments` 时，才进入兼容归一化流程；其他解析错误保持原样抛出，避免掩盖文件损坏或未知问题。
+`readXlsxWorkbook()` 仍然先直接调用 ExcelJS。只有捕获对象的 `name` 为 `TypeError`，且错误消息包含 `comments` 时，才进入兼容归一化流程。这里不使用 `instanceof TypeError`，也不依赖 V8 的完整英文句式，以兼容 Safari、Firefox、跨 realm 异常等不同运行环境。
+
+错误匹配后仍有第二道约束：若 ZIP 中不存在可修复或可降级的 comments/VML Relationship，归一化函数返回 `null`，调用方重新抛出第一次加载的原始异常。因此，放宽浏览器错误文案匹配不会将无关错误静默吞掉。
 
 处理流程如下：
 
@@ -75,6 +77,7 @@ ExcelJS 能读取工作表关系，却没有为上述批注路径建立索引。
 - 将工作表关系目标改写为 ExcelJS 预期的相对路径
 - 将直接文本 `<text><t>...</t></text>` 包装为 `<text><r><t>...</t></r></text>`，保留批注正文
 - 若批注或 VML 关系指向不存在的部件，则移除该可选关系，使工作表主体仍可预览
+- Relationship XML 同时兼容自闭合、成对闭合和命名空间前缀形式；删除缺失部件关系时会移除完整元素，避免遗留非法的结束标签
 
 归一化不会删除或覆盖原始上传文件。新的 ZIP 只存在于当前解析过程的内存中。
 
@@ -86,12 +89,15 @@ ExcelJS 能读取工作表关系，却没有为上述批注路径建立索引。
 
 ### 4. 增加回归测试
 
-回归测试先使用 ExcelJS 生成标准工作簿，再将测试 ZIP 改写成问题文件的结构：
+回归测试先使用 ExcelJS 生成标准工作簿，再按场景改写测试 ZIP。移动 comments 部件时同步更新 `[Content_Types].xml`，使 fixture 保持为内部一致的 OOXML 包。覆盖场景包括：
 
-- 绝对批注关系路径
-- `xl/comments/comment1.xml` 非约定批注位置
-- `commentsDrawing1.vml` 非约定 VML 名称
-- `<text><t>...</t></text>` 简单批注文本
+- 非约定 comments/VML 路径、绝对 Relationship Target 和简单批注文本
+- 标准 ExcelJS 工作簿无需重新打包
+- comments 部件缺失时舍弃批注并保留单元格值
+- VML 部件缺失时保留批注正文，仅舍弃批注框布局元数据
+- 多 Sheet 且标准目标文件名已被占用时，自动避让并保持批注不串联
+- 非自闭合、带命名空间前缀的 Relationship 可被完整移除
+- Chrome/V8、Safari 和 Firefox 风格的批注关联 TypeError 文案
 
 测试断言兼容加载后：
 
@@ -123,3 +129,4 @@ ExcelJS 能读取工作表关系，却没有为上述批注路径建立索引。
 - 旧版二进制 `.xls` 仍不在 ExcelJS 的支持范围内
 - 未知的 ExcelJS 解析异常不会自动进入该兼容分支，仍会按原错误上报
 - 归一化是预览时的内存转换，不会把兼容后的文件写回用户磁盘
+- 简单文本批注的包装只在 ExcelJS 首次发生批注关联错误、进入兼容分支后执行；若 comments/VML 路径完全符合 ExcelJS 约定且首次加载不抛错，当前实现不会为发现简单文本而主动预扫描 ZIP。这一取舍用于保持正常工作簿的快速路径，后续可结合统一 OOXML 预扫描或 Worker 再扩展

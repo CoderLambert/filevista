@@ -82,7 +82,12 @@ async function rewriteWorksheetRelationships(
   if (!relationshipsFile) return false;
 
   const xml = await relationshipsFile.async("string");
-  const relationshipPattern = /<Relationship\b[^>]*\/?\s*>/gi;
+  // Relationship elements are usually self-closing, but paired elements and
+  // namespace-prefixed forms are valid XML too. Match the entire element so a
+  // dangling optional relationship can be removed without leaving an orphaned
+  // closing tag behind.
+  const relationshipPattern =
+    /<(?:[\w.-]+:)?Relationship\b[^>]*(?:\/\s*>|>\s*<\/(?:[\w.-]+:)?Relationship\s*>)/gi;
   let output = "";
   let lastIndex = 0;
   let changed = false;
