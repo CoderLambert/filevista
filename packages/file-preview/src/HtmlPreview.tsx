@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   CheckIcon,
   ChevronDownIcon,
   Code2Icon,
+  Minimize2Icon,
   ShieldCheckIcon,
   ZapIcon,
 } from "./icons";
@@ -19,7 +20,21 @@ interface HtmlPreviewProps {
 }
 
 type ViewMode = "preview" | "source";
+type HtmlLayoutMode = "browser" | "fit";
 export type HtmlSecurityMode = "safe" | "trusted";
+
+const HTML_CANVAS_WIDTH = 1920;
+const HTML_CANVAS_HEIGHT = 1080;
+
+interface HtmlLayoutState {
+  contentKey: string;
+  mode: HtmlLayoutMode;
+}
+
+interface HtmlBlobState {
+  contentKey: string;
+  url: string;
+}
 
 export interface HtmlTrustedPreviewRequest {
   fileName: string;
@@ -38,10 +53,39 @@ export function HtmlPreview({
 }: HtmlPreviewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
   const [securityMode, setSecurityMode] = useState<HtmlSecurityMode>("safe");
+  const contentKey = useMemo(
+    () => `${fileName}:${content.length}:${content.slice(0, 128)}:${content.slice(-128)}`,
+    [content, fileName],
+  );
+  const [layoutState, setLayoutState] = useState<HtmlLayoutState>(() => ({
+    contentKey,
+    mode: "browser",
+  }));
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
-  const [blobUrl, setBlobUrl] = useState<string>("");
+  const [blobState, setBlobState] = useState<HtmlBlobState | null>(null);
   const modeMenuRef = useRef<HTMLDivElement>(null);
+  const canvasViewportRef = useRef<HTMLDivElement>(null);
   const t = useLocale();
+  const layoutMode =
+    layoutState.contentKey === contentKey ? layoutState.mode : "browser";
+  const blobUrl = blobState?.contentKey === contentKey ? blobState.url : "";
+
+  const canvasScale = useMemo(() => {
+    if (layoutMode !== "fit" || viewportSize.width <= 0 || viewportSize.height <= 0) {
+      return 1;
+    }
+    return Math.max(
+      0.1,
+      Math.min(
+        viewportSize.width / HTML_CANVAS_WIDTH,
+        viewportSize.height / HTML_CANVAS_HEIGHT,
+        1,
+      ),
+    );
+  }, [layoutMode, viewportSize.height, viewportSize.width]);
+
+  const isFitLayout = layoutMode === "fit";
 
   // Build blob URL in an effect (not useMemo) so the cleanup runs exactly
   // once per `content` change. Returning the revoke from the effect cleanup
@@ -53,9 +97,58 @@ export function HtmlPreview({
   useEffect(() => {
     const blob = new Blob([content], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    setBlobUrl(url);
+    setBlobState({ contentKey, url });
     return () => URL.revokeObjectURL(url);
-  }, [content]);
+  }, [content, contentKey]);
+
+  useEffect(() => {
+    setLayoutState({ contentKey, mode: "browser" });
+    setViewportSize({ width: 0, height: 0 });
+  }, [contentKey]);
+
+  useEffect(() => {
+    if (viewMode !== "preview" || layoutMode !== "fit") return;
+    const element = canvasViewportRef.current;
+    if (!element) return;
+
+    let frame = 0;
+
+    const updateSize = (size?: { width: number; height: number }) => {
+      const width = size?.width ?? element.clientWidth;
+      const height = size?.height ?? element.clientHeight;
+
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setViewportSize((current) => {
+          if (current.width === width && current.height === height) {
+            return current;
+          }
+          return { width, height };
+        });
+      });
+    };
+
+    updateSize();
+
+    if (typeof ResizeObserver === "undefined") {
+      const handleResize = () => updateSize();
+      window.addEventListener("resize", handleResize);
+      return () => {
+        cancelAnimationFrame(frame);
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      updateSize(entry?.contentRect);
+    });
+    observer.observe(element);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [layoutMode, viewMode]);
 
   useEffect(() => {
     if (!isModeMenuOpen) return;
@@ -126,6 +219,18 @@ export function HtmlPreview({
       confirm: enableTrustedPreview,
       cancel: () => setSecurityMode("safe"),
     });
+  };
+
+  const toggleFitLayout = () => {
+    setLayoutState((current) => {
+      const currentMode =
+        current.contentKey === contentKey ? current.mode : "browser";
+      return {
+        contentKey,
+        mode: currentMode === "fit" ? "browser" : "fit",
+      };
+    });
+    setViewMode("preview");
   };
 
   return (
@@ -199,6 +304,19 @@ export function HtmlPreview({
 
         <div className="fv-html__toolbar-divider" />
 
+        <button
+          type="button"
+          onClick={toggleFitLayout}
+          className={`fv-html__fit-btn ${layoutMode === "fit" ? "fv-html__fit-btn--active" : ""}`}
+          title={t.htmlFitLayoutDesc}
+          aria-pressed={layoutMode === "fit"}
+        >
+          <Minimize2Icon size={13} />
+          <span>{t.htmlFitLayout}</span>
+        </button>
+
+        <div className="fv-html__toolbar-divider" />
+
         <div className="fv-html__source-group">
           <button
             onClick={() => setViewMode("source")}
@@ -211,17 +329,55 @@ export function HtmlPreview({
         </div>
       </div>
 
-      <div className="fv-html__content">
+      <div
+        className={`fv-html__content ${
+          viewMode === "preview" && isFitLayout
+            ? "fv-html__content--canvas"
+            : "fv-html__content--browser"
+        }`}
+      >
         {viewMode === "preview" ? (
           blobUrl ? (
-            <iframe
-              key={securityMode}
-              src={blobUrl}
-              sandbox={sandbox}
-              referrerPolicy="no-referrer"
-              className="fv-html__iframe"
-              title={fileName}
-            />
+            isFitLayout ? (
+              <div
+                className="fv-html__viewport"
+                ref={canvasViewportRef}
+                tabIndex={0}
+              >
+                <div
+                  className="fv-html__frame-sizer"
+                  style={{
+                    width: HTML_CANVAS_WIDTH * canvasScale,
+                    height: HTML_CANVAS_HEIGHT * canvasScale,
+                  }}
+                >
+                  <iframe
+                    key={`${contentKey}:${securityMode}:${layoutMode}:${blobUrl}`}
+                    src={blobUrl}
+                    sandbox={sandbox}
+                    referrerPolicy="no-referrer"
+                    className="fv-html__iframe fv-html__iframe--canvas"
+                    title={fileName}
+                    style={{
+                      width: HTML_CANVAS_WIDTH,
+                      height: HTML_CANVAS_HEIGHT,
+                      transform: `scale(${canvasScale})`,
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="fv-html__browser-frame">
+                <iframe
+                  key={`${contentKey}:${securityMode}:${layoutMode}:${blobUrl}`}
+                  src={blobUrl}
+                  sandbox={sandbox}
+                  referrerPolicy="no-referrer"
+                  className="fv-html__iframe"
+                  title={fileName}
+                />
+              </div>
+            )
           ) : null
         ) : (
           <ShikiSourceView content={content} fileName={fileName} language="html" />

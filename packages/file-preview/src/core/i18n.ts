@@ -69,6 +69,8 @@ export interface LocaleMessages {
   htmlSafePreviewDesc: string;
   htmlTrustedPreview: string;
   htmlTrustedPreviewDesc: string;
+  htmlFitLayout: string;
+  htmlFitLayoutDesc: string;
 
   // Large file
   largeFileHint: string;
@@ -218,6 +220,8 @@ export const zhCN: LocaleMessages = {
   htmlSafePreviewDesc: "限制脚本执行，保护你的设备安全",
   htmlTrustedPreview: "完整预览",
   htmlTrustedPreviewDesc: "放开脚本执行，体验完整页面效果",
+  htmlFitLayout: "适配",
+  htmlFitLayoutDesc: "自动缩放固定画布，保持完整展示",
 
   // Large file
   largeFileHint: "当前文件较大，浏览器端解析可能需要更长时间，期间页面可能短暂卡顿。",
@@ -365,6 +369,8 @@ export const enUS: LocaleMessages = {
   htmlSafePreviewDesc: "Restrict script execution to protect your device",
   htmlTrustedPreview: "Full preview",
   htmlTrustedPreviewDesc: "Allow scripts for the complete page experience",
+  htmlFitLayout: "Fit",
+  htmlFitLayoutDesc: "Automatically scale a fixed canvas so the full page stays visible",
 
   // Large file
   largeFileHint: "This file is large. Browser-side parsing may take longer and the page may briefly freeze.",

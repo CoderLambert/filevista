@@ -1,5 +1,13 @@
 # @lamberl-lee/file-preview
 
+## 0.7.2
+
+### Patch Changes
+
+- Add an auto-fit mode for fixed-canvas HTML previews so presentation-style pages scale to remain fully visible inside the available preview area.
+- Reset HTML preview layout/blob state when switching files so the auto-fit iframe cannot reuse stale content styling.
+- Fix PDF download Blob typing under stricter TypeScript DOM definitions.
+
 ## 0.7.1
 
 ### Patch Changes

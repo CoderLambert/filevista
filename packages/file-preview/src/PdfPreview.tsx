@@ -205,7 +205,9 @@ export function PdfPreview({ content, source, fileName }: PdfPreviewProps) {
   const handleDownload = async () => {
     try {
       const bytes = await readBinaryPreviewAsUint8Array({ source, content });
-      const blob = new Blob([bytes], { type: "application/pdf" });
+      const pdfBytes = new Uint8Array(bytes.byteLength);
+      pdfBytes.set(bytes);
+      const blob = new Blob([pdfBytes.buffer], { type: "application/pdf" });
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

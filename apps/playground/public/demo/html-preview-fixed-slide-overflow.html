@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML Preview Fixed Slide Overflow Test</title>
+    <style>
+      :root {
+        --bg: #070b10;
+        --panel: rgba(18, 22, 29, 0.92);
+        --line: rgba(160, 174, 192, 0.16);
+        --text: #e8eef7;
+        --muted: #737b89;
+        --cyan: #20e8f2;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          "Microsoft YaHei",
+          "PingFang SC",
+          "Noto Sans CJK SC",
+          sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(rgba(24, 232, 242, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(24, 232, 242, 0.045) 1px, transparent 1px);
+        background-size: 96px 96px;
+      }
+
+      body::after {
+        content: "韩坤鹏 01616960 2026年7月9日 21:59";
+        position: fixed;
+        inset: 0;
+        color: rgba(255, 255, 255, 0.05);
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        line-height: 160px;
+        transform: rotate(-15deg);
+        word-spacing: 28px;
+        pointer-events: none;
+      }
+
+      .stage {
+        position: fixed;
+        left: 0;
+        top: 50%;
+        width: 100vw;
+        aspect-ratio: 16 / 9;
+        min-height: 900px;
+        transform: translateY(-50%);
+        overflow: hidden;
+        border-top: 4px solid var(--cyan);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        background: radial-gradient(circle at 85% 20%, rgba(32, 232, 242, 0.08), transparent 30%),
+          #080c12;
+      }
+
+      .inner {
+        position: absolute;
+        inset: 0;
+        padding: 76px 150px 84px;
+        display: flex;
+        flex-direction: column;
+        gap: 42px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 54px;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      h1 span {
+        color: var(--cyan);
+      }
+
+      .trends {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 58px 56px;
+      }
+
+      .trend-card,
+      .lesson-card {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      }
+
+      .trend-card {
+        min-height: 224px;
+        padding: 42px;
+      }
+
+      .kicker {
+        color: rgba(232, 238, 247, 0.32);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 6px;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin: 28px 0 18px;
+        font-size: 30px;
+        line-height: 1.25;
+        font-weight: 900;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 23px;
+        line-height: 1.65;
+        font-weight: 700;
+      }
+
+      h3 {
+        margin: 0 0 28px;
+        color: var(--cyan);
+        font-size: 28px;
+        line-height: 1.2;
+        font-weight: 900;
+      }
+
+      .lessons {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 38px;
+      }
+
+      .lesson-card {
+        min-height: 164px;
+        padding: 30px;
+      }
+
+      .lesson-card .kicker {
+        font-size: 16px;
+        letter-spacing: 5px;
+        margin-bottom: 28px;
+      }
+
+      .lesson-card p {
+        font-size: 21px;
+        line-height: 1.55;
+      }
+
+      .lesson-card strong {
+        color: var(--cyan);
+      }
+
+      .footer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 60px;
+        border-top: 1px solid rgba(255, 255, 255, 0.11);
+        background: rgba(8, 10, 14, 0.96);
+        color: rgba(232, 238, 247, 0.38);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 18px;
+        letter-spacing: 1px;
+      }
+
+      .page strong {
+        color: var(--cyan);
+      }
+
+      .arrows {
+        display: inline-flex;
+        gap: 34px;
+        margin-left: 34px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage" aria-label="Fixed 16:9 slide overflow test">
+      <section class="inner">
+        <h1>四大<span>技术趋势</span></h1>
+
+        <div class="trends">
+          <article class="trend-card">
+            <div class="kicker">// TREND 01</div>
+            <h2>从自动化到自主化</h2>
+            <p>仓库从“按预设规则运行的自动化设备”进化为“AI 动态决策的自主化系统”</p>
+          </article>
+
+          <article class="trend-card">
+            <div class="kicker">// TREND 02</div>
+            <h2>生成式 AI 进入物理世界</h2>
+            <p>DeepFleet 标志生成式 AI 从数字领域进入物理世界，驱动机器人调度</p>
+          </article>
+
+          <article class="trend-card">
+            <div class="kicker">// TREND 03</div>
+            <h2>触觉智能崛起</h2>
+            <p>Vulcan 证明机器人不再仅依赖视觉，触觉感知成为新的前沿能力</p>
+          </article>
+
+          <article class="trend-card">
+            <div class="kicker">// TREND 04</div>
+            <h2>自然语言交互</h2>
+            <p>从编程操控到对话式协作，降低人机协作门槛</p>
+          </article>
+        </div>
+
+        <section>
+          <h3>对物流企业的六大启示</h3>
+          <div class="lessons">
+            <article class="lesson-card">
+              <div class="kicker">// 01</div>
+              <p><strong>规模化部署</strong> - 机器人不是试点项目，需规模化才能产生显著效益</p>
+            </article>
+
+            <article class="lesson-card">
+              <div class="kicker">// 02</div>
+              <p><strong>AI 大脑</strong> - 硬件 + AI 调度模型 = 真正效率突破</p>
+            </article>
+
+            <article class="lesson-card">
+              <div class="kicker">// 03</div>
+              <p><strong>数据积累</strong> - 物流数据是 AI 模型燃料，需尽早布局</p>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <span>AMAZON x DEEPFLEET</span>
+        <span class="page"><strong>09</strong> / 11 <span class="arrows">← →</span></span>
+      </footer>
+    </main>
+  </body>
+</html>
