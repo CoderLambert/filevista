@@ -2,7 +2,16 @@
   "name": "filevista-monorepo",
   "version": "0.2.0",
   "private": true,
-  "description": "FileVista — workspace root for @lamberl-lee/file-preview package and the playground demo app.",
+  "description": "FileVista — a browser-only React file viewer for PDF, Office documents, code, images, and media.",
+  "homepage": "https://coderlambert.github.io/filevista/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CoderLambert/filevista.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CoderLambert/filevista/issues"
+  },
+  "license": "LGPL-3.0-or-later",
   "packageManager": "pnpm@11.6.0",
   "engines": {
     "node": ">=22.0.0",

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">FileVista social preview</title>
+  <desc id="desc">React file viewer for PDF, Office, code, and media, rendered entirely in the browser.</desc>
+  <defs>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a101c"/>
+      <stop offset="1" stop-color="#111a2b"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#9fb0ca" stroke-opacity=".09"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="640" rx="36" fill="url(#ink)"/>
+  <rect width="1280" height="640" rx="36" fill="url(#grid)"/>
+  <path d="M0 520C190 465 325 570 505 512S825 388 1280 470V640H0Z" fill="#7cf7d4" opacity=".08"/>
+  <circle cx="1115" cy="86" r="215" fill="#52e6ff" opacity=".08"/>
+
+  <g transform="translate(88 78)">
+    <rect width="72" height="72" rx="18" fill="#7cf7d4"/>
+    <path d="M20 21h34L29 51h25" fill="none" stroke="#09111c" stroke-width="8" stroke-linecap="square" stroke-linejoin="bevel"/>
+    <text x="94" y="53" fill="#f7fbff" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="700">FileVista</text>
+  </g>
+
+  <g transform="translate(88 196)">
+    <text fill="#f7fbff" font-family="Georgia, 'Times New Roman', serif" font-size="72" font-weight="700">
+      <tspan x="0" y="0">One React viewer.</tspan>
+      <tspan x="0" y="84">Twenty-plus formats.</tspan>
+    </text>
+    <text x="2" y="144" fill="#aebbd0" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="23">Rendered in the browser · No server uploads</text>
+  </g>
+
+  <g transform="translate(88 500)" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" font-weight="700">
+    <g><rect width="86" height="42" rx="21" fill="#ff6b67"/><text x="43" y="27" text-anchor="middle" fill="#101624">PDF</text></g>
+    <g transform="translate(98)"><rect width="96" height="42" rx="21" fill="#66d8ff"/><text x="48" y="27" text-anchor="middle" fill="#101624">DOCX</text></g>
+    <g transform="translate(206)"><rect width="96" height="42" rx="21" fill="#ffb45e"/><text x="48" y="27" text-anchor="middle" fill="#101624">PPTX</text></g>
+    <g transform="translate(314)"><rect width="96" height="42" rx="21" fill="#7cf7d4"/><text x="48" y="27" text-anchor="middle" fill="#101624">XLSX</text></g>
+    <g transform="translate(422)"><rect width="126" height="42" rx="21" fill="#c7b4ff"/><text x="63" y="27" text-anchor="middle" fill="#101624">MARKDOWN</text></g>
+  </g>
+
+  <g transform="translate(862 154) rotate(3)" filter="url(#shadow)">
+    <rect width="318" height="344" rx="22" fill="#f7fbff"/>
+    <rect x="22" y="22" width="274" height="48" rx="12" fill="#e9eff8"/>
+    <circle cx="48" cy="46" r="8" fill="#ff6b67"/>
+    <circle cx="74" cy="46" r="8" fill="#ffb45e"/>
+    <circle cx="100" cy="46" r="8" fill="#7cf7d4"/>
+    <rect x="22" y="92" width="72" height="230" rx="12" fill="#111a2b"/>
+    <rect x="112" y="92" width="184" height="230" rx="12" fill="#e9eff8"/>
+    <rect x="132" y="116" width="120" height="15" rx="7" fill="#7b8da8"/>
+    <rect x="132" y="151" width="143" height="9" rx="4" fill="#b4c0d2"/>
+    <rect x="132" y="174" width="132" height="9" rx="4" fill="#b4c0d2"/>
+    <rect x="132" y="214" width="144" height="76" rx="10" fill="#7cf7d4" opacity=".75"/>
+    <path d="M151 270l37-34 25 20 23-17 22 31z" fill="#111a2b" opacity=".72"/>
+    <g fill="#7cf7d4"><circle cx="58" cy="124" r="13"/><circle cx="58" cy="169" r="13"/><circle cx="58" cy="214" r="13"/></g>
+  </g>
+
+  <text x="1192" y="596" text-anchor="end" fill="#7cf7d4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18">@lamberl-lee/file-preview</text>
+</svg>
