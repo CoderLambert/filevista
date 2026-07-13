@@ -112,7 +112,10 @@ export function XlsxPreview({ content, source, fileName, fileSize }: XlsxPreview
             const ssData = transformWorkbookToSpreadsheetData(workbook, { mode, themeColors });
             if (cancelled) return;
             setSpreadsheetData(ssData);
-            setRenderer("spreadsheet");
+            // Keep the stable HTML table as the default. The enhanced canvas
+            // renderer remains available through the toolbar for consumers
+            // that explicitly want Excel-like selection and interaction.
+            setRenderer("table");
           } else {
             setSpreadsheetAvailable(false);
             setSpreadsheetData(null);

@@ -56,8 +56,10 @@ export function XlsxSpreadsheetPreview({
     let disposed = false;
     let resizeObserver: ResizeObserver | null = null;
     let resizeFrame: number | null = null;
-    let previousWidth = 0;
-    let previousHeight = 0;
+    let viewportWidth = wrapperRef.current?.clientWidth ?? 0;
+    let viewportHeight = wrapperRef.current?.clientHeight ?? 0;
+    let previousWidth = viewportWidth;
+    let previousHeight = viewportHeight;
 
     const stopObserving = () => {
       resizeObserver?.disconnect();
@@ -84,6 +86,11 @@ export function XlsxSpreadsheetPreview({
         if (width === previousWidth && height === previousHeight) return;
         previousWidth = width;
         previousHeight = height;
+        // Keep one stable size for every synchronous x-data-spreadsheet
+        // layout pass. Reading clientWidth repeatedly lets its own inline
+        // canvas width feed back into flex/overflow layout in consumers.
+        viewportWidth = width;
+        viewportHeight = height;
 
         if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
         resizeFrame = requestAnimationFrame(() => {
@@ -114,8 +121,8 @@ export function XlsxSpreadsheetPreview({
           showContextmenu: false,
           showBottomBar: true,
           view: {
-            height: () => wrapperRef.current?.clientHeight || 300,
-            width: () => wrapperRef.current?.clientWidth || 1200,
+            height: () => viewportHeight || wrapperRef.current?.clientHeight || 300,
+            width: () => viewportWidth || wrapperRef.current?.clientWidth || 1200,
           },
           row: {
             len: 100,

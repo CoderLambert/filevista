@@ -6,12 +6,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const reload = vi.fn();
 
+type SpreadsheetOptions = {
+  view: {
+    width: () => number;
+    height: () => number;
+  };
+};
+
+let spreadsheetOptions: SpreadsheetOptions | null = null;
+
 class FakeSpreadsheet {
   sheet = { reload };
   bottombar = { swapFunc: vi.fn() };
   on = vi.fn();
 
-  constructor(_host: HTMLElement, _options: unknown) {}
+  constructor(_host: HTMLElement, options: SpreadsheetOptions) {
+    spreadsheetOptions = options;
+  }
 
   loadData(_data: unknown) {
     return this;
@@ -65,6 +76,7 @@ beforeEach(() => {
   observe.mockClear();
   animationFrames = new Map();
   nextFrameId = 1;
+  spreadsheetOptions = null;
 
   vi.stubGlobal("ResizeObserver", FakeResizeObserver);
   vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
@@ -101,6 +113,8 @@ describe("XlsxSpreadsheetPreview container resizing", () => {
     });
 
     expect(reload).toHaveBeenCalledTimes(1);
+    expect(spreadsheetOptions?.view.width()).toBe(900);
+    expect(spreadsheetOptions?.view.height()).toBe(600);
   });
 
   it("waits for hidden containers to become visible and cleans up on unmount", async () => {
