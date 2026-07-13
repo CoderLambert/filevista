@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/CoderLambert/filevista/security/advisories/new
+    about: Report vulnerabilities privately instead of opening a public issue.
+  - name: Package documentation
+    url: https://github.com/CoderLambert/filevista/tree/main/packages/file-preview#readme
+    about: Review installation, optional dependencies, static assets, and browser support.

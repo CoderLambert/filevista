@@ -1,0 +1,81 @@
+name: Bug report
+description: Report a reproducible problem with FileVista
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting a problem. Remove confidential content from sample files before attaching them.
+  - type: input
+    id: version
+    attributes:
+      label: FileVista version
+      placeholder: "@lamberl-lee/file-preview 0.7.9"
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: File format
+      options:
+        - PDF
+        - DOCX
+        - PPTX
+        - XLSX
+        - EPUB
+        - RTF
+        - Markdown / code / text
+        - HTML / SVG
+        - Image / audio / video
+        - ZIP / CSV / JSON
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: "Chrome 126 on macOS 15"
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source type
+      options:
+        - File
+        - Blob
+        - ArrayBuffer
+        - Remote URL
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Link to a repository or provide the smallest code sample that reproduces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I tested the latest published version.
+          required: true
+        - label: I removed confidential data from files, logs, and links.
+          required: true
+        - label: This is not a security vulnerability; security reports use the private advisory link in SECURITY.md.
+          required: true

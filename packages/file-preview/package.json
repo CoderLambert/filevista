@@ -1,27 +1,35 @@
 {
   "name": "@lamberl-lee/file-preview",
   "version": "0.7.9",
-  "description": "Browser-side file preview toolkit for React — 20+ formats (PDF, DOCX, PPTX, XLSX, EPUB, RTF, code, images, video, audio …) with zero server processing.",
+  "description": "React file viewer for 20+ formats—PDF, DOCX, PPTX, XLSX, EPUB, Markdown, code and media—rendered entirely in the browser with no server uploads.",
   "keywords": [
     "react",
+    "react-component",
     "file-preview",
-    "pdf",
+    "file-viewer",
+    "react-file-viewer",
+    "document-viewer",
+    "document-preview",
+    "office-viewer",
+    "pdf-viewer",
+    "word-viewer",
+    "excel-viewer",
+    "powerpoint-viewer",
     "docx",
     "pptx",
     "xlsx",
-    "epub",
-    "rtf",
-    "markdown",
-    "code-preview",
-    "office",
-    "browser"
+    "epub-viewer",
+    "markdown-viewer",
+    "code-viewer",
+    "browser",
+    "client-side"
   ],
   "type": "module",
   "sideEffects": [
     "**/*.css"
   ],
   "author": "CoderLambert",
-  "homepage": "https://github.com/CoderLambert/filevista/tree/main/packages/file-preview#readme",
+  "homepage": "https://coderlambert.github.io/filevista/",
   "bugs": {
     "url": "https://github.com/CoderLambert/filevista/issues"
   },
