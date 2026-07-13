@@ -23,18 +23,20 @@ const sheets: SheetData[] = [{
 afterEach(cleanup);
 
 describe("XlsxTablePreview comment tooltip", () => {
-  it("uses viewport coordinates and closes when the table scrolls", () => {
+  it("portals viewport-positioned tooltips outside transformed ancestors", () => {
     const view = render(
-      <XlsxTablePreview
-        sheets={sheets}
-        activeSheet={0}
-        onActiveSheetChange={() => {}}
-        mode="fast"
-        onModeChange={() => {}}
-        fileSize={1024}
-        isLargeFile={false}
-        isTooLargeForFidelity={false}
-      />,
+      <div style={{ transform: "translate(-50%, -50%)" }}>
+        <XlsxTablePreview
+          sheets={sheets}
+          activeSheet={0}
+          onActiveSheetChange={() => {}}
+          mode="fast"
+          onModeChange={() => {}}
+          fileSize={1024}
+          isLargeFile={false}
+          isTooLargeForFidelity={false}
+        />
+      </div>,
     );
     const commentDot = view.container.querySelector<HTMLElement>(".fv-xlsx__comment-dot");
     expect(commentDot).not.toBeNull();
@@ -53,17 +55,19 @@ describe("XlsxTablePreview comment tooltip", () => {
 
     fireEvent.mouseEnter(commentDot!);
 
-    const tooltip = view.container.querySelector<HTMLElement>(".fv-xlsx__comment-tooltip");
+    const tooltip = document.body.querySelector<HTMLElement>(".fv-xlsx__comment-tooltip");
     expect(tooltip).not.toBeNull();
+    expect(tooltip?.parentElement).toBe(document.body);
+    expect(view.container.querySelector(".fv-xlsx__comment-tooltip")).toBeNull();
     expect(tooltip).toHaveStyle({ left: "235px", top: "172px" });
 
     fireEvent.scroll(view.container.querySelector(".fv-xlsx__content")!);
-    expect(view.container.querySelector(".fv-xlsx__comment-tooltip")).toBeNull();
+    expect(document.body.querySelector(".fv-xlsx__comment-tooltip")).toBeNull();
 
     fireEvent.mouseEnter(commentDot!);
-    expect(view.container.querySelector(".fv-xlsx__comment-tooltip")).not.toBeNull();
+    expect(document.body.querySelector(".fv-xlsx__comment-tooltip")).not.toBeNull();
 
     fireEvent(window, new Event("resize"));
-    expect(view.container.querySelector(".fv-xlsx__comment-tooltip")).toBeNull();
+    expect(document.body.querySelector(".fv-xlsx__comment-tooltip")).toBeNull();
   });
 });
