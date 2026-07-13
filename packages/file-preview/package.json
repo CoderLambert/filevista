@@ -1,6 +1,6 @@
 {
   "name": "@lamberl-lee/file-preview",
-  "version": "0.7.7",
+  "version": "0.7.8",
   "description": "Browser-side file preview toolkit for React — 20+ formats (PDF, DOCX, PPTX, XLSX, EPUB, RTF, code, images, video, audio …) with zero server processing.",
   "keywords": [
     "react",

@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.8
+
+### Patch Changes
+
+- 5dd8d45: Fix XLSX comment tooltips positioning against the browser viewport and dismiss stale tooltips when the table scrolls or the window resizes.
+
 ## 0.7.7
 
 ### Patch Changes
