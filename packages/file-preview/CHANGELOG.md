@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.5
+
+### Patch Changes
+
+- 0fb01ac: Make the enhanced XLSX renderer respond to container size changes in dialogs, tabs, fullscreen layouts, and resizable panels.
+
 ## 0.7.4
 
 ### Patch Changes
