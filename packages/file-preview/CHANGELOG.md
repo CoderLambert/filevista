@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.7
+
+### Patch Changes
+
+- 00fe0a9: Remove the unstable enhanced XLSX canvas renderer and its x-data-spreadsheet dependency so spreadsheet previews consistently use the stable, scrollable HTML table renderer.
+
 ## 0.7.6
 
 ### Patch Changes
