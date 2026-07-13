@@ -1,0 +1,23 @@
+.changeset/portal-xlsx-comment-tooltip.md
+  s_4fc2f02cec83d8::t_2d108d911c9e16 1-5
+packages/file-preview/src/__tests__/XlsxTablePreview.comments.test.tsx
+  s_4fc2f02cec83d8::t_2d108d911c9e16 26,28-39,58,60-61,65,68,71
+packages/file-preview/src/XlsxTablePreview.tsx
+  s_4fc2f02cec83d8::t_2d108d911c9e16 12,447-451,456-457
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "4d7742bf4ad2b98bb525db690db887b0acb24ce5",
+  "prompts": {},
+  "sessions": {
+    "s_4fc2f02cec83d8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5a0c-c557-7280-883b-d241af5b9214",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
