@@ -1,0 +1,31 @@
+packages/file-preview/src/excel/convert-style.ts
+  s_cf0a0c8ac35e3a::t_544b66d794be35 10
+packages/file-preview/src/__tests__/XlsxPreview.renderer.test.tsx
+  s_cf0a0c8ac35e3a::t_d715ec7bb647ff 4,29,38,47
+apps/playground/package.json
+  s_cf0a0c8ac35e3a::t_24deac05058d2f 62
+packages/file-preview/src/XlsxPreview.tsx
+  s_cf0a0c8ac35e3a::t_99ca600f4df5de 4,10,69,93,184-193
+.changeset/stable-xlsx-table.md
+  s_cf0a0c8ac35e3a::t_b3558aaa7569ed 1-5
+packages/file-preview/package.json
+  s_cf0a0c8ac35e3a::t_24deac05058d2f 104,148
+packages/file-preview/src/excel/types.ts
+  s_cf0a0c8ac35e3a::t_544b66d794be35 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "00fe0a9a7474d5a979e23dbabc92ec9469b1df09",
+  "prompts": {},
+  "sessions": {
+    "s_cf0a0c8ac35e3a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5900-b058-76f3-9412-f8baec58568f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
