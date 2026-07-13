@@ -1,0 +1,29 @@
+packages/file-preview/src/XlsxPreview.tsx
+  s_cf0a0c8ac35e3a::t_bf640f9aa3db95 115-118
+packages/file-preview/src/styles/XlsxPreview.css
+  s_cf0a0c8ac35e3a::t_092637d56fc257 5-8,422-423,425,432-434
+.changeset/calm-tables-scroll.md
+  s_cf0a0c8ac35e3a::t_230250538e542f 1-5
+packages/file-preview/src/__tests__/XlsxPreview.renderer.test.tsx
+  s_cf0a0c8ac35e3a::t_bf640f9aa3db95 1-69
+packages/file-preview/src/XlsxSpreadsheetPreview.tsx
+  s_cf0a0c8ac35e3a::t_092637d56fc257 59-62,89-93,124-125
+packages/file-preview/src/__tests__/XlsxSpreadsheetPreview.resize.test.tsx
+  s_cf0a0c8ac35e3a::t_092637d56fc257 9-17,23-25,79,116-117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "d6b1292828c50e40c3faaa43e4a250b6e83e10b8",
+  "prompts": {},
+  "sessions": {
+    "s_cf0a0c8ac35e3a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5900-b058-76f3-9412-f8baec58568f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
