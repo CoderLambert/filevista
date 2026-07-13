@@ -1,0 +1,23 @@
+packages/file-preview/src/excel/read-workbook.ts
+  s_cf0a0c8ac35e3a::t_09b4053e173247 27,33,34-35,68-71,73,76,80
+packages/file-preview/src/XlsxSpreadsheetPreview.tsx
+  s_cf0a0c8ac35e3a::t_48fc1510a98b02 14-23,53,57-100,132-133,179
+packages/file-preview/src/__tests__/XlsxSpreadsheetPreview.resize.test.tsx
+  s_cf0a0c8ac35e3a::t_50be20783d7e55 1-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "e9b8a777444421594fc269e8654e3a58bacc1f83",
+  "prompts": {},
+  "sessions": {
+    "s_cf0a0c8ac35e3a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5900-b058-76f3-9412-f8baec58568f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
