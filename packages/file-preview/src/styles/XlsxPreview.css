@@ -384,6 +384,7 @@
 /* ── Comment tooltip ── */
 .fv-xlsx__comment-tooltip {
   position: fixed;
+  pointer-events: none;
   z-index: 50;
   max-width: 20rem;
   background: var(--fv-warning-bg, #fffbeb);
