@@ -1,0 +1,27 @@
+packages/file-preview/src/XlsxTablePreview.tsx
+  s_4fc2f02cec83d8::t_ec662fc3986c17 93-103,105,351-352
+  s_4fc2f02cec83d8::t_e8a4c26c575b8d 104
+.changeset/fix-xlsx-comment-tooltip.md
+  s_4fc2f02cec83d8::t_f1e40721b4289f 1-5
+packages/file-preview/src/__tests__/XlsxTablePreview.comments.test.tsx
+  s_4fc2f02cec83d8::t_ec662fc3986c17 1-61,68-69
+  s_4fc2f02cec83d8::t_e8a4c26c575b8d 62-67
+packages/file-preview/src/styles/XlsxPreview.css
+  s_4fc2f02cec83d8::t_ec662fc3986c17 387
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "069742f095c0480917449aea65ad0d201d5a0d48",
+  "prompts": {},
+  "sessions": {
+    "s_4fc2f02cec83d8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5a0c-c557-7280-883b-d241af5b9214",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
