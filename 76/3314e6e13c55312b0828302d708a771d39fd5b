@@ -1,0 +1,25 @@
+packages/file-preview/src/excel/read-workbook.ts
+  s_cf0a0c8ac35e3a::t_09b4053e173247 24-103,136-148
+packages/file-preview/src/XlsxSpreadsheetPreview.tsx
+  s_cf0a0c8ac35e3a::t_48fc1510a98b02 14-23,53,57-100,132-133,179
+packages/file-preview/src/__tests__/read-workbook.comments.test.ts
+  s_cf0a0c8ac35e3a::t_efd86d9c6634bb 1-74
+packages/file-preview/src/__tests__/XlsxSpreadsheetPreview.resize.test.tsx
+  s_cf0a0c8ac35e3a::t_50be20783d7e55 1-131
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.11",
+  "base_commit_sha": "763314e6e13c55312b0828302d708a771d39fd5b",
+  "prompts": {},
+  "sessions": {
+    "s_cf0a0c8ac35e3a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5900-b058-76f3-9412-f8baec58568f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
