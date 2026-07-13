@@ -11,6 +11,16 @@ import { useEffect, useRef } from "react";
 import { loadXDataSpreadsheet } from "./excel/spreadsheet-loader";
 import type { SpreadsheetWorkbookData } from "./excel/types";
 
+type SpreadsheetInstance = {
+  bottombar?: {
+    swapFunc?: (index: number) => void;
+  };
+  on?: (event: string, handler: (...args: any[]) => void) => void;
+  sheet?: {
+    reload?: () => void;
+  };
+};
+
 export interface XlsxSpreadsheetPreviewProps {
   data: SpreadsheetWorkbookData;
   activeSheet: number;
@@ -40,10 +50,54 @@ export function XlsxSpreadsheetPreview({
 }: XlsxSpreadsheetPreviewProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
-  const spreadsheetRef = useRef<any>(null);
+  const spreadsheetRef = useRef<SpreadsheetInstance | null>(null);
 
   useEffect(() => {
     let disposed = false;
+    let resizeObserver: ResizeObserver | null = null;
+    let resizeFrame: number | null = null;
+    let previousWidth = 0;
+    let previousHeight = 0;
+
+    const stopObserving = () => {
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+      if (resizeFrame !== null) {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = null;
+      }
+    };
+
+    const observeContainer = (xs: SpreadsheetInstance) => {
+      const wrapper = wrapperRef.current;
+      if (!wrapper || typeof ResizeObserver === "undefined") return;
+
+      resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[entries.length - 1];
+        const width = Math.round(entry?.contentRect.width ?? wrapper.clientWidth);
+        const height = Math.round(entry?.contentRect.height ?? wrapper.clientHeight);
+
+        // Hidden tabs commonly report 0x0. Wait for the observer notification
+        // emitted when the tab/dialog becomes visible instead of laying out the
+        // spreadsheet against invalid dimensions.
+        if (width <= 0 || height <= 0) return;
+        if (width === previousWidth && height === previousHeight) return;
+        previousWidth = width;
+        previousHeight = height;
+
+        if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+          resizeFrame = null;
+          if (!disposed && spreadsheetRef.current === xs) {
+            // x-data-spreadsheet exposes reload on its sheet object. It reads
+            // the view callbacks again and resizes the canvas and scrollbars.
+            xs.sheet?.reload?.();
+          }
+        });
+      });
+
+      resizeObserver.observe(wrapper);
+    };
 
     async function mount() {
       try {
@@ -75,7 +129,8 @@ export function XlsxSpreadsheetPreview({
           },
         }).loadData(data.sheets as any);
 
-        spreadsheetRef.current = xs;
+        spreadsheetRef.current = xs as SpreadsheetInstance;
+        observeContainer(xs as SpreadsheetInstance);
 
         // x-data-spreadsheet event hooks
         xs.on?.("cell-selected", (cell: unknown, ri: number, ci: number) => {
@@ -121,6 +176,7 @@ export function XlsxSpreadsheetPreview({
 
     return () => {
       disposed = true;
+      stopObserving();
       spreadsheetRef.current = null;
       if (hostRef.current) hostRef.current.innerHTML = "";
     };
