@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.9
+
+### Patch Changes
+
+- cedc68a: Portal XLSX comment tooltips to the document body so viewport coordinates remain correct inside transformed dialogs and other positioned ancestors.
+
 ## 0.7.8
 
 ### Patch Changes
