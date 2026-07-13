@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   SearchIcon,
   ZoomInIcon,
@@ -443,14 +444,17 @@ export function XlsxTablePreview({
       )}
 
       {/* Comment tooltip */}
-      {hoveredComment && (
-        <div className="fv-xlsx__comment-tooltip"
-          style={{ left: hoveredComment.x, top: hoveredComment.y - 8, transform: "translate(-50%, -100%)" }}>
+      {hoveredComment && typeof document !== "undefined" && createPortal(
+        <div
+          className="fv-xlsx__comment-tooltip"
+          style={{ left: hoveredComment.x, top: hoveredComment.y - 8, transform: "translate(-50%, -100%)" }}
+        >
           <div className="fv-xlsx__comment-tooltip-header">
             <MessageSquareIcon size={10} /> {t.comment}
           </div>
           <p className="fv-xlsx__comment-tooltip-text">{hoveredComment.text}</p>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
