@@ -90,6 +90,19 @@ export function XlsxTablePreview({
     setCurrentPage(1); // Reset to first page when search changes
   }, [searchTerm]);
 
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    const hideComment = () => setHoveredComment(null);
+
+    scrollElement?.addEventListener("scroll", hideComment, { passive: true });
+    window.addEventListener("resize", hideComment);
+
+    return () => {
+      scrollElement?.removeEventListener("scroll", hideComment);
+      window.removeEventListener("resize", hideComment);
+    };
+  }, [sheets.length]);
+
   const currentSheet = sheets[activeSheet];
 
   const filteredRowIndices = useMemo(() => {
@@ -333,11 +346,10 @@ export function XlsxTablePreview({
                             <span className="fv-xlsx__comment-dot"
                               onMouseEnter={(e) => {
                                 const rect = e.currentTarget.getBoundingClientRect();
-                                const container = scrollRef.current?.getBoundingClientRect();
                                 setHoveredComment({
                                   row: originalIdx, col: colIdx, text: cell.style.comment!,
-                                  x: rect.left - (container?.left ?? 0) + rect.width / 2,
-                                  y: rect.top - (container?.top ?? 0),
+                                  x: rect.left + rect.width / 2,
+                                  y: rect.top,
                                 });
                               }}
                               onMouseLeave={() => setHoveredComment(null)}
