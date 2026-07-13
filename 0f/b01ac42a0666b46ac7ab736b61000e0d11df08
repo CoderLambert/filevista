@@ -1,0 +1,20 @@
+.changeset/clean-pandas-preview.md
+  s_cf0a0c8ac35e3a::t_09fce9e5f5f457 5
+  s_cf0a0c8ac35e3a::t_4055e3fb6df96f 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "0fb01ac42a0666b46ac7ab736b61000e0d11df08",
+  "prompts": {},
+  "sessions": {
+    "s_cf0a0c8ac35e3a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5900-b058-76f3-9412-f8baec58568f",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
