@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.10
+
+### Patch Changes
+
+- 1d72b2c: Improve npm discoverability and onboarding with clearer package metadata, search-focused keywords, and a streamlined README.
+
 ## 0.7.9
 
 ### Patch Changes

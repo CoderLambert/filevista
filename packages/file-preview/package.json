@@ -1,6 +1,6 @@
 {
   "name": "@lamberl-lee/file-preview",
-  "version": "0.7.9",
+  "version": "0.7.10",
   "description": "React file viewer for 20+ formats—PDF, DOCX, PPTX, XLSX, EPUB, Markdown, code and media—rendered entirely in the browser with no server uploads.",
   "keywords": [
     "react",
