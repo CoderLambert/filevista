@@ -1,5 +1,11 @@
 # @lamberl-lee/file-preview
 
+## 0.7.6
+
+### Patch Changes
+
+- d6b1292: Default XLSX previews to the stable table renderer while keeping enhanced rendering opt-in, and stabilize enhanced spreadsheet sizing and scrolling inside flex, dialog, tab, and fullscreen containers.
+
 ## 0.7.5
 
 ### Patch Changes
