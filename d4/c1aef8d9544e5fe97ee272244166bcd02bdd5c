@@ -1,0 +1,46 @@
+.github/ISSUE_TEMPLATE/feature_request.yml
+  s_6c9918e3382e68::t_1c4c155204447b 1-37
+packages/file-preview/README.md
+  s_6c9918e3382e68::t_920d1ad9f9d2df 8,12-21,88-105,252-262,313
+package.json
+  s_6c9918e3382e68::t_2f78128ec3ccc2 5-14
+SECURITY.md
+  s_6c9918e3382e68::t_1c4c155204447b 1-23
+.changeset/bright-files-smile.md
+  s_6c9918e3382e68::t_2f78128ec3ccc2 1-5
+docs/assets/social-preview.svg
+  s_6c9918e3382e68::t_1c4c155204447b 1-60
+COPYING
+  s_6c9918e3382e68::t_4284bc080d340a 1-675
+CONTRIBUTING.md
+  s_6c9918e3382e68::t_1c4c155204447b 1-55
+.github/ISSUE_TEMPLATE/config.yml
+  s_6c9918e3382e68::t_1c4c155204447b 1-8
+README.md
+  s_6c9918e3382e68::t_1a4c1a6561b5d3 16
+  s_6c9918e3382e68::t_2f78128ec3ccc2 3-6,8,10,12,14,17-34,36,38-40,42,52-53,55-59,62,66,68,71,75,80,83,85,87-93,95,97,99-105,107,109,111-113,115,117,124,130,132,134
+README.zh-CN.md
+  s_6c9918e3382e68::t_418758621898e2 1-405
+packages/file-preview/package.json
+  s_6c9918e3382e68::t_2f78128ec3ccc2 4,7,9-17,21-25,32
+.github/ISSUE_TEMPLATE/bug_report.yml
+  s_6c9918e3382e68::t_1c4c155204447b 1-81
+LICENSE
+  s_6c9918e3382e68::t_4284bc080d340a 1-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "d4c1aef8d9544e5fe97ee272244166bcd02bdd5c",
+  "prompts": {},
+  "sessions": {
+    "s_6c9918e3382e68": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5a3a-ee25-7a83-a403-428dee0486f0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
