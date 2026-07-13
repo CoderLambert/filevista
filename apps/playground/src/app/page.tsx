@@ -1,6 +1,5 @@
 "use client";
 
-import "x-data-spreadsheet/dist/xspreadsheet.css";
 import { useState, useCallback, useRef } from "react";
 import {
   Upload,

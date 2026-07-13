@@ -2,7 +2,7 @@
  * Excel preview — shared type definitions.
  *
  * These types are internal to the excel/ module family and the
- * XlsxPreview / XlsxTablePreview / XlsxSpreadsheetPreview components.
+ * XlsxPreview / XlsxTablePreview components.
  * They are NOT part of the public package API.
  */
 
@@ -57,42 +57,6 @@ export interface SheetData {
   imageCount: number;
   accRowHeights: number[];
   isLegacyXls?: boolean;
-}
-
-// ─── Spreadsheet renderer types ───
-
-export interface SpreadsheetStyle {
-  bgcolor?: string;
-  color?: string;
-  align?: string;
-  valign?: string;
-  textwrap?: boolean;
-  border?: Record<string, [string, string]>;
-  font?: {
-    name?: string;
-    size?: number;
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-  };
-}
-
-export interface SpreadsheetSheetData {
-  name: string;
-  styles: SpreadsheetStyle[];
-  rows: {
-    len?: number;
-    [rowIndex: string]: any;
-  };
-  cols: {
-    len?: number;
-    [colIndex: string]: any;
-  };
-  merges: string[];
-}
-
-export interface SpreadsheetWorkbookData {
-  sheets: SpreadsheetSheetData[];
 }
 
 // ─── Workbook loading result ───

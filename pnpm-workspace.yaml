@@ -13,7 +13,6 @@ allowBuilds:
   prisma: false
   sharp: true
   unrs-resolver: true
-  x-data-spreadsheet: true
 
 # canvas is only used by pdfjs-dist for server-side rendering; this project
 # renders PDFs in the browser, so we skip its native build entirely.

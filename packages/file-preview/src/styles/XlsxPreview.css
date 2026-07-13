@@ -415,56 +415,6 @@
   overflow-wrap: break-word;
 }
 
-/* Enhanced spreadsheet renderer */
-.fv-xlsx__spreadsheet {
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  width: 100%;
-  background: var(--fv-canvas-bg);
-}
-
-.fv-xlsx__spreadsheet-host {
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.fv-xlsx__renderer-switch {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--fv-border);
-  border-radius: var(--fv-radius);
-  overflow: hidden;
-  background: var(--fv-background);
-}
-
-.fv-xlsx__renderer-btn {
-  border: 0;
-  background: transparent;
-  color: var(--fv-muted-foreground);
-  cursor: pointer;
-  font-size: var(--fv-font-size-xs);
-  padding: 0.25rem 0.5rem;
-}
-
-.fv-xlsx__renderer-btn:hover {
-  background: var(--fv-muted);
-}
-
-.fv-xlsx__renderer-btn--active {
-  background: var(--fv-primary);
-  color: var(--fv-primary-foreground);
-}
-
-.fv-xlsx__renderer-btn--active:hover {
-  background: var(--fv-primary);
-}
-
 /* ── Pagination ── */
 .fv-xlsx__pagination {
   display: flex;
