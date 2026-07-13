@@ -90,7 +90,7 @@ jobs:
           cache: pnpm
 
       - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -112,7 +112,7 @@ jobs:
       # Output directory moved with the pnpm monorepo split — playground's
       # `next export` now writes to apps/playground/out/.
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./apps/playground/out
 
@@ -128,4 +128,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
