@@ -1,0 +1,23 @@
+.github/workflows/ci.yml
+  s_6c9918e3382e68::t_24ed957e6851ba 28,33,36,79,82,85
+.github/workflows/pages.yml
+  s_6c9918e3382e68::t_24ed957e6851ba 26,84,87
+.github/workflows/release.yml
+  s_6c9918e3382e68::t_24ed957e6851ba 38,45,48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.13",
+  "base_commit_sha": "264d15f11f3921c18ae75ffd10f7134965eda411",
+  "prompts": {},
+  "sessions": {
+    "s_6c9918e3382e68": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5a3a-ee25-7a83-a403-428dee0486f0",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
