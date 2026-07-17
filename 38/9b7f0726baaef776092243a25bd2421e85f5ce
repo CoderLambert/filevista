@@ -1,0 +1,19 @@
+docs/records/feat-pptx-toolbar-segmented-view-mode-control.md
+  s_89778969ba721d::t_62eeefa9a00f5e 1-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "389b7f0726baaef776092243a25bd2421e85f5ce",
+  "prompts": {},
+  "sessions": {
+    "s_89778969ba721d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dfa1efb6-4d44-495c-a41c-8d4670bf185b",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
