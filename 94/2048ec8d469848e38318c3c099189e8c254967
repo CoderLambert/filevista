@@ -1,0 +1,19 @@
+.changeset/pptx-toolbar-segmented-control.md
+  s_89778969ba721d::t_c26385b311d281 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "942048ec8d469848e38318c3c099189e8c254967",
+  "prompts": {},
+  "sessions": {
+    "s_89778969ba721d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dfa1efb6-4d44-495c-a41c-8d4670bf185b",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
