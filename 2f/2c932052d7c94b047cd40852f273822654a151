@@ -1,0 +1,44 @@
+packages/file-preview/src/PptxPreview.tsx
+  s_3798c2ad58083f::t_afd4d2b5778e39 13
+  s_3798c2ad58083f::t_fc5263fbf9b298 622,624-655,659,662,665-666,671
+  s_3798c2ad58083f::t_5cef71f8989d15 591-601
+  s_3798c2ad58083f::t_829cc128b8a8e8 623,656-658,660-661,663-664,667-670
+packages/file-preview/src/__tests__/PptxPreview.lifecycle.test.tsx
+  s_3798c2ad58083f::t_54ece362cfcbe3 178,184-187
+packages/file-preview/src/icons.tsx
+  s_3798c2ad58083f::t_e46b03dd3e2b30 275-286
+packages/file-preview/src/core/i18n.ts
+  s_3798c2ad58083f::t_3e6c0773499a59 187-192
+  s_3798c2ad58083f::t_d206b97f27c2ec 35
+  s_3798c2ad58083f::t_365f063b6c2dff 336-341
+  s_3798c2ad58083f::t_ca252ececea9b4 186
+  s_3798c2ad58083f::t_5e0101d9ef08e6 38-41
+  s_3798c2ad58083f::t_7f681a4b52fb6f 335
+packages/file-preview/src/styles/PptxPreview.css
+  s_3798c2ad58083f::t_3724d72e2528f9 73,82-86
+  s_3798c2ad58083f::t_e14fd8270acca7 104-106
+  s_3798c2ad58083f::t_ee6e711d8c70bc 125-126,132-136,147-148,156-158,163-170,182-183,196,203-204,208-218,223,230-236,241-248,255-257,272-273
+  s_3798c2ad58083f::t_878aafc004f424 96,499-508,519-521,548-559
+  s_3798c2ad58083f::t_59444297ac9565 98-100
+  s_3798c2ad58083f::t_208df6546a1ed5 401,405-409
+  s_3798c2ad58083f::t_f1508b0761d2df 55-61,65-68,81,87,91,95,107-108,110-114,118-119,123-124,127-131,137-146,149-155,159-162,171-181,184-195,197-202,205-207,219-222,224-229,237-240,249-254,258-271,274-283,290-291,293,295-299,303-308,311-312,317-318,325-328,331-336
+  s_3798c2ad58083f::t_a1d87e34e70ed5 350,352,354-356,358-359,363-364,368-373,376-378,382-383,387-390,392-398
+  s_3798c2ad58083f::t_970305693eb189 511,513,518,522-525,530-531,535,544-547
+  s_3798c2ad58083f::t_6d9e28313779fc 97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "2f2c932052d7c94b047cd40852f273822654a151",
+  "prompts": {},
+  "sessions": {
+    "s_3798c2ad58083f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4961381b-2373-4f7f-9e45-5b3f430661e9",
+        "model": "glm-5.2"
+      },
+      "human_author": "lambert.li <lambert.li@jtexpress.com>"
+    }
+  }
+}
