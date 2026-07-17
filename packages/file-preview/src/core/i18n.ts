@@ -32,8 +32,13 @@ export interface LocaleMessages {
   // Page / slide units
   page: string;
   pages: string;
+  previewMode: string;
   slideView: string;
   gridView: string;
+  slideViewShort: string;
+  gridViewShort: string;
+  slideViewHint: string;
+  gridViewHint: string;
   previousPage: string;
   nextPage: string;
 
@@ -178,8 +183,13 @@ export const zhCN: LocaleMessages = {
   // Page / slide units
   page: "页",
   pages: "页",
-  slideView: "幻灯片视图",
-  gridView: "缩略图视图",
+  previewMode: "预览方式",
+  slideView: "单页预览",
+  gridView: "缩略图总览",
+  slideViewShort: "单页",
+  gridViewShort: "总览",
+  slideViewHint: "逐页查看 PPT，支持翻页和缩放",
+  gridViewHint: "查看全部页面，点击缩略图可快速跳转",
   previousPage: "上一页 (←)",
   nextPage: "下一页 (→)",
 
@@ -322,8 +332,13 @@ export const enUS: LocaleMessages = {
   // Page / slide units
   page: "page",
   pages: "pages",
-  slideView: "Slide View",
-  gridView: "Grid View",
+  previewMode: "Preview mode",
+  slideView: "Single Page",
+  gridView: "Thumbnails",
+  slideViewShort: "Single",
+  gridViewShort: "All",
+  slideViewHint: "View slides one at a time with zoom and navigation",
+  gridViewHint: "See all slides at a glance; click any thumbnail to jump",
   previousPage: "Previous Page (←)",
   nextPage: "Next Page (→)",
 

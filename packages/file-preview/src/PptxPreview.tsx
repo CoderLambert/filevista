@@ -10,7 +10,7 @@ import {
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  Grid3X3Icon,
+  LayoutGridIcon,
   MonitorIcon,
   AlertTriangleIcon,
   ZoomInIcon,
@@ -588,62 +588,18 @@ export function PptxPreview({
       {/* Toolbar */}
       <div className="fv-pptx__toolbar">
         <div className="fv-pptx__toolbar-left">
-          {viewMode === "slide" ? (
-            <>
-              <span className="fv-pptx__slide-count">
-                {slideCount > 0 ? `${currentSlide + 1} / ${slideCount}` : "— / —"}
-              </span>
-              <span className="fv-pptx__slide-label">{t.page}</span>
-            </>
-          ) : (
-            <>
-              <span className="fv-pptx__slide-count">{slideCount}</span>
-              <span className="fv-pptx__slide-label">{t.page}</span>
-            </>
-          )}
-        </div>
-
-        <div className="fv-pptx__toolbar-right">
-          <button
-            type="button"
-            disabled={state.status !== "ready" || isModeSwitching}
-            onClick={() => switchViewMode("slide")}
-            className={`fv-pptx__mode-btn ${viewMode === "slide" ? "fv-pptx__mode-btn--active" : ""}`}
-            title={t.slideView}
+          <span className="fv-pptx__slide-count">
+            {viewMode === "slide"
+              ? slideCount > 0
+                ? `${currentSlide + 1} / ${slideCount}`
+                : "— / —"
+              : slideCount}
+          </span>
+          <span className="fv-pptx__slide-label">{t.page}</span>
+          <div
+            className={`fv-pptx__nav ${viewMode !== "slide" ? "fv-pptx__nav--hidden" : ""}`}
+            aria-hidden={viewMode !== "slide"}
           >
-            <MonitorIcon size={16} />
-          </button>
-          <button
-            type="button"
-            disabled={state.status !== "ready" || isModeSwitching}
-            onClick={() => switchViewMode("grid")}
-            className={`fv-pptx__mode-btn ${viewMode === "grid" ? "fv-pptx__mode-btn--active" : ""}`}
-            title={t.gridView}
-          >
-            <Grid3X3Icon size={16} />
-          </button>
-
-          <div className="fv-toolbar__separator" />
-
-          <div className="fv-pptx__zoom-group">
-            <button type="button" onClick={zoomOut} className="fv-pptx__zoom-btn" title={t.zoomOut}>
-              <ZoomOutIcon size={14} />
-            </button>
-            <button type="button" onClick={resetZoom} className="fv-pptx__zoom-label" title="Reset zoom">
-              {zoom}%
-            </button>
-            <button type="button" onClick={zoomIn} className="fv-pptx__zoom-btn" title={t.zoomIn}>
-              <ZoomInIcon size={14} />
-            </button>
-          </div>
-
-          <button type="button" onClick={toggleFullscreen} className="fv-pptx__fullscreen-btn" title={t.fullscreen}>
-            {isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
-          </button>
-        </div>
-
-        {viewMode === "slide" && (
-          <div className="fv-pptx__nav">
             <button
               type="button"
               onClick={prevSlide}
@@ -663,7 +619,56 @@ export function PptxPreview({
               <ChevronRightIcon size={16} />
             </button>
           </div>
-        )}
+        </div>
+
+        <div className="fv-pptx__toolbar-center">
+          <div className="fv-pptx__mode-switch" role="group" aria-label={t.previewMode}>
+            <button
+              type="button"
+              disabled={state.status !== "ready" || isModeSwitching}
+              onClick={() => switchViewMode("slide")}
+              className={`fv-pptx__mode-item ${viewMode === "slide" ? "fv-pptx__mode-item--active" : ""}`}
+              data-active={viewMode === "slide"}
+              aria-pressed={viewMode === "slide"}
+              title={`${t.slideView}\n${t.slideViewHint}`}
+            >
+              <MonitorIcon size={14} />
+              <span className="fv-pptx__mode-item-label">{t.slideView}</span>
+              <span className="fv-pptx__mode-item-label-short">{t.slideViewShort}</span>
+            </button>
+            <button
+              type="button"
+              disabled={state.status !== "ready" || isModeSwitching}
+              onClick={() => switchViewMode("grid")}
+              className={`fv-pptx__mode-item ${viewMode === "grid" ? "fv-pptx__mode-item--active" : ""}`}
+              data-active={viewMode === "grid"}
+              aria-pressed={viewMode === "grid"}
+              title={`${t.gridView}\n${t.gridViewHint}`}
+            >
+              <LayoutGridIcon size={14} />
+              <span className="fv-pptx__mode-item-label">{t.gridView}</span>
+              <span className="fv-pptx__mode-item-label-short">{t.gridViewShort}</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="fv-pptx__toolbar-right">
+          <div className="fv-pptx__zoom-group">
+            <button type="button" onClick={zoomOut} className="fv-pptx__zoom-btn" title={t.zoomOut}>
+              <ZoomOutIcon size={14} />
+            </button>
+            <button type="button" onClick={resetZoom} className="fv-pptx__zoom-label" title="Reset zoom">
+              {zoom}%
+            </button>
+            <button type="button" onClick={zoomIn} className="fv-pptx__zoom-btn" title={t.zoomIn}>
+              <ZoomInIcon size={14} />
+            </button>
+          </div>
+
+          <button type="button" onClick={toggleFullscreen} className="fv-pptx__fullscreen-btn" title={t.fullscreen}>
+            {isFullscreen ? <Minimize2Icon size={16} /> : <Maximize2Icon size={16} />}
+          </button>
+        </div>
       </div>
 
       {/* Content area */}

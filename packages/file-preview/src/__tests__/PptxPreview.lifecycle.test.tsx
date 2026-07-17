@@ -175,14 +175,16 @@ describe("PptxPreview — lifecycle and safety", () => {
     const { source, fileName } = makeBlobSource();
 
     const onError = vi.fn();
-    const { getByTitle, queryByTitle } = render(
+    const { container } = render(
       React.createElement(PptxPreview, { source, fileName, onError }),
     );
 
     await flushAsync();
 
-    // Find the grid view toggle (title is i18n'd; default zhCN string).
-    const gridBtn = getByTitle("缩略图视图");
+    // Find the grid view toggle - the non-active button in the mode switch.
+    const gridBtn = container.querySelector(
+      ".fv-pptx__mode-switch button[data-active='false']",
+    ) as HTMLButtonElement;
     fireEvent.click(gridBtn);
     await flushAsync();
 
