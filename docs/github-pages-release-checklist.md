@@ -122,20 +122,22 @@ Expected:
 unknown → Preview Not Available
 ```
 
-## 8. Check Large File Hint
+## 8. Check Demo Preview Size Limit (50 MB)
 
-Upload a file >= 20MB of type:
+The **Playground demo** has its own policy: warn at 20 MiB, require confirmation at 35 MiB, and block previews above 50 MiB (50 × 1024 × 1024 bytes). The reusable library retains its default thresholds.
 
-```txt
-PDF / DOCX / PPTX / XLSX / ZIP / EPUB
-```
+Test local PDF / DOCX / PPTX / XLSX / ZIP / EPUB files through both **Browse Files** and drag-and-drop:
 
-Expected:
+| File size | Expected |
+| --- | --- |
+| Less than 20 MiB | Preview normally |
+| 20–under 35 MiB | Show a warning, continue preview |
+| 35–50 MiB (inclusive) | Require explicit confirmation before preview |
+| Greater than 50 MiB | Block local preview and offer download |
 
-```txt
-Large file hint appears
-User can still proceed with preview
-```
+The **remote URL** loader must enforce the same 50 MiB cap before or during download. Verify that a remote file above the limit produces a clear error (subject to CORS). A file exactly 50 MiB must remain eligible for preview.
+
+The limit applies per file, not to the total size of the selected files. Large-file parsing may still be slow or require significant memory even when the size policy allows it.
 
 ## 9. Check Browser Console
 

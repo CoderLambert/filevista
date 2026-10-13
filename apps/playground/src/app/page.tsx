@@ -26,6 +26,7 @@ import {
   type FileInfo,
   type FileType,
   type HtmlTrustedPreviewRequest,
+  type PreviewSizePolicyConfig,
   detectFileType,
   detectFileMeta,
   PluginPreviewRenderer,
@@ -51,6 +52,14 @@ setAssetBasePath(process.env.NEXT_PUBLIC_BASE_PATH || "");
 // Playground previews every supported file type, so use the full registry
 // (PDF, DOCX, PPTX, XLSX, RTF, ZIP, EPUB and base formats).
 const previewRegistry = createFullPreviewRegistry();
+
+// Playground-only limit. Library consumers retain the default 20/50/100 MB policy.
+const MB = 1024 * 1024;
+const DEMO_PREVIEW_POLICY = {
+  warningBytes: 20 * MB,
+  confirmBytes: 35 * MB,
+  maxBytes: 50 * MB,
+} satisfies PreviewSizePolicyConfig;
 
 const FILE_TYPE_ICONS: Record<FileType, string> = {
   pdf: "📄",
@@ -238,6 +247,7 @@ export default function Home() {
     try {
       const info = await processRemoteUrl(currentUrl, {
         signal: controller.signal,
+        maxBytes: DEMO_PREVIEW_POLICY.maxBytes,
         onProgress: setRemoteProgress,
       });
 
@@ -416,6 +426,9 @@ export default function Home() {
               onChange={handleFileInput}
               accept="*"
             />
+            <p className="text-center text-[11px] text-muted-foreground">
+              Preview files up to 50 MB each
+            </p>
             <div className="flex gap-2">
               <input
                 value={remoteUrl}
@@ -596,20 +609,14 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Preview content — PluginPreviewRenderer applies its own
-                  LargeFileGate. Thresholds are tuned for the demo: warn at
-                  2 MB, require confirmation at 3 MB, block at 5 MB. */}
+              {/* Preview content — the Demo gates files at 20/35/50 MB. */}
               <div className="flex-1 min-h-0 min-w-0">
                 <PluginPreviewRenderer
                   file={activeFile}
                   registry={previewRegistry}
                   showPluginDebug={process.env.NODE_ENV === "development"}
                   onHtmlTrustedPreviewRequest={handleTrustedPreviewRequest}
-                  largeFilePolicy={{
-                    warningBytes: 2 * 1024 * 1024,
-                    confirmBytes: 3 * 1024 * 1024,
-                    maxBytes: 5 * 1024 * 1024,
-                  }}
+                  largeFilePolicy={DEMO_PREVIEW_POLICY}
                 />
               </div>
             </>
