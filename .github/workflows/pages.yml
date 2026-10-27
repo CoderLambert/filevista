@@ -109,6 +109,13 @@ jobs:
           pnpm run build:lib
           pnpm --filter @lamberl-lee/playground run build:pages
 
+      # Webpack is intentional: Turbopack caches rejected plugin chunk loads,
+      # preventing Retry from recovering after a transient network failure.
+      - name: Verify preview chunk retry in the Pages export
+        run: |
+          pnpm --filter @lamberl-lee/playground exec playwright install --with-deps chromium
+          pnpm --filter @lamberl-lee/playground run test:pages
+
       # Output directory moved with the pnpm monorepo split — playground's
       # `next export` now writes to apps/playground/out/.
       - name: Upload GitHub Pages artifact

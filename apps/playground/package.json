@@ -3,10 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "test:pages": "playwright test",
     "sync:demos": "node scripts/sync-demos.mjs",
     "dev": "node scripts/sync-demos.mjs && next dev -p 3000 2>&1 | tee dev.log",
-    "build": "node scripts/sync-demos.mjs && next build && cp -r .next/static .next/standalone/apps/playground/.next/ && cp -r public .next/standalone/apps/playground/",
-    "build:pages": "node scripts/sync-demos.mjs && NEXT_PUBLIC_DEPLOY_TARGET=github-pages next build",
+    "build": "node scripts/sync-demos.mjs && next build --webpack && cp -r .next/static .next/standalone/apps/playground/.next/ && cp -r public .next/standalone/apps/playground/",
+    "build:pages": "node scripts/sync-demos.mjs && NEXT_PUBLIC_DEPLOY_TARGET=github-pages next build --webpack",
     "start": "NODE_ENV=production node .next/standalone/apps/playground/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -62,6 +63,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^22",
     "@types/react": "^19",
